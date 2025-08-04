@@ -100,14 +100,25 @@ class AntiFerro:
         z = self.z
         T,h = x
         m1, m2 = self.get_m_sublattices(x)
-        one_minus_m1_sq = 1 - m1**2
-        one_minus_m2_sq = 1 - m2**2
-        
 
-        g_TT = (T*((one_minus_m1_sq)*np.arctanh(m1)**2 + (one_minus_m2_sq)*np.arctanh(m2)**2) +
-            2*z*(one_minus_m1_sq)*(one_minus_m2_sq)*np.arctanh(m1)*np.arctanh(m2))/\
+        if not np.isclose(np.abs(m1), 1, rtol=0, atol=1e-9) and m1 < 1:
+            one_minus_m1_sq = 1 - m1**2
+            atanhm1 = np.arctanh(m1)
+        else:
+            one_minus_m1_sq = 0
+            atanhm1 = 100 # large value to avoid divide by zero error
+        
+        if not np.isclose(np.abs(m2), 1, rtol=0, atol=1e-9) and m2 < 1:
+            one_minus_m2_sq = 1 - m2**2
+            atanhm2 = np.arctanh(m2)
+        else:
+            one_minus_m2_sq = 0
+            atanhm2 = 100
+
+        g_TT = (T*((one_minus_m1_sq)*atanhm1**2 + (one_minus_m2_sq)*atanhm2**2) +
+            2*z*(one_minus_m1_sq)*(one_minus_m2_sq)*atanhm1*atanhm2)/\
             (2*T**2 - 2*z**2*one_minus_m1_sq*one_minus_m2_sq)
-        g_Th = (-(T + z*one_minus_m1_sq)*one_minus_m2_sq*np.arctanh(m2) - (T + z*one_minus_m2_sq)*one_minus_m1_sq*np.arctanh(m1))/\
+        g_Th = (-(T + z*one_minus_m1_sq)*one_minus_m2_sq*atanhm2 - (T + z*one_minus_m2_sq)*one_minus_m1_sq*atanhm1)/\
             (2*T**2 - 2*z**2*one_minus_m1_sq*one_minus_m2_sq)
         g_hh = (T*(-m1**2 - m2**2 + 2) + 2*z*(one_minus_m1_sq)*(one_minus_m2_sq))/\
             (2*T**2 - 2*z**2*one_minus_m1_sq*one_minus_m2_sq)
@@ -117,10 +128,20 @@ class AntiFerro:
         T,h = x
         z = self.z
         m1, m2 = self.get_m_sublattices(x)
-        atanhm1 = np.arctanh(m1)
-        atanhm2 = np.arctanh(m2)
-        m1_sq_minus1 = m1**2 - 1
-        m2_sq_minus1 = m2**2 - 1
+
+        if not np.isclose(m1, 1, rtol=0, atol=1e-9) and m1 < 1:
+            m1_sq_minus1 = m1**2 - 1
+            atanhm1 = np.arctanh(m1)
+        else:
+            m1_sq_minus1 = 0
+            atanhm1 = 100 # large value to avoid divide by zero error
+        
+        if not np.isclose(m2, 1, rtol=0, atol=1e-9) and m2 < 1:
+            m2_sq_minus1 = m2**2 - 1
+            atanhm2 = np.arctanh(m2)
+        else:
+            m2_sq_minus1 = 0
+            atanhm2 = 100
 
         sec_diag = -2*(T - m2_sq_minus1*z)*atanhm1/m2_sq_minus1 - 2*(T - (m1**2 -1)*z)*atanhm2/m1_sq_minus1
         return np.array([[-2*T*(m1_sq_minus1 + m2_sq_minus1)/(m1_sq_minus1*m2_sq_minus1) + 4*z, 
@@ -132,10 +153,20 @@ class AntiFerro:
         T,h = x
         z = self.z
         m1, m2 = self.get_m_sublattices(x)
-        atanhm1 = np.arctanh(m1)
-        atanhm2 = np.arctanh(m2)
-        m1_sq_minus1 = m1**2 - 1
-        m2_sq_minus1 = m2**2 - 1
+        
+        if not np.isclose(m1, 1, rtol=0, atol=1e-9) and m1 < 1:
+            m1_sq_minus1 = m1**2 - 1
+            atanhm1 = np.arctanh(m1)
+        else:
+            m1_sq_minus1 = 0
+            atanhm1 = 100 # large value to avoid divide by zero error
+        
+        if not np.isclose(m2, 1, rtol=0, atol=1e-9) and m2 < 1:
+            m2_sq_minus1 = m2**2 - 1
+            atanhm2 = np.arctanh(m2)
+        else:
+            m2_sq_minus1 = 0
+            atanhm2 = 100
 
         Γ_T_xx = [[(2*T*(T**2*m1 - m2*z**2*m1_sq_minus1**2)*atanhm1**3 + (-T**3*(3*m1**2 + m2**2 - 4)/m1_sq_minus1 + T*z**2*(m1_sq_minus1 - m2_sq_minus1)*m2_sq_minus1 + 
                     2*T*(T**2*m2 - m1*z**2*m2_sq_minus1**2)*atanhm2 + 4*z**3*m1_sq_minus1*m2_sq_minus1**2)*atanhm2**2 + 

@@ -1,13 +1,13 @@
+from bokeh.plotting import show as bkshow
 import numpy as np
 import heapq
 from scipy.spatial import Delaunay
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from rich.progress import Progress
 import metrics
 import warnings
 import holoviews as hv
 hv.extension('bokeh')
-from bokeh.plotting import show  # noqa: E402
 
 warnings.filterwarnings("error", category=RuntimeWarning)
 
@@ -72,6 +72,8 @@ class FMMGeodesicPaths:
         a = self.geonorm(positions[A], vec_ab)
         b = self.geonorm(positions[A], vec_ac)
         cos_theta = self.geoip(positions[A], vec_ab, vec_ac) / (a * b)
+        if np.abs(cos_theta) > 1 and np.isclose(cos_theta**2, 1, rtol=0):
+            cos_theta = np.sign(cos_theta)
         sin_theta = np.sqrt(1 - cos_theta**2)
 
         # if is_obtuse_triangle(positions[A], positions[B], positions[C]):
@@ -79,10 +81,13 @@ class FMMGeodesicPaths:
         #     if virtual_vertex is not None:
         #         T_virtual = T[virtual_vertex] + np.linalg.norm(positions[C] - positions[virtual_vertex]) * F
         #         return min(Tc, T_virtual)
-
-        t = self.solve_quadratic(a**2 + b**2 - 2*a*b*cos_theta,
-                            2*b*u*(a*cos_theta - b),
-                            b**2*(u**2 - (F**2)*(a**2)*(sin_theta**2)))
+        if a**2 + b**2 - 2*a*b*cos_theta == 0:
+            t = np.inf
+        else:
+            t = self.solve_quadratic(a**2 + b**2 - 2*a*b*cos_theta,
+                                2*b*u*(a*cos_theta - b),
+                                b**2*(u**2 - (F**2)*(a**2)*(sin_theta**2)))
+        
         try:
             if u < t and (a * cos_theta <  b * (1 - u/t)) and\
                     (b * (1 - u/t) < (a / cos_theta if cos_theta != 0 else np.inf)):
@@ -160,31 +165,35 @@ def main_sphere():
     ) * hv.Points((*positions[source],), label='Source').opts(color="red",size=10)).opts(
         legend_position='top_left', width=800, height=550, title="Geodesic Paths on Sphere"
     )
-    show(hv.render(plot))
+    bkshow(hv.render(plot))
 
     print(positions[-1], ":", distances[-1])
 
 def main_antiferro():
-    positions = np.reshape(np.meshgrid(np.linspace(0.001, np.pi-0.001, 20),np.linspace(0, 2*np.pi, 20)), (2, -1)).T
+    t = np.linspace((0.1, )*20, (1-0.01, )*20, 20)
+    h = np.array([ np.linspace(-(T/2 * np.log((1+np.sqrt(1-T))/(1-np.sqrt(1-T))) + np.sqrt(1-T))*(1 - 1e-4),
+        (T/2 * np.log((1+np.sqrt(1-T))/(1-np.sqrt(1-T))) + np.sqrt(1-T))*(1 - 1e-4), 20) for T in t[:,0]])
+    positions = np.reshape((t,h), (2, -1)).T
     triangles = Delaunay(positions).simplices
-    source = 255
+    source = 105
     print("source:", positions[source])
 
     afmetric = metrics.AntiFerro()
-    geo = FMMGeodesicPaths(afmetric.metric(), dim=2)
+    geo = FMMGeodesicPaths(afmetric.metric, dim=2)
 
     distances = geo.fast_marching_method(positions, triangles, source)
-    # plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
-    # plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
-    # plt.colorbar()
-    # plt.show()
+
     plot = (hv.HeatMap((positions[:, 0], positions[:, 1], distances), label='Geodesic Distances').opts(
         colorbar=True, cmap='viridis', tools=["hover",], xlabel='Theta', ylabel='Phi'
     ) * hv.Points((*positions[source],), label='Source').opts(color="red",size=10)).opts(
         legend_position='top_left', width=800, height=550, title="Geodesic Paths on Antiferro"
     )
-    show(hv.render(plot))
+    bkshow(hv.render(plot))
+
+    plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
+    plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
+    plt.colorbar()
+    plt.show()
 
 if __name__ == "__main__":
-    # Example usage (requires proper triangulation and positions):
-    pass
+    main_antiferro()
