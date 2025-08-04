@@ -1,61 +1,20 @@
 from typing import Callable
-import warnings
+import warnings # noqa: F401
 
 import numpy as np
 import scipy.sparse as sparse
 import scipy.sparse.linalg as spla
 from scipy.spatial import Delaunay  # noqa: F401
 
-def fixed_point(func:Callable, start:float, args=(), xtol:float=1e-9, maxiter:int=5000, method="iteration"):
-    """
-    Find the fixed point of a function using iteration.
-
-    Parameters:
-    func (callable): The function for which to find the fixed point.
-    start (float): The initial guess for the fixed point.
-    args (iterable): arguments to be passed to function.
-    xtol (float, optional): The tolerance for convergence. Default is 1e-9.
-    max_iter (int, optional): The maximum number of iterations. Default is 5000.
-
-    Returns:
-    float: The fixed point of the function.
-    """
-    if method != "iteration":
-        raise NotImplementedError
-    x0 = start
-    for itr in range(maxiter):
-        x1 = func(x0, *args)
-        if np.max(abs(x1 - x0)) < xtol:
-            break
-        if np.any(np.isnan(x1)):
-            raise Exception(f"got NaN in fixed point. last x was {x0}, args={args}")
-        x0 = x1
-    if itr == maxiter - 1:
-        warnings.warn(f"Tolerance not reached\nachieved tolerance = {np.max(abs(func(x0, *args) - x0)):.3e} >= {xtol} = required tolerance")
-    return x1
-
 
 class HeatGeodesicPaths:
-    def __init__(self, metric, christoffel_func, dim):
+    def __init__(self, metric: Callable[[np.ndarray], np.ndarray], dim: int = 2, **kwargs):
         self.metric = metric
-        self.christoffel_func = christoffel_func
         self.dim = dim
+        for key, val in kwargs.items():
+            setattr(self, key, val)
 
-    def dist(self, path):
-        """
-        Compute the distance of a path.
-
-        Parameters:
-        path (array-like): The path. Assumed to be dense enough.
-
-        Returns:
-        float: The distance of the path.
-        """
-        metric = [self.metric(x) for x in (path[1:, :] + path[:-1, :]) / 2]
-        diffs = np.diff(path, axis=0)
-        return np.sum([np.sqrt(d.T @ m @ d) for d,m in zip(diffs, metric)])
-
-    def cotangent_weights(self, V, F):
+    def laplacian(self, V, F):
         # V: vertices, F: faces
         i1, i2, i3 = F[:,0], F[:,1], F[:,2]
         v1, v2, v3 = V[i1], V[i2], V[i3]
@@ -84,7 +43,7 @@ class HeatGeodesicPaths:
 
     def heat_method(self, V, F, source, t_mult=1.0):
         # Compute Laplacian
-        L = self.cotangent_weights(V, F)
+        L = self.laplacian(V, F)
 
         # Compute mass matrix (lumped)
         A = np.zeros(V.shape[0])

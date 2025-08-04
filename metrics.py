@@ -52,6 +52,20 @@ class AntiFerro:
     dim = 2
     z = 1
 
+    def dist(self, path):
+        """
+        Compute the distance of a path.
+
+        Parameters:
+        path (array-like): The path. Assumed to be dense enough.
+
+        Returns:
+        float: The distance of the path.
+        """
+        metric = [self.metric(x) for x in (path[1:, :] + path[:-1, :]) / 2]
+        diffs = np.diff(path, axis=0)
+        return np.sum([np.sqrt(d.T @ m @ d) for d,m in zip(diffs, metric)])
+
     #                                        x=(T,h)
     def free_energy_non_minimized(self, m_s, x, z=1):
         T,h = x
