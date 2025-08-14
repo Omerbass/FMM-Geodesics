@@ -170,12 +170,14 @@ def main_sphere():
     print(positions[-1], ":", distances[-1])
 
 def main_antiferro():
-    t = np.linspace((0.1, )*20, (1-0.01, )*20, 20)
+    N = 200
+    t = np.linspace((0.1, )*N, (1-0.01, )*N, N)
     h = np.array([ np.linspace(-(T/2 * np.log((1+np.sqrt(1-T))/(1-np.sqrt(1-T))) + np.sqrt(1-T))*(1 - 1e-4),
-        (T/2 * np.log((1+np.sqrt(1-T))/(1-np.sqrt(1-T))) + np.sqrt(1-T))*(1 - 1e-4), 20) for T in t[:,0]])
+        (T/2 * np.log((1+np.sqrt(1-T))/(1-np.sqrt(1-T))) + np.sqrt(1-T))*(1 - 1e-4), N) for T in t[:,0]])
     positions = np.reshape((t,h), (2, -1)).T
-    triangles = Delaunay(positions).simplices
-    source = 105
+    delaunay = Delaunay(positions)
+    triangles = delaunay.simplices
+    source = 10500
     print("source:", positions[source])
 
     afmetric = metrics.AntiFerro()
@@ -183,12 +185,15 @@ def main_antiferro():
 
     distances = geo.fast_marching_method(positions, triangles, source)
 
-    plot = (hv.HeatMap((positions[:, 0], positions[:, 1], distances), label='Geodesic Distances').opts(
-        colorbar=True, cmap='viridis', tools=["hover",], xlabel='Theta', ylabel='Phi'
-    ) * hv.Points((*positions[source],), label='Source').opts(color="red",size=10)).opts(
-        legend_position='top_left', width=800, height=550, title="Geodesic Paths on Antiferro"
-    )
-    bkshow(hv.render(plot))
+    np.savez(f"antiferro_geodesic_paths_T0={positions[source, 0]}_h0={positions[source, 1]}.npz", 
+        positions=positions, distances=distances, source=source, delaunay=delaunay, triangles=triangles)
+
+    # plot = (hv.HeatMap((positions[:, 0], positions[:, 1], distances), label='Geodesic Distances').opts(
+    #     colorbar=True, cmap='viridis', tools=["hover",], xlabel='Theta', ylabel='Phi'
+    # ) * hv.Points((*positions[source],), label='Source').opts(color="red",size=10)).opts(
+    #     legend_position='top_left', width=800, height=550, title="Geodesic Paths on Antiferro Mean Field"
+    # )
+    # bkshow(hv.render(plot))
 
     plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
     plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')

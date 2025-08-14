@@ -8,8 +8,9 @@ from scipy.spatial import Delaunay  # noqa: F401
 
 
 class HeatGeodesicPaths:
-    def __init__(self, metric: Callable[[np.ndarray], np.ndarray], dim: int = 2, **kwargs):
-        self.metric = metric
+    def __init__(self, rmetric, grid, dim: int = 2, **kwargs):
+        self.rmetric = rmetric
+        self.grid = grid
         self.dim = dim
         for key, val in kwargs.items():
             setattr(self, key, val)
