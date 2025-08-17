@@ -47,8 +47,93 @@ def sphereMetric(p):
         """
         return np.diag([1, np.sin(p[0])**2])
 
+class RMetric:
+    def metric(self, p):
+        raise NotImplementedError("This method should be implemented in subclasses.")
 
-class AntiFerro:
+    def dist(self, a, b, N=100):
+        """
+        Compute the distance between two points a and b using the metric tensor.
+
+        Parameters:
+        a (array-like): The first point.
+        b (array-like): The second point.
+        N (int): The number of points to sample between a and b for numerical integration.
+
+        Returns:
+        float: The distance between the two points.
+        """
+        if np.all(a == b):
+            return 0
+        t = np.linspace(0, 1, N)
+        path = a + t[:, np.newaxis] * (b - a)
+        return self.dist(path)
+    
+    def inv_metric(self, p):
+        """
+        Compute the inverse of the metric tensor at a given point p.
+
+        Parameters:
+        p (array-like): The point at which to compute the inverse metric tensor.
+
+        Returns:
+        numpy.ndarray: The inverse of the metric tensor at point p.
+        """
+        return np.linalg.inv(self.metric(p))
+    
+    def metric_det(self, p):
+        """
+        Compute the determinant of the metric tensor at a given point p.
+
+        Parameters:
+        p (array-like): The point at which to compute the metric tensor.
+
+        Returns:
+        float: The determinant of the metric tensor.
+        """
+        return np.linalg.det(self.metric(p))
+
+    def geonorm(self, p, a):
+        """
+        Compute the norm of a vector a at point p using the metric tensor.
+
+        Parameters:
+        p (array-like): The point at which to compute the norm.
+        a (array-like): The vector for which to compute the norm.
+
+        Returns:
+        float: The norm of the vector a at point p.
+        """
+        return np.sqrt(a.T @ self.metric(p) @ a)
+        
+    def geoip(self, p, a, b):
+        """
+        Compute the inner product of two vectors a and b at point p using the metric tensor.
+
+        Parameters:
+        p (array-like): The point at which to compute the inner product.
+        a (array-like): The first vector.
+        b (array-like): The second vector.
+
+        Returns:
+        float: The inner product of vectors a and b at point p.
+        """
+        return a.T @ self.metric(p) @ b
+
+    def chrystoffel_func(self, p):
+        """
+        Compute the Christoffel symbols at a given point p.
+
+        Parameters:
+        p (array-like): The point at which to compute the Christoffel symbols.
+
+        Returns:
+        numpy.ndarray: The Christoffel symbols at point p.
+        """
+        raise NotImplementedError("This method should be implemented in subclasses.")
+        
+
+class AntiFerro(RMetric):
     dim = 2
     z = 1
 

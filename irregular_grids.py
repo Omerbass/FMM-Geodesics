@@ -20,10 +20,10 @@ class BoundedGrid(object):
         xs = np.meshgrid(*[np.arange(cartesian_boundaries[i][0], cartesian_boundaries[i][1], deltas[i]) for i in range(dim)], indexing='ij')
         self.points = np.vstack([x.flatten() for x in xs]).T
         self.valid_idxs = np.arange(len(self.valid_idxs))[bound_function(p) for p in self.points]
+        self.bounded_size = len(self.valid_idxs)
         self.valid_points = self.points[self.valid_idxs]
         self.idxgrid = -np.ones(xs[0].shape, dtype=int)
-        self.idxgrid[np.unravel_index(self.valid_idxs, xs[0].shape)] = valid_idxs
-        self.bounded_size = len(self.valid_idxs)
+        self.idxgrid[np.unravel_index(self.valid_idxs, xs[0].shape)] = np.arange(self.bounded_size)
 
     def point_to_idx(self, point):
         """
@@ -49,6 +49,14 @@ class BoundedGrid(object):
             return -1
         return self.idxgrid[np.unravel_index(idx, self.idxgrid.shape)]
     
+    def idx_to_point(self, idx):
+        """
+        Convert an index to a point in the grid.
+        """
+        if idx<0 or idx>=self.bounded_size:
+            return -1
+        return self.valid_points[idx]
+
     def neighbor(self, idx, grid_delta):
         """
         Get the neighbor index of a point given a delta in each dimension.
