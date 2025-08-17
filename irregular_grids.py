@@ -12,14 +12,15 @@ class BoundedGrid(object):
         bound_function: callable
             A function that takes a point and returns whether it is within the bounds.
         """
+        assert dim == len(cartesian_boundaries) == len(deltas), "Dimension mismatch between dim, boundaries, and deltas."
         self.dim = dim
-        self.cartesian_boundaries = cartesian_boundaries
+        self.cartesian_boundaries = np.array(cartesian_boundaries)
         self.checkbounds = bound_function
-        self.deltas = deltas
+        self.deltas = np.array(deltas)
         
         xs = np.meshgrid(*[np.arange(cartesian_boundaries[i][0], cartesian_boundaries[i][1], deltas[i]) for i in range(dim)], indexing='ij')
         self.points = np.vstack([x.flatten() for x in xs]).T
-        self.valid_idxs = np.arange(len(self.valid_idxs))[bound_function(p) for p in self.points]
+        self.valid_idxs = np.array([i for i,p in enumerate(self.points) if bound_function(p)])
         self.bounded_size = len(self.valid_idxs)
         self.valid_points = self.points[self.valid_idxs]
         self.idxgrid = -np.ones(xs[0].shape, dtype=int)
@@ -29,7 +30,7 @@ class BoundedGrid(object):
         """
         Convert a point to an index in the grid.
         """
-        idx = np.searchsorted(self.points, point, side='left')
+        idx = np.argmin(np.linalg.norm(self.points - point, axis=1))
         if idx < len(self.points) and np.all(self.points[idx] == point):
             return idx
         else:
@@ -47,7 +48,7 @@ class BoundedGrid(object):
         """
         if not self.isvalid_idx(idx):
             return -1
-        return self.idxgrid[np.unravel_index(idx, self.idxgrid.shape)]
+        return np.array(np.where(idx == self.idxgrid)).flatten()
     
     def idx_to_point(self, idx):
         """
@@ -65,7 +66,7 @@ class BoundedGrid(object):
         new_gridpoint = grid_point + grid_delta
         if np.any(new_gridpoint < 0) or np.any(new_gridpoint >= self.idxgrid.shape):
             return -1
-        new_idx = self.idxgrid[new_gridpoint]
+        new_idx = self.idxgrid[*new_gridpoint]
         return new_idx
     
     def values_to_grid(self, values):

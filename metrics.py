@@ -152,15 +152,15 @@ class AntiFerro(RMetric):
         return np.sum([np.sqrt(d.T @ m @ d) for d,m in zip(diffs, metric)])
 
     #                                        x=(T,h)
-    def free_energy_non_minimized(self, m_s, x, z=1):
+    def free_energy_non_minimized(self, m_s, x):
         T,h = x
-        return 0.5*(z*(m_s[0]*m_s[1]) - h*(m_s[0] + m_s[1]) + 0.5 * T *(
+        return 0.5*(self.z*(m_s[0]*m_s[1]) - h*(m_s[0] + m_s[1]) + 0.5 * T *(
         sp.special.xlogy(1+m_s[0], 1+m_s[0]) + sp.special.xlogy(1-m_s[0], 1-m_s[0]) +
         sp.special.xlogy(1+m_s[1], 1+m_s[1]) + sp.special.xlogy(1-m_s[1], 1-m_s[1]) )
         )
 
     #                       x=(T,h) 
-    def tranceqn(self, m_s, x, z=1):
+    def tranceqn(self, m_s, x):
         m1 = np.tanh( (x[1] - self.z * m_s[1])/x[0] )
         m2 = np.tanh( (x[1] - self.z * m_s[0])/x[0] )
         return np.array([m1, m2])
@@ -170,14 +170,14 @@ class AntiFerro(RMetric):
         assert np.nan not in x, "x contains NaN values"
         # print(x)
         M1, M2 = np.meshgrid(*np.linspace([-1+1e-3,-1+1e-3],[1-1e-3,1-1e-3],grid).T)
-        f = self.free_energy_non_minimized((M1,M2), x,z=self.z)
+        f = self.free_energy_non_minimized((M1,M2), x)
         ix, iy = np.unravel_index(np.argmin(f), f.shape)
         m1_0, m2_0 = M1[ix, iy], M2[ix,iy]
         if m1_0 == m2_0:
             m1_0 = np.min([m1_0 + 1e-2, 0.999])
             m2_0 = np.max([m2_0 - 1e-2, -0.999])
         # print("m0:", (m1_0, m2_0))
-        m_s = fixed_point(self.tranceqn, (m1_0,m2_0), args=(x,self.z))
+        m_s = fixed_point(self.tranceqn, (m1_0,m2_0), args=(x,))
         return m_s
 
     #                x=(T,h)
@@ -343,3 +343,29 @@ class AntiFerro(RMetric):
         # print("Γ_T_xx:", Γ_T_xx, "\nΓ_h_xx:", Γ_h_xx)
 
         return np.array([Γ_T_xx, Γ_h_xx])
+
+    def phase_transition_line(self, T):
+        """
+        Compute the phase transition line for a given temperature T.
+
+        Parameters:
+        T (float): The temperature at which to compute the phase transition line.
+
+        Returns:
+        float: The value of h at the phase transition line.
+        """
+        return T/2 * np.log((1+np.sqrt(1-T))/(1-np.sqrt(1-T))) + np.sqrt(1-T) if T <= 1 else np.nan
+
+    def is_ordered_phase(self, x):
+        """
+        Check if the system is in the ordered phase for a given set of parameters x.
+
+        Parameters:
+        x (array-like): The parameters (T, h) to check.
+
+        Returns:
+        bool: True if the system is in the ordered (Anti-Ferromagnetic) phase, False otherwise.
+        """
+        T, h = x
+        hc = self.phase_transition_line(T)
+        return (h < hc) and (h > -hc)
