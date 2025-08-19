@@ -10,6 +10,8 @@ import scipy.sparse.linalg as spla
 # from scipy.spatial import Delaunay  # noqa: F401
 from matplotlib import pyplot as plt
 
+warnings.filterwarnings("error")
+
 class HeatGeodesicPaths:
     def __init__(self, rmetric:metrics.RMetric, grid:BoundedGrid, dim: int = 2, **kwargs):
         self.rmetric = rmetric
@@ -27,41 +29,17 @@ class HeatGeodesicPaths:
         spacing_counter = 0
         for row in np.arange(self.grid.bounded_size):
             x0 = self.grid.idx_to_point(row)
-            for delta1dim in np.arange(self.grid.dim):
-                delta1 = np.zeros(self.grid.dim, dtype=int)
-                delta1[delta1dim] = 1
-                i1p = self.grid.neighbor(row, delta1)
-                i1m = self.grid.neighbor(row, -delta1)
-                if i1p >= 0 and i1m >= 0:
-                    x1p = self.grid.idx_to_point(i1p)
-                    x1m = self.grid.idx_to_point(i1m)
-                    dx1 = delta1 * self.grid.deltas**-1
-                    g_inv_1p = self.rmetric.inv_metric(x1p)
-                    g_inv_1m = self.rmetric.inv_metric(x1m)
-                    for delta2dim in np.arange(self.dim):
-                        delta2 = np.zeros(self.dim, dtype=int)
-                        delta2[delta2dim] = 1
-                        i2pp = self.grid.neighbor(i1p, delta2)
-                        i2pm = self.grid.neighbor(i1p, -delta2)
-                        i2mp = self.grid.neighbor(i1m, delta2)
-                        i2mm = self.grid.neighbor(i1m, -delta2)
-                        if np.all(np.array([i2pp, i2pm, i2mp, i2mm]) >= 0):
-                            dx2 = delta2 * self.grid.deltas
-                            detg = self.rmetric.metric_det(x0)
-                            detg_1p = self.rmetric.metric_det(x1p)
-                            detg_1m = self.rmetric.metric_det(x1m)
-                            row_indices.extend([row] * 4)
-                            col_indices.extend([i2pp, i2pm, i2mp, i2mm])
-                            W.extend([
-                                (detg_1p * np.dot(dx1, np.dot(g_inv_1p, dx2))) / 4 / detg,
-                                -(detg_1p * np.dot(dx1, np.dot(g_inv_1p, dx2))) / 4 / detg,
-                                -(detg_1m * np.dot(dx1, np.dot(g_inv_1m, dx2))) / 4 / detg,
-                                (detg_1m * np.dot(dx1, np.dot(g_inv_1m, dx2))) / 4 / detg
-                            ])
-                            sum_spacing = sum_spacing + \
-                                np.einsum("ij, i, j", self.rmetric.metric(x0), dx1, dx1) + \
-                                np.einsum("ij, i, j", self.rmetric.metric(x0), dx2, dx2)
-                        spacing_counter += 2
+            
+            # TODO
+            D0p = 0
+            D0m = 0
+            D1p = 0
+            D1m = 0
+
+            sum_spacing = sum_spacing + \
+                np.sqrt(self.rmetric.metric(x0)[0, 0]) * self.grid.deltas[0] + \
+                np.sqrt(self.rmetric.metric(x0)[1, 1]) * self.grid.deltas[1]
+            spacing_counter += 2
 
         L = sparse.coo_matrix((W, (row_indices, col_indices)), shape=(self.grid.bounded_size, self.grid.bounded_size))
         L = sparse.csr_matrix(L)
@@ -71,15 +49,17 @@ class HeatGeodesicPaths:
     def heat_method(self, source, t_mult=1.0):
         # Compute Laplacian
         L, h = self.L, self.h
+        # print(L)
 
-        print(L)
         # Compute time step
         t = t_mult * (h ** 2)
 
         # Solve heat equation
         u0 = np.zeros(self.grid.bounded_size)
         u0[source] = 1.0
-        u = spla.spsolve(sparse.eye(self.grid.bounded_size) + t * L, u0)
+        u = spla.spsolve(sparse.eye(self.grid.bounded_size) - t * L, u0)
+        # for _ in range(100):
+        #     u = spla.spsolve(sparse.eye(self.grid.bounded_size) - t/100 * L, u)
 
         # Compute gradient of u
         grad_u = np.zeros((self.grid.bounded_size, self.grid.dim))
@@ -99,7 +79,7 @@ class HeatGeodesicPaths:
                     grad_u[row] = np.einsum( "ij, j" , inv_metric, grad_contravariant)
 
         # Normalize the gradient
-        X = grad_u / np.array([self.rmetric.geonorm(p, grad) 
+        X =grad_u / np.array([self.rmetric.geonorm(p, grad) 
             for p, grad in zip(self.grid.valid_points, grad_u)])[:, np.newaxis]
         
         # Compute divergence
@@ -137,7 +117,7 @@ if __name__ == "__main__":
 
     # Create a dummy grid and metric
     aFmetric = AntiFerro()
-    grid = BoundedGrid(cartesian_boundaries=[(0.001, 0.999), (-1.225, 1.25)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.225, 1.25)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     # Initialize HeatGeodesicPaths
     heat_paths = HeatGeodesicPaths(aFmetric, grid)

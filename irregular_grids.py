@@ -26,15 +26,24 @@ class BoundedGrid(object):
         self.idxgrid = -np.ones(xs[0].shape, dtype=int)
         self.idxgrid[np.unravel_index(self.valid_idxs, xs[0].shape)] = np.arange(self.bounded_size)
 
+        self.boundary = []
+        for idx in range(self.bounded_size):
+            for delta in np.eye(self.dim, dtype=int):
+                if self.neighbor(idx, delta) == -1:
+                    self.boundary.append(idx)
+                    break
+            for delta in -np.eye(self.dim, dtype=int):
+                if self.neighbor(idx, delta) == -1:
+                    self.boundary.append(idx)
+                    break
+
+
     def point_to_idx(self, point):
         """
-        Convert a point to an index in the grid.
+        Convert a point to the closest index in the grid.
         """
-        idx = np.argmin(np.linalg.norm(self.points - point, axis=1))
-        if idx < len(self.points) and np.all(self.points[idx] == point):
-            return idx
-        else:
-            return -1
+        idx = np.argmin(np.linalg.norm(self.valid_points - point, axis=1))
+        return idx
 
     def isvalid_idx(self, idx):
         """

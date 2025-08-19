@@ -214,19 +214,19 @@ class AntiFerro(RMetric):
         z = self.z
         m1, m2 = self.get_m_sublattices(x)
 
-        if not np.isclose(m1, 1, rtol=0, atol=1e-9) and m1 < 1:
+        if not np.isclose(np.abs(m1), 1, rtol=0, atol=1e-16):
             m1_sq_minus1 = m1**2 - 1
             atanhm1 = np.arctanh(m1)
         else:
-            m1_sq_minus1 = 0
+            m1_sq_minus1 = 1e-16
             atanhm1 = 100 # large value to avoid divide by zero error
         
-        if not np.isclose(m2, 1, rtol=0, atol=1e-9) and m2 < 1:
+        if not np.isclose(np.abs(m2), 1, rtol=0, atol=1e-16):
             m2_sq_minus1 = m2**2 - 1
             atanhm2 = np.arctanh(m2)
         else:
-            m2_sq_minus1 = 0
-            atanhm2 = 100
+            m2_sq_minus1 = 1e-16
+            atanhm2 = -100
 
         sec_diag = -2*(T - m2_sq_minus1*z)*atanhm1/m2_sq_minus1 - 2*(T - (m1**2 -1)*z)*atanhm2/m1_sq_minus1
         return np.array([[-2*T*(m1_sq_minus1 + m2_sq_minus1)/(m1_sq_minus1*m2_sq_minus1) + 4*z, 
@@ -248,19 +248,19 @@ class AntiFerro(RMetric):
         z = self.z
         m1, m2 = self.get_m_sublattices(x)
 
-        if not np.isclose(m1, 1, rtol=0, atol=1e-9) and m1 < 1:
+        if not np.isclose(np.abs(m1), 1, rtol=0, atol=1e-16) and m1 < 1:
             m1_sq_minus1 = m1**2 - 1
             atanhm1 = np.arctanh(m1)
         else:
-            m1_sq_minus1 = 0
+            m1_sq_minus1 = 1e-16
             atanhm1 = 100 # large value to avoid divide by zero error
         
-        if not np.isclose(m2, 1, rtol=0, atol=1e-9) and m2 < 1:
+        if not np.isclose(np.abs(m2), 1, rtol=0, atol=1e-16) and m2 < 1:
             m2_sq_minus1 = m2**2 - 1
             atanhm2 = np.arctanh(m2)
         else:
-            m2_sq_minus1 = 0
-            atanhm2 = 100
+            m2_sq_minus1 = 1e-16
+            atanhm2 = -100
         
         return m1_sq_minus1*m2_sq_minus1*(atanhm1 - atanhm2)**2/(4*T**2 - 4*z**2*m1_sq_minus1*m2_sq_minus1)
 
