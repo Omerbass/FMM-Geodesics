@@ -2,7 +2,7 @@ import metrics
 from irregular_grids import BoundedGrid
 
 from typing import Callable # noqa: F401
-import warnings
+import warnings # noqa: F401
 
 import numpy as np
 import scipy.sparse as sparse
@@ -10,12 +10,18 @@ import scipy.sparse.linalg as spla
 # from scipy.spatial import Delaunay  # noqa: F401
 from matplotlib import pyplot as plt
 
-warnings.filterwarnings("error")
+# warnings.filterwarnings("error")
 
 class HeatGeodesicPaths:
-    def __init__(self, rmetric:metrics.RMetric, grid:BoundedGrid, **kwargs):
+    def __init__(self, rmetric:metrics.RMetric, grid:BoundedGrid, dim:int = 2, **kwargs):
         self.rmetric = rmetric
         self.grid = grid
+        if dim != grid.dim:
+            raise ValueError(f"Dimension mismatch: {dim} != {grid.dim}")
+        if dim != rmetric.dim:
+            raise ValueError(f"Dimension mismatch: {dim} != {rmetric.dim}")
+        if dim != 2:
+            raise NotImplementedError("Currently only 2D grids are supported.")
         self.dim = 2 # It is assumed that the grid is 2D for now.
         for key, val in kwargs.items():
             setattr(self, key, val)
@@ -28,8 +34,6 @@ class HeatGeodesicPaths:
         sum_spacing = 0
         spacing_counter = 0
         for row in np.arange(self.grid.bounded_size):
-            if row in self.grid.boundary:
-                continue
             x0 = self.grid.idx_to_point(row)
             sqrtdetg = np.sqrt(self.rmetric.metric_det(x0))
             
@@ -39,21 +43,26 @@ class HeatGeodesicPaths:
             neighbors = np.array([[self.grid.neighbor(row, delta1 + delta2) for delta1 in (np.array((-1,0), dtype=int), np.array((0,0), dtype=int), np.array((1,0), dtype=int))]
                 for delta2 in (np.array((0,-1), dtype=int), np.array((0,0), dtype=int), np.array((0,1), dtype=int))])
 
+            if np.any(neighbors < 0):
+                # If any neighbor is invalid, skip this row
+                continue
+            # legal_neighbors = neighbors.flatten() >= 0
+
             xm0 = (self.grid.idx_to_point(neighbors[0, 0]) + x0) / 2
             xp0 = (self.grid.idx_to_point(neighbors[2, 0]) + x0) / 2
 
             xm1 = (self.grid.idx_to_point(neighbors[0, 0]) + x0) / 2
             xp1 = (self.grid.idx_to_point(neighbors[0, 2]) + x0) / 2
 
-            A_m0 = self.gmetric.metric_det(xm0) * self.rmetric.inv_metric(xm0)
-            A_p0 = self.gmetric.metric_det(xp0) * self.rmetric.inv_metric(xp0)
-            A_m1 = self.gmetric.metric_det(xm1) * self.rmetric.inv_metric(xm1)
-            A_p1 = self.gmetric.metric_det(xp1) * self.rmetric.inv_metric(xp1)
+            A_m0 = self.rmetric.metric_det(xm0) * self.rmetric.inv_metric(xm0)
+            A_p0 = self.rmetric.metric_det(xp0) * self.rmetric.inv_metric(xp0)
+            A_m1 = self.rmetric.metric_det(xm1) * self.rmetric.inv_metric(xm1)
+            A_p1 = self.rmetric.metric_det(xp1) * self.rmetric.inv_metric(xp1)
 
             # Compute the weights for the Laplacian
-            row_indices.extend([row,] * 9)
-            col_indices.extend(neighbors.flatten())
-            W.extend([
+            row_indices.extend([row,] *  9) #np.sum(legal_neighbors))
+            col_indices.extend(neighbors.flatten()) #[legal_neighbors])
+            W.extend(np.array([
                 (   A_m0[0,1] + A_m1[0,1]) / (2 * deltas[0] * deltas[1] * sqrtdetg),
                 ( - A_p0[0,1] + A_m0[0,1]) / (2 * deltas[0] * deltas[1] * sqrtdetg) + A_m1[1,1] / (deltas[1]**2 * sqrtdetg),
                 ( - A_p0[0,1] - A_m1[0,1]) / (2 * deltas[0] * deltas[1] * sqrtdetg),
@@ -63,7 +72,8 @@ class HeatGeodesicPaths:
                 ( - A_m0[0,1] - A_p1[0,1]) / (2 * deltas[0] * deltas[1] * sqrtdetg),
                 (   A_p0[0,1] - A_m0[0,1]) / (2 * deltas[0] * deltas[1] * sqrtdetg) + A_p1[0,0] / (deltas[1]**2 * sqrtdetg),
                 (   A_p0[0,1] + A_p1[0,1]) / (2 * deltas[0] * deltas[1] * sqrtdetg),
-            ])
+            ]))
+            # ])[legal_neighbors])
 
             sum_spacing = sum_spacing + \
                 np.sqrt(self.rmetric.metric(x0)[0, 0]) * self.grid.deltas[0] + \
@@ -75,7 +85,7 @@ class HeatGeodesicPaths:
 
         return L, sum_spacing / spacing_counter
 
-    def heat_method(self, source, t_mult=1.0):
+    def heat_method(self, source, t_mult=.5):
         # Compute Laplacian
         L, h = self.L, self.h
 
@@ -116,7 +126,7 @@ class HeatGeodesicPaths:
             grad_u[row] = np.einsum( "ij, j" , inv_metric, grad_contravariant)
 
         # Normalize the gradient
-        X =grad_u / np.array([self.rmetric.geonorm(p, grad) 
+        X =grad_u / np.array([self.rmetric.geonorm(p, grad) if np.linalg.norm(grad) > 0 else 1.0 
             for p, grad in zip(self.grid.valid_points, grad_u)])[:, np.newaxis]
         
         # Compute divergence
@@ -148,10 +158,12 @@ class HeatGeodesicPaths:
                 ) / factor / sqrtdetg / self.grid.deltas[delta1dim]
 
         # Solve Poisson equation
-        phi = spla.spsolve(L, div)
+        legalidxs = np.intersect1d(np.unique(L.nonzero()[0]), np.unique(L.nonzero()[1]))
+        phi = np.full(self.grid.bounded_size, np.nan)
+        phi[legalidxs] = spla.spsolve(L[legalidxs, :][:,legalidxs], div[legalidxs])
 
         # Shift minimum to zero
-        phi -= np.min(phi)
+        phi -= np.nanmin(phi)
 
         return phi
 
@@ -162,7 +174,7 @@ if __name__ == "__main__":
 
     # Create a dummy grid and metric
     aFmetric = AntiFerro()
-    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.225, 1.25)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.25, 1.25)], deltas=[0.02, 0.02], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     # Initialize HeatGeodesicPaths
     heat_paths = HeatGeodesicPaths(aFmetric, grid)
@@ -171,7 +183,9 @@ if __name__ == "__main__":
     source_idx = grid.point_to_idx(np.array([0.2, 0.3]))
     phi = heat_paths.heat_method(source_idx)
 
+    plt.scatter(grid.valid_points[:, 0], grid.valid_points[:, 1], s=0.5)
+    plt.scatter(grid.valid_points[:, 0], grid.valid_points[:, 1], c=phi, cmap='viridis')
+    plt.colorbar()
+    plt.show()
     print("Computed heat geodesic lengths")
     print(phi)
-    plt.scatter(grid.valid_points[:, 0], grid.valid_points[:, 1], c=phi, cmap='viridis')
-    plt.show()

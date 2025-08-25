@@ -45,17 +45,11 @@ class BoundedGrid(object):
         idx = np.argmin(np.linalg.norm(self.valid_points - point, axis=1))
         return idx
 
-    def isvalid_idx(self, idx):
-        """
-        Check if an index is valid.
-        """
-        return idx in self.valid_idxs
-
     def idx_to_gridpoint(self, idx):
         """
         Convert an index to a grid point.
         """
-        if not self.isvalid_idx(idx):
+        if idx<0 or idx>=self.bounded_size:
             return -1
         return np.array(np.where(idx == self.idxgrid)).flatten()
     

@@ -2,10 +2,13 @@ from bokeh.plotting import show as bkshow
 import numpy as np
 import heapq
 from scipy.spatial import Delaunay
-import matplotlib.pyplot as plt
 from rich.progress import Progress
-import metrics
 import warnings
+
+import metrics
+from irregular_grids import BoundedGrid
+
+import matplotlib.pyplot as plt
 import holoviews as hv
 hv.extension('bokeh')
 
@@ -47,15 +50,6 @@ class FMMGeodesicPaths:
         edges.sort()
         return edges[2]**2 > edges[0]**2 + edges[1]**2
 
-    def unfold_and_find_virtual_edge(self, positions, triangles, vertex_index):
-        # Simplified unfolding: just selects a neighboring vertex as virtual support
-        for tri in triangles:
-            if vertex_index in tri:
-                for idx in tri:
-                    if idx != vertex_index:
-                        return idx
-        return None
-
     def update_triangle(self, T, positions, triangles, A, B, C, F=1.0):
         Ta, Tb, Tc = T[A], T[B], T[C]
 
@@ -76,11 +70,6 @@ class FMMGeodesicPaths:
             cos_theta = np.sign(cos_theta)
         sin_theta = np.sqrt(1 - cos_theta**2)
 
-        # if is_obtuse_triangle(positions[A], positions[B], positions[C]):
-        #     virtual_vertex = unfold_and_find_virtual_edge(positions, triangles, C)
-        #     if virtual_vertex is not None:
-        #         T_virtual = T[virtual_vertex] + np.linalg.norm(positions[C] - positions[virtual_vertex]) * F
-        #         return min(Tc, T_virtual)
         if a**2 + b**2 - 2*a*b*cos_theta == 0:
             t = np.inf
         else:
@@ -169,7 +158,7 @@ def main_sphere():
 
     print(positions[-1], ":", distances[-1])
 
-def main_antiferro():
+def main_antiferro_old():
     N = 200
     t = np.linspace((0.1, )*N, (1-0.01, )*N, N)
     h = np.array([ np.linspace(-(T/2 * np.log((1+np.sqrt(1-T))/(1-np.sqrt(1-T))) + np.sqrt(1-T))*(1 - 1e-4),
@@ -199,6 +188,51 @@ def main_antiferro():
     plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
     plt.colorbar()
     plt.show()
+
+def main_antiferro():
+    aFmetric = metrics.AntiFerro()
+    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.25, 1.25)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
+
+    triangles = Delaunay(grid.valid_points).simplices
+    additional_triangles = []    
+    
+    for point in grid.valid_points:
+        met = aFmetric.metric(point)
+        if not np.isclose(met[0,1], 0, atol = 1e-5, rtol=0):
+            P = np.abs(met[0,1]) / met[0,0]
+            Q = met[1,1] / np.abs(met[0,1])
+            if P >= 1:
+                p = P%1
+                q = Q - P+p
+            else:
+                p = P
+                q = Q
+            n = 1
+            while True:
+                Pn = p*n
+                Qn = q*n
+                m = np.ceil(Pn)
+                if m < Qn:
+                    break
+                n += 1
+            if P >= 1:
+                m += np.floor(P)*n
+            if met[0,1] > 0:
+                n = -n
+            new_triangles = [ tri for tri in ((point, grid.neighbor(point, (n, m)), grid.neighbor(point, (np.sign(n), 0))),
+                (point, grid.neighbor(point, (n, m)), grid.neighbor(point, (0, np.sign(m)))),
+                (point, grid.neighbor(point, (-n, -m)), grid.neighbor(point, (-np.sign(n), 0))),
+                (point, grid.neighbor(point, (-n, -m)), grid.neighbor(point, (0, -np.sign(m))))) if -1 not in tri]
+                
+            additional_triangles.extend(new_triangles)
+    
+    triangles.extend(additional_triangles)
+
+    source = grid.point_to_idx(np.array([0.2, 0.3]))
+
+    geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
+
+    geo.fast_marching_method(grid.valid_points, triangles, source)
 
 if __name__ == "__main__":
     main_antiferro()
