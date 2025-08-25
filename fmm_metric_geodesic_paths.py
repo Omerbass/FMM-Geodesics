@@ -193,7 +193,7 @@ def main_antiferro():
     aFmetric = metrics.AntiFerro()
     grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.25, 1.25)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
 
-    triangles = Delaunay(grid.valid_points).simplices
+    triangles = Delaunay(grid.valid_points).simplices.tolist()
     additional_triangles = []    
     
     for point in grid.valid_points:
