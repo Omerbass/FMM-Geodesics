@@ -3,6 +3,7 @@ import numpy as np
 import heapq
 from scipy.spatial import Delaunay
 from rich.progress import Progress
+from rich import print as rprint # noqa: F401
 import warnings
 
 import metrics
@@ -109,7 +110,7 @@ class FMMGeodesicPaths:
 
         with Progress() as progress:
             task0 = progress.add_task("[cyan]heap")
-            task1 = progress.add_task("[green]alive", total=len(status))
+            task1 = progress.add_task("[white]alive", total=len(status))
             task2 = progress.add_task("[yellow]close", total=len(status))
             while heap:
                 _, p = heapq.heappop(heap)
@@ -191,48 +192,62 @@ def main_antiferro_old():
 
 def main_antiferro():
     aFmetric = metrics.AntiFerro()
-    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.25, 1.25)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.25, 1.25)], deltas=[0.02, 0.02], dim=2, bound_function = aFmetric.is_ordered_phase)
 
-    triangles = Delaunay(grid.valid_points).simplices.tolist()
-    additional_triangles = []    
-    
-    for point in grid.valid_points:
-        met = aFmetric.metric(point)
-        if not np.isclose(met[0,1], 0, atol = 1e-5, rtol=0):
-            P = np.abs(met[0,1]) / met[0,0]
-            Q = met[1,1] / np.abs(met[0,1])
-            if P >= 1:
-                p = P%1
-                q = Q - P+p
-            else:
-                p = P
-                q = Q
-            n = 1
-            while True:
-                Pn = p*n
-                Qn = q*n
-                m = np.ceil(Pn)
-                if m < Qn:
-                    break
-                n += 1
-            if P >= 1:
-                m += np.floor(P)*n
-            if met[0,1] > 0:
-                n = -n
-            new_triangles = [ tri for tri in ((point, grid.neighbor(point, (n, m)), grid.neighbor(point, (np.sign(n), 0))),
-                (point, grid.neighbor(point, (n, m)), grid.neighbor(point, (0, np.sign(m)))),
-                (point, grid.neighbor(point, (-n, -m)), grid.neighbor(point, (-np.sign(n), 0))),
-                (point, grid.neighbor(point, (-n, -m)), grid.neighbor(point, (0, -np.sign(m))))) if -1 not in tri]
-                
-            additional_triangles.extend(new_triangles)
-    
-    triangles.extend(additional_triangles)
+    positions = grid.valid_points
 
-    source = grid.point_to_idx(np.array([0.2, 0.3]))
+    triangles = Delaunay(positions).simplices.tolist()
+    # additional_triangles = []    
+    # with Progress() as progress:
+    #     task = progress.add_task("[red]Adding triangles", total=len(positions))
+    #     for idx, point in enumerate(positions):
+    #         progress.update(task, advance=1)
+    #         met = aFmetric.metric(point)
+    #         if not np.isclose(np.linalg.det(met), 0, atol = 1e-5, rtol=0):
+    #             P = np.abs(met[0,1]) / met[0,0]
+    #             Q = met[1,1] / np.abs(met[0,1])
+    #             if P >= 1:
+    #                 p = P%1
+    #                 q = Q - P+p
+    #             else:
+    #                 p = P
+    #                 q = Q
+    #             n = 1
+    #             while True:
+    #                 Pn = p*n
+    #                 Qn = q*n
+    #                 m = np.ceil(Pn)
+    #                 if m < Qn:
+    #                     break
+    #                 n += 1
+    #             if P >= 1:
+    #                 m += np.floor(P)*n
+    #             if met[0,1] > 0:
+    #                 n = -n
+    #             new_triangles = [ tri for tri in ((idx, grid.neighbor(idx, np.array((n, m), dtype=int)), grid.neighbor(idx, np.array((np.sign(n), 0), dtype=int))),
+    #                 (idx, grid.neighbor(idx, np.array((n, m), dtype=int)), grid.neighbor(idx, np.array((0, np.sign(m)), dtype=int))),
+    #                 (idx, grid.neighbor(idx, np.array((-n, -m), dtype=int)), grid.neighbor(idx, np.array((-np.sign(n), 0), dtype=int))),
+    #                 (idx, grid.neighbor(idx, np.array((-n, -m), dtype=int)), grid.neighbor(idx, np.array((0, -np.sign(m)), dtype=int)))) if -1 not in tri]
+                    
+    #             additional_triangles.extend(new_triangles)
+    
+    # rprint(f"[green]Added {len(additional_triangles)} additional triangles ({100*len(additional_triangles)/len(triangles):.2f}%)")
+
+    # triangles.extend(additional_triangles)
+
+    source = grid.point_to_idx(np.array([0.5, 0.3]))
 
     geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
 
-    geo.fast_marching_method(grid.valid_points, triangles, source)
+    distances = geo.fast_marching_method(positions, triangles, source)
+
+    plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
+    plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
+    plt.colorbar()
+    plt.show()
+
+    np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}_added_triangles.npz", 
+        positions=positions, distances=distances, source=source, triangles=triangles, grid=grid)
 
 if __name__ == "__main__":
     main_antiferro()

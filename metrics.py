@@ -200,12 +200,12 @@ class AntiFerro(RMetric):
             one_minus_m2_sq = 0
             atanhm2 = 100
 
-        g_TT = (T*((one_minus_m1_sq)*atanhm1**2 + (one_minus_m2_sq)*atanhm2**2) +
+        g_TT = (T*((one_minus_m1_sq)*atanhm1**2 + (one_minus_m2_sq)*atanhm2**2) -
             2*z*(one_minus_m1_sq)*(one_minus_m2_sq)*atanhm1*atanhm2)/\
             (2*T**2 - 2*z**2*one_minus_m1_sq*one_minus_m2_sq)
-        g_Th = (-(T + z*one_minus_m1_sq)*one_minus_m2_sq*atanhm2 - (T + z*one_minus_m2_sq)*one_minus_m1_sq*atanhm1)/\
+        g_Th = (-(T - z*one_minus_m1_sq)*one_minus_m2_sq*atanhm2 - (T - z*one_minus_m2_sq)*one_minus_m1_sq*atanhm1)/\
             (2*T**2 - 2*z**2*one_minus_m1_sq*one_minus_m2_sq)
-        g_hh = (T*(-m1**2 - m2**2 + 2) + 2*z*(one_minus_m1_sq)*(one_minus_m2_sq))/\
+        g_hh = (T*(-m1**2 - m2**2 + 2) - 2*z*(one_minus_m1_sq)*(one_minus_m2_sq))/\
             (2*T**2 - 2*z**2*one_minus_m1_sq*one_minus_m2_sq)
         return np.array([[g_TT, g_Th], [g_Th, g_hh]])
 
@@ -228,11 +228,10 @@ class AntiFerro(RMetric):
             m2_sq_minus1 = 1e-16
             atanhm2 = -100
 
-        sec_diag = -2*(T - m2_sq_minus1*z)*atanhm1/m2_sq_minus1 - 2*(T - (m1**2 -1)*z)*atanhm2/m1_sq_minus1
-        return np.array([[-2*T*(m1_sq_minus1 + m2_sq_minus1)/(m1_sq_minus1*m2_sq_minus1) + 4*z, 
-                           sec_diag], 
-                          [sec_diag, 
-                           -2*T*atanhm1**2/m2_sq_minus1 - 2*T*atanhm2**2/m1_sq_minus1 + 4*z*atanhm1*atanhm2]]) /(atanhm1 - atanhm2)**2
+            
+        sec_diag = -(2*(T + z*m1_sq_minus1)*m2_sq_minus1*atanhm2 + 2*(T + z*m2_sq_minus1)*m1_sq_minus1*atanhm1)/(m1_sq_minus1*m2_sq_minus1*(atanhm1 - atanhm2)**2)
+        return np.array([[(-2*T*(m1_sq_minus1+m2_sq_minus1)/(m1_sq_minus1*m2_sq_minus1) - 4*z)/(atanhm1 - atanhm2)**2, sec_diag],
+            [sec_diag, (-2*T*atanhm1**2/m2_sq_minus1 - 2*T*atanhm2**2/m1_sq_minus1 - 4*z*atanhm1*atanhm2)/(atanhm1 - atanhm2)**2]])
 
     def metric_det(self, x):
         """
@@ -283,63 +282,58 @@ class AntiFerro(RMetric):
             m2_sq_minus1 = 0
             atanhm2 = 100
 
-        Γ_T_xx = [[(2*T*(T**2*m1 - m2*z**2*m1_sq_minus1**2)*atanhm1**3 + (-T**3*(3*m1**2 + m2**2 - 4)/m1_sq_minus1 + T*z**2*(m1_sq_minus1 - m2_sq_minus1)*m2_sq_minus1 + 
-                    2*T*(T**2*m2 - m1*z**2*m2_sq_minus1**2)*atanhm2 + 4*z**3*m1_sq_minus1*m2_sq_minus1**2)*atanhm2**2 + 
-                    (-T**3*(m1**2 + 3*m2**2 - 4)/m2_sq_minus1 - T*z**2*(m1_sq_minus1 - m2_sq_minus1)*m1_sq_minus1 + 
-                     2*T*(-T**2*m1 + 2*T*z*(m1 - m2)*(m1*m2 + 1) + m2*z**2*m1_sq_minus1**2)*atanhm2 + 
-                     4*z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm1**2 + 2*(2*T**3 + 3*T**2*z*(m1_sq_minus1 + m2_sq_minus1) - 6*T*z**2*m1_sq_minus1*m2_sq_minus1 + 
-                    T*(-T**2*m2 + 2*T*z*(-m1 + m2)*(m1*m2 + 1) + m1*z**2*m2_sq_minus1**2)*atanhm2 - z**3*m1_sq_minus1*m2_sq_minus1*(m1_sq_minus1 + m2_sq_minus1))*atanhm1*atanhm2)/
-                    (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2), 
-                   
-          (-2*T*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**2*m1 + T*z*(m1 - m2)*(m1*m2 + 1) - m2*z**2*m1_sq_minus1**2)*atanhm1**2 - 
-           (-T**2 + z**2*m1_sq_minus1*m2_sq_minus1)*(T**3*(m1_sq_minus1 + m2_sq_minus1) - 3*T**2*z*m1_sq_minus1*(m1_sq_minus1 + m2_sq_minus1) + T*z**2*m1_sq_minus1*m2_sq_minus1*(5*m1_sq_minus1 + m2_sq_minus1) - 
-            2*T*m1_sq_minus1*(T**2*m2 + T*z*(-m1 + m2)*(m1*m2 + 1) - m1*z**2*m2_sq_minus1**2)*atanhm2 + z**3*m1_sq_minus1**2*m2_sq_minus1*(m1**2 - 3*m2**2 + 2))*atanhm2/m1_sq_minus1 + 
-            (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**3*(m1_sq_minus1 + m2_sq_minus1) - 3*T**2*z*m2_sq_minus1*(m1_sq_minus1 + m2_sq_minus1) + T*z**2*m1_sq_minus1*m2_sq_minus1*(m1_sq_minus1 + 5*m2_sq_minus1) + 
-                2*T*(T**2 - z**2*(m1*m2*(m1**2 - m1*m2 + m2**2 - 2) + 1))*(m1 + m2)*m2_sq_minus1*atanhm2 - z**3*m1_sq_minus1*m2_sq_minus1**2*(3*m1**2 - m2**2 - 2))*atanhm1/m2_sq_minus1)/
-                (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**3*(atanhm1 - atanhm2)**2)],
-        
-                  [(-2*T*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**2*m1 + T*z*(m1 - m2)*(m1*m2 + 1) - m2*z**2*m1_sq_minus1**2)*atanhm1**2 - (-T**2 + z**2*m1_sq_minus1*m2_sq_minus1)*
-                    (T**3*(m1_sq_minus1 + m2_sq_minus1) - 3*T**2*z*m1_sq_minus1*(m1_sq_minus1 + m2_sq_minus1) + T*z**2*m1_sq_minus1*m2_sq_minus1*(5*m1_sq_minus1 + m2_sq_minus1) - 
-                    2*T*m1_sq_minus1*(T**2*m2 + T*z*(-m1 + m2)*(m1*m2 + 1) - m1*z**2*m2_sq_minus1**2)*atanhm2 + z**3*m1_sq_minus1**2*m2_sq_minus1*(m1**2 - 3*m2**2 + 2))*atanhm2/m1_sq_minus1 + 
-                    (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**3*(m1_sq_minus1 + m2_sq_minus1) - 3*T**2*z*m2_sq_minus1*(m1_sq_minus1 + m2_sq_minus1) + T*z**2*m1_sq_minus1*m2_sq_minus1*(5*m2_sq_minus1 + m1_sq_minus1) + 
-                    2*T*(T**2 - z**2*(m1*m2*(m1**2 - m1*m2 + m2**2 - 2) + 1))*(m1 + m2)*m2_sq_minus1*atanhm2 - z**3*m1_sq_minus1*m2_sq_minus1**2*(3*m1**2 - m2**2 - 2))*atanhm1/m2_sq_minus1)/
-                    (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**3*(atanhm1 - atanhm2)**2),
+        Γ_T_xx = [[(2*T*(T**2*m1 - m2*z**2*m1_sq_minus1**2)*atanhm1**3 + (-T**3*(3*m1**2 + m2**2 - 4)/m1_sq_minus1 + T*z**2*(m1 - m2)*(m1 + m2)*m2_sq_minus1 + 
+            2*T*(T**2*m2 - m1*z**2*m2_sq_minus1**2)*atanhm2 + 4*z**3*m1_sq_minus1*m2_sq_minus1**2)*atanhm2**2 + (-T**3*(m1**2 + 3*m2**2 - 4)/m2_sq_minus1 - 
+            T*z**2*(m1 - m2)*(m1 + m2)*m1_sq_minus1 + 2*T*(-T**2*m1 + 2*T*z*(m1 - m2)*(m1*m2 + 1) + m2*z**2*m1_sq_minus1**2)*atanhm2 + 4*z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm1**2 + 
+            2*(2*T**3 + 3*T**2*z*(m1**2 + m2**2 - 2) - 6*T*z**2*m1_sq_minus1*m2_sq_minus1 + T*(-T**2*m2 + 2*T*z*(-m1 + m2)*(m1*m2 + 1) + m1*z**2*m2_sq_minus1**2)*atanhm2 - 
+            z**3*m1_sq_minus1*m2_sq_minus1*(m1**2 + m2**2 - 2))*atanhm1*atanhm2)/(2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2), 
+            
+            (-2*T*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**2*m1 + T*z*(m1 - m2)*(m1*m2 + 1) - m2*z**2*m1_sq_minus1**2)*atanhm1**2 - 
+            (-T**2 + z**2*m1_sq_minus1*m2_sq_minus1)*(T**3*(m1**2 + m2**2 - 2) - 3*T**2*z*m1_sq_minus1*(m1**2 + m2**2 - 2) + 
+            T*z**2*m1_sq_minus1*m2_sq_minus1*(5*m1**2 + m2**2 - 6) - 2*T*m1_sq_minus1*(T**2*m2 + T*z*(-m1 + m2)*(m1*m2 + 1) - 
+            m1*z**2*m2_sq_minus1**2)*atanhm2 + z**3*m1_sq_minus1**2*m2_sq_minus1*(m1**2 - 3*m2**2 + 2))*atanhm2/m1_sq_minus1 + 
+            (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**3*(m1**2 + m2**2 - 2) - 3*T**2*z*m2_sq_minus1*(m1**2 + m2**2 - 2) + T*z**2*m1_sq_minus1*m2_sq_minus1*(m1**2 + 5*m2**2 - 6) +
+            2*T*(T**2 - z**2*(m1*m2*(m1**2 - m1*m2 + m2**2 - 2) + 1))*(m1 + m2)*m2_sq_minus1*atanhm2 - z**3*m1_sq_minus1*m2_sq_minus1**2*(3*m1**2 - m2**2 - 2))*atanhm1/m2_sq_minus1)/
+            (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**3*(atanhm1 - atanhm2)**2)], 
+            
+            [(-2*T*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**2*m1 + T*z*(m1 - m2)*(m1*m2 + 1) - m2*z**2*m1_sq_minus1**2)*atanhm1**2 - 
+            (-T**2 + z**2*m1_sq_minus1*m2_sq_minus1)*(T**3*(m1**2 + m2**2 - 2) - 3*T**2*z*m1_sq_minus1*(m1**2 + m2**2 - 2) + 
+            T*z**2*m1_sq_minus1*m2_sq_minus1*(5*m1**2 + m2**2 - 6) - 2*T*m1_sq_minus1*(T**2*m2 + T*z*(-m1 + m2)*(m1*m2 + 1) - 
+            m1*z**2*m2_sq_minus1**2)*atanhm2 + z**3*m1_sq_minus1**2*m2_sq_minus1*(m1**2 - 3*m2**2 + 2))*atanhm2/m1_sq_minus1 + 
+            (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**3*(m1**2 + m2**2 - 2) - 3*T**2*z*m2_sq_minus1*(m1**2 + m2**2 - 2) + 
+            T*z**2*m1_sq_minus1*m2_sq_minus1*(m1**2 + 5*m2**2 - 6) + 2*T*(T**2 - z**2*(m1*m2*(m1**2 - m1*m2 + m2**2 - 2) + 1))*(m1 + m2)*m2_sq_minus1*atanhm2 - 
+            z**3*m1_sq_minus1*m2_sq_minus1**2*(3*m1**2 - m2**2 - 2))*atanhm1/m2_sq_minus1)/(2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**3*(atanhm1 - atanhm2)**2),
 
-                   -(T**3*(m1_sq_minus1 + m2_sq_minus1)**2/(m1_sq_minus1*m2_sq_minus1) - 6*T**2*z*(m1_sq_minus1 + m2_sq_minus1) + T*z**2*(m1**4 + 2*m1**2*(5*m2_sq_minus1 - 1) + m2**4 - 12*m2**2 + 12) +
-                      2*T*(m1 - m2)*(-atanhm1 + atanhm2)*(T**2 + 2*T*z*(m1*m2 + 1) - m1*m2*z**2*(m1**2 + m1*m2 + m2**2 - 2) + z**2) - 2*z**3*m1_sq_minus1*m2_sq_minus1*(m1_sq_minus1 + m2_sq_minus1))/
-                      (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2)]]
+            -(T**3*(m1**2 + m2**2 - 2)**2/(m1_sq_minus1*m2_sq_minus1) - 6*T**2*z*(m1**2 + m2**2 - 2) + T*z**2*(m1**4 + 2*m1**2*(5*m2**2 - 6) + m2**4 - 12*m2**2 + 12) + 
+            2*T*(m1 - m2)*(-atanhm1 + atanhm2)*(T**2 + 2*T*z*(m1*m2 + 1) - m1*m2*z**2*(m1**2 + m1*m2 + m2**2 - 2) + z**2) - 2*z**3*m1_sq_minus1*m2_sq_minus1*(m1**2 + m2**2 - 2))/
+            (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2)]]
         
-        Γ_h_xx = [[(-2*T*m2*z**2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*m1_sq_minus1**2*atanhm1**4 + 
-                    (-T**2 + z**2*m1_sq_minus1*m2_sq_minus1)*m2_sq_minus1*(T**3 + T**2*z*m1_sq_minus1 + 2*T*m1*z**2*m1_sq_minus1*m2_sq_minus1*atanhm2 +
-                    T*z**2*m1_sq_minus1*m2_sq_minus1 - 3*z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm2**3/m1_sq_minus1 + (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*
-                    (-T**3 + 7*T**2*z*m2_sq_minus1 - 5*T*z**2*m1_sq_minus1*m2_sq_minus1 + 2*T*(T**2*m2 + 2*T*m1*z*m2_sq_minus1 + m1*z**2*m2_sq_minus1**2)*atanhm2 - 
-                    z**3*m1_sq_minus1*m2_sq_minus1**2)*atanhm1*atanhm2**2 - (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**3 - 7*T**2*z*m1_sq_minus1 + 
-                    2*T**2*(m1 + m2)*(T + 2*m1*m2*z - 2*z)*atanhm2 + 5*T*z**2*m1_sq_minus1*m2_sq_minus1 + z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm1**2*atanhm2 - 
-                    (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(-2*T*m2_sq_minus1*(T**2*m1 + 2*T*m2*z*m1_sq_minus1 + m2*z**2*m1_sq_minus1**2)*atanhm2 + 
-                    m1_sq_minus1*(T**3 + T**2*z*m2_sq_minus1 + T*z**2*m1_sq_minus1*m2_sq_minus1 - 3*z**3*m1_sq_minus1*m2_sq_minus1**2))*atanhm1**3/m2_sq_minus1)/
-                    (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**3*(atanhm1 - atanhm2)**2),
-                   
-                   (-2*T*m2*z*m1_sq_minus1*(T - m1**2*z + z)*atanhm1**3 + 2*T*(2*(T - m1**2*z + z)*(T - m2**2*z + z) +
-                   (T**2*(m1 - m2) + T*m2*z*m1_sq_minus1 - m1*z**2*m2_sq_minus1**2)*atanhm2)* atanhm1*atanhm2 + 
-                    (T**3*(-m1**2 + m2**2)/m1_sq_minus1 - 2*T**2*z*m2_sq_minus1 - 2*T*m1*z*m2_sq_minus1*(T - m2**2*z + z)*atanhm2 + 
-                     T*z**2*m2_sq_minus1*(3*m1**2 + m2**2 - 4) - 2*z**3*m1_sq_minus1*m2_sq_minus1**2)*atanhm2**2 + 
-                    (T**3*(m1_sq_minus1-m2_sq_minus1)/m2_sq_minus1 - 2*T**2*z*m1_sq_minus1 + T*z**2*m1_sq_minus1*(m1**2 + 3*m2**2 - 4) - 
-                     2*T*(T**2*(m1 - m2) - T*m1*z*m2_sq_minus1 + m2*z**2*m1_sq_minus1**2)*atanhm2 - 
-                     2*z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm1**2)/
-                    (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2)],
-                  
-                  [(-2*T*m2*z*m1_sq_minus1*(T - m1**2*z + z)*atanhm1**3 + 2*T*(2*(T - m1**2*z + z)*(T - m2**2*z + z) +
-                   (T**2*(m1 - m2) + T*m2*z*m1_sq_minus1 - m1*z**2*m2_sq_minus1**2)*atanhm2)*atanhm1*atanhm2 + 
-                   (T**3*(-m1**2 + m2**2)/m1_sq_minus1 - 2*T**2*z*m2_sq_minus1 - 2*T*m1*z*m2_sq_minus1*(T - m2**2*z + z)*atanhm2 + T*z**2*m2_sq_minus1*(3*m1**2 + m2**2 - 4) - 
-                    2*z**3*m1_sq_minus1*m2_sq_minus1**2)*atanhm2**2 + 
-                   (T**3*(m1_sq_minus1-m2_sq_minus1)/m2_sq_minus1 - 2*T**2*z*m1_sq_minus1 + T*z**2*m1_sq_minus1*(m1**2 + 3*m2**2 - 4) - 
-                    2*T*(T**2*(m1 - m2) - T*m1*z*m2_sq_minus1 + m2*z**2*m1_sq_minus1**2)*atanhm2 - 
-                    2*z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm1**2)/(2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2),
-                   
-                   -(2*T*m2*(T - m1**2*z + z)**2*atanhm1**2 + (T**3*(m1_sq_minus1 + m2_sq_minus1)/m1_sq_minus1 - T**2*z*(5*m2_sq_minus1 + m1_sq_minus1) + 2*T*m1*(T - m2**2*z + z)**2*atanhm2 + 
-                    T*z**2*m2_sq_minus1*(5*m1_sq_minus1 + m2_sq_minus1) - z**3*m1_sq_minus1*m2_sq_minus1*(m1_sq_minus1 + m2_sq_minus1))*atanhm2 + (T**3*(m1_sq_minus1 + m2_sq_minus1)/m2_sq_minus1 - 
-                     T**2*z*(5*m1_sq_minus1 + m2_sq_minus1) + T*z**2*m1_sq_minus1*(5*m2_sq_minus1 + m1_sq_minus1) - 2*T*(m1 + m2)*(T**2 - 2*T*z*(m1*m2 - 1) + z**2*(m1*m2*(m1**2 - m1*m2 + m2**2 - 2) + 1))*atanhm2 - 
-                    z**3*m1_sq_minus1*m2_sq_minus1*(m1_sq_minus1 + m2_sq_minus1))*atanhm1)/(2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2)]]
+        Γ_h_xx = [[(-2*T*m2*z**2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*m1_sq_minus1**2*atanhm1**4 +
+            (-T**2 + z**2*m1_sq_minus1*m2_sq_minus1)*m2_sq_minus1*(T**3 - T**2*z*m1_sq_minus1 + 2*T*m1*z**2*m1_sq_minus1*m2_sq_minus1*atanhm2 + T*z**2*m1_sq_minus1*m2_sq_minus1 +
+            3*z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm2**3/m1_sq_minus1 + (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(-T**3 - 7*T**2*z*m2_sq_minus1 - 5*T*z**2*m1_sq_minus1*m2_sq_minus1 + 
+            2*T*(T**2*m2 - 2*T*m1*z*m2_sq_minus1 + m1*z**2*m2_sq_minus1**2)*atanhm2 + z**3*m1_sq_minus1*m2_sq_minus1**2)*atanhm1*atanhm2**2 - 
+            (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(T**3 + 7*T**2*z*m1_sq_minus1 + 2*T**2*(m1 + m2)*(T - 2*m1*m2*z + 2*z)*atanhm2 + 5*T*z**2*m1_sq_minus1*m2_sq_minus1 -
+            z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm1**2*atanhm2 - (T**2 - z**2*m1_sq_minus1*m2_sq_minus1)*(-2*T*m2_sq_minus1*(T**2*m1 - 2*T*m2*z*m1_sq_minus1 + m2*z**2*m1_sq_minus1**2)*atanhm2 +
+            m1_sq_minus1*(T**3 - T**2*z*m2_sq_minus1 + T*z**2*m1_sq_minus1*m2_sq_minus1 + 3*z**3*m1_sq_minus1*m2_sq_minus1**2))*atanhm1**3/m2_sq_minus1)/
+            (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**3*(atanhm1 - atanhm2)**2),
+            
+            -(-2*T*m2*z*(T + z*m1_sq_minus1)*m1_sq_minus1*atanhm1**3 + 2*T*(-2*(T + z*m1_sq_minus1)*(T + z*m2_sq_minus1) + 
+            (T**2*(-m1 + m2) + T*m2*z*m1_sq_minus1 + m1*z**2*m2_sq_minus1**2)*atanhm2)*atanhm1*atanhm2 + 
+            (T**3*(-m1**2 + m2**2)/m2_sq_minus1 - 2*T**2*z*m1_sq_minus1 - T*z**2*m1_sq_minus1*(m1**2 + 3*m2**2 - 4) + 2*T*(T**2*(m1 - m2) + T*m1*z*m2_sq_minus1 + m2*z**2*m1_sq_minus1**2)*atanhm2 -
+            2*z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm1**2 + (T**3*(m1 - m2)*(m1 + m2)/m1_sq_minus1 - 2*T**2*z*m2_sq_minus1 - 2*T*m1*z*(T + z*m2_sq_minus1)*m2_sq_minus1*atanhm2 -
+            T*z**2*m2_sq_minus1*(3*m1**2 + m2**2 - 4) - 2*z**3*m1_sq_minus1*m2_sq_minus1**2)*atanhm2**2)/(2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2)], 
+            
+            [-(-2*T*m2*z*(T + z*m1_sq_minus1)*m1_sq_minus1*atanhm1**3 + 2*T*(-2*(T + z*m1_sq_minus1)*(T + z*m2_sq_minus1) +
+            (T**2*(-m1 + m2) + T*m2*z*m1_sq_minus1 + m1*z**2*m2_sq_minus1**2)*atanhm2)*atanhm1*atanhm2 + (T**3*(-m1**2 + m2**2)/m2_sq_minus1 - 2*T**2*z*m1_sq_minus1 -
+            T*z**2*m1_sq_minus1*(m1**2 + 3*m2**2 - 4) + 2*T*(T**2*(m1 - m2) + T*m1*z*m2_sq_minus1 + m2*z**2*m1_sq_minus1**2)*atanhm2 - 2*z**3*m1_sq_minus1**2*m2_sq_minus1)*atanhm1**2 +
+            (T**3*(m1 - m2)*(m1 + m2)/m1_sq_minus1 - 2*T**2*z*m2_sq_minus1 - 2*T*m1*z*(T + z*m2_sq_minus1)*m2_sq_minus1*atanhm2 - T*z**2*m2_sq_minus1*(3*m1**2 + m2**2 - 4) -
+            2*z**3*m1_sq_minus1*m2_sq_minus1**2)*atanhm2**2)/(2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2),
+            
+            (-2*T*m2*(T + z*m1_sq_minus1)**2*atanhm1**2 +(-T**3*(m1**2 + m2**2 - 2)/m1_sq_minus1 - T**2*z*(m1**2 + 5*m2**2 - 6) - 
+            2*T*m1*(T + z*m2_sq_minus1)**2*atanhm2 - T*z**2*m2_sq_minus1*(5*m1**2 + m2**2 - 6) -
+            z**3*m1_sq_minus1*m2_sq_minus1*(m1**2 + m2**2 - 2))*atanhm2 + (-T**3*(m1**2 + m2**2 - 2)/m2_sq_minus1 - T**2*z*(5*m1**2 + m2**2 - 6) - T*z**2*m1_sq_minus1*(m1**2 + 5*m2**2 - 6) +
+            2*T*(m1 + m2)*(T**2 + 2*T*z*(m1*m2 - 1) + z**2*(m1*m2*(m1**2 - m1*m2 + m2**2 - 2) + 1))*atanhm2 - z**3*m1_sq_minus1*m2_sq_minus1*(m1**2 + m2**2 - 2))*atanhm1)/
+            (2*(T**2 - z**2*m1_sq_minus1*m2_sq_minus1)**2*(atanhm1 - atanhm2)**2)]]
         # print("Γ_T_xx:", Γ_T_xx, "\nΓ_h_xx:", Γ_h_xx)
 
         return np.array([Γ_T_xx, Γ_h_xx])
