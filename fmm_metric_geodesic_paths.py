@@ -136,6 +136,30 @@ class FMMGeodesicPaths:
 
         return T
 
+    def gradient_descent_to_origin(self, grid, delaunay, distances, start, step_size=0.1, max_steps=1000, tol=1e-6):
+        path = [grid.valid_points[start]]
+        current = grid.valid_points[start]
+        for _ in range(max_steps):
+            simplex = delaunay.find_simplex(current)
+            if simplex == -1:
+                print("Warning: point outside of triangulation.")
+                break
+            vertices = delaunay.simplices[simplex]
+            bary_coords = delaunay.transform[simplex, :grid.dim].dot(current - delaunay.transform[simplex, grid.dim])
+            bary_coords = np.append(bary_coords, 1 - bary_coords.sum())
+            grad = np.zeros(grid.dim)
+            for i, v in enumerate(vertices):
+                grad += distances[v] * (bary_coords[i] - 1/(grid.dim+1))
+            grad_norm = self.geonorm(current, grad)
+            if grad_norm < tol:
+                break
+            grad /= grad_norm
+            current = current - step_size * grad
+            path.append(current)
+            if np.linalg.norm(current - grid.valid_points[0]) < tol:
+                break
+        return np.array(path)
+
 def main_sphere():
     positions = np.reshape(np.meshgrid(np.linspace(0.001, np.pi-0.001, 50),np.linspace(0, 2*np.pi, 50)), (2, -1)).T
     triangles = Delaunay(positions).simplices
@@ -192,11 +216,12 @@ def main_antiferro_old():
 
 def main_antiferro():
     aFmetric = metrics.AntiFerro()
-    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.25, 1.25)], deltas=[0.02, 0.02], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.2, 1.2)], deltas=[0.02, 0.02], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
-    triangles = Delaunay(positions).simplices.tolist()
+    delaunay = Delaunay(positions)
+    triangles = delaunay.simplices.tolist()
     # additional_triangles = []    
     # with Progress() as progress:
     #     task = progress.add_task("[red]Adding triangles", total=len(positions))
@@ -235,7 +260,7 @@ def main_antiferro():
 
     # triangles.extend(additional_triangles)
 
-    source = grid.point_to_idx(np.array([0.5, 0.3]))
+    source = grid.point_to_idx(np.array([0.4, 0.6]))
 
     geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
 
@@ -246,8 +271,8 @@ def main_antiferro():
     plt.colorbar()
     plt.show()
 
-    np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}_added_triangles.npz", 
-        positions=positions, distances=distances, source=source, triangles=triangles, grid=grid)
+    np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz", 
+        positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
 if __name__ == "__main__":
     main_antiferro()
