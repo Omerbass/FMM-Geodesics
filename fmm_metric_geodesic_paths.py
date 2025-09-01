@@ -16,7 +16,11 @@ hv.extension('bokeh')
 warnings.filterwarnings("error", category=RuntimeWarning)
 
 class FMMGeodesicPaths:
-    def __init__(self, metric, dim=2, **kwargs):
+    def __init__(self, metric, dim=2, inv_metric=None, **kwargs):
+        if inv_metric is None:
+            self.inv_metric = lambda x: np.linalg.inv(metric(x))
+        else:
+            self.inv_metric = inv_metric
         self.metric = metric
         self.dim = dim
         for key, val in kwargs.items():
@@ -139,24 +143,28 @@ class FMMGeodesicPaths:
     def gradient_descent_to_origin(self, grid, delaunay, distances, start, step_size=0.1, max_steps=1000, tol=1e-6):
         path = [grid.valid_points[start]]
         current = grid.valid_points[start]
+        final_idx = np.argmin(distances)
+        final_point = grid.valid_points[final_idx]
         for _ in range(max_steps):
             simplex = delaunay.find_simplex(current)
             if simplex == -1:
                 print("Warning: point outside of triangulation.")
                 break
             vertices = delaunay.simplices[simplex]
-            bary_coords = delaunay.transform[simplex, :grid.dim].dot(current - delaunay.transform[simplex, grid.dim])
-            bary_coords = np.append(bary_coords, 1 - bary_coords.sum())
-            grad = np.zeros(grid.dim)
-            for i, v in enumerate(vertices):
-                grad += distances[v] * (bary_coords[i] - 1/(grid.dim+1))
+            d1, d2, d3 = distances[vertices]
+            p1, p2, p3 = grid.valid_points[vertices]
+            p_mat = np.column_stack((p2 - p1, p3 - p1))
+            d_vec = np.array([d2 - d1, d3 - d1])
+            grad_embedded = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
+            grad = np.einsum("ij, j", self.inv_metric(current), grad_embedded)
+            # grad = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
             grad_norm = self.geonorm(current, grad)
             if grad_norm < tol:
                 break
             grad /= grad_norm
-            current = current - step_size * grad
+            current = current - np.min((step_size, step_size / 10 * self.dist(current, final_point))) * grad
             path.append(current)
-            if np.linalg.norm(current - grid.valid_points[0]) < tol:
+            if self.dist(current, final_point) < tol:
                 break
         return np.array(path)
 
@@ -216,7 +224,7 @@ def main_antiferro_old():
 
 def main_antiferro():
     aFmetric = metrics.AntiFerro()
-    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.2, 1.2)], deltas=[0.02, 0.02], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.2, 1.2)], deltas=[0.005, 0.005], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
@@ -260,7 +268,7 @@ def main_antiferro():
 
     # triangles.extend(additional_triangles)
 
-    source = grid.point_to_idx(np.array([0.4, 0.6]))
+    source = grid.point_to_idx(np.array([0.4, 1.15]))
 
     geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
 
@@ -271,7 +279,7 @@ def main_antiferro():
     plt.colorbar()
     plt.show()
 
-    np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz", 
+    np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}_high-res.npz", 
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
 if __name__ == "__main__":
