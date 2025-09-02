@@ -4,6 +4,7 @@ import heapq
 from scipy.spatial import Delaunay
 from rich.progress import Progress
 from rich import print as rprint # noqa: F401
+import itertools as it
 import warnings
 
 import metrics
@@ -140,16 +141,17 @@ class FMMGeodesicPaths:
 
         return T
 
-    def gradient_descent_to_origin(self, grid, delaunay, distances, start, step_size=0.1, max_steps=1000, tol=1e-6):
+    def gradient_descent_to_origin(self, grid, delaunay, distances, start, step_size=0.01, max_steps=1000, tol=1e-6):
         path = [grid.valid_points[start]]
         current = grid.valid_points[start]
         final_idx = np.argmin(distances)
         final_point = grid.valid_points[final_idx]
-        for _ in range(max_steps):
-            simplex = delaunay.find_simplex(current)
+
+        def get_normalized_gradient(point):
+            simplex = delaunay.find_simplex(point)
             if simplex == -1:
                 print("Warning: point outside of triangulation.")
-                break
+                return np.zeros(self.dim)
             vertices = delaunay.simplices[simplex]
             d1, d2, d3 = distances[vertices]
             p1, p2, p3 = grid.valid_points[vertices]
@@ -159,13 +161,60 @@ class FMMGeodesicPaths:
             grad = np.einsum("ij, j", self.inv_metric(current), grad_embedded)
             # grad = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
             grad_norm = self.geonorm(current, grad)
-            if grad_norm < tol:
-                break
-            grad /= grad_norm
-            current = current - np.min((step_size, step_size / 10 * self.dist(current, final_point))) * grad
+            return grad / grad_norm
+
+        for _ in range(max_steps):
+            true_step = np.min((step_size, step_size / 10 * self.dist(current, final_point)))
+            grad = get_normalized_gradient(current)
+            
+            # RK2
+            next_pred = current - true_step * grad
+            grad_pred = get_normalized_gradient(next_pred)
+
+            nxt = current - 0.5 * true_step * (grad + grad_pred)
+
+            current = nxt
             path.append(current)
             if self.dist(current, final_point) < tol:
                 break
+        return np.array(path)
+
+    def gradient_descent_to_origin_along_grid(self, grid, distances, start, tol=1e-6):
+        """ Gradient descent to the origin along the grid points.
+        grid: BoundedGrid object
+        distances: array of distances from the source point
+        start: int
+            Index of the starting point in the grid.
+        step_size: float
+            Step size for the gradient descent.
+        """
+        path = [grid.valid_points[start]]
+        current_idx = start
+        final_idx = np.argmin(distances)
+        final_point = grid.valid_points[final_idx]
+        while True:
+            current = grid.valid_points[current_idx]
+            if self.dist(current, final_point) < tol:
+                break
+            elif current_idx == final_idx:
+                break
+            neighbors = []
+            for delta in it.product(*[[1, 0, -1], ]*grid.dim):
+                if not np.any(delta):
+                    continue
+                elif np.all(delta):
+                    continue
+                neighbor_idx = grid.neighbor(current_idx, delta)
+                if neighbor_idx != -1:
+                    neighbors.append(neighbor_idx)
+            if not neighbors:
+                print("Warning: no neighbors found.")
+                break
+            next_idx = min(neighbors, key=lambda idx: distances[idx])
+            if distances[next_idx] > distances[current_idx] + tol:
+                break
+            path.append(grid.valid_points[next_idx])
+            current_idx = next_idx
         return np.array(path)
 
 def main_sphere():
