@@ -3,6 +3,7 @@ import numpy as np
 import heapq
 from scipy.spatial import Delaunay
 from rich.progress import Progress
+import rich.progress as rprog
 from rich import print as rprint # noqa: F401
 import itertools as it
 import warnings
@@ -31,7 +32,8 @@ class FMMGeodesicPaths:
         """
         Compute the infenitesimal distance between two points.
         """
-        return a.T @ self.metric((a+b)/2) @ b
+        diff = b - a
+        return np.sqrt(diff.T @ self.metric((a+b)/2) @ diff)
     
     def geonorm(self, p, a):
         """
@@ -113,8 +115,8 @@ class FMMGeodesicPaths:
                         T[p] = self.dist(positions[p], positions[source])
                         heapq.heappush(heap, (T[p], p))
 
-        with Progress() as progress:
-            task0 = progress.add_task("[cyan]heap")
+        with Progress(*Progress.get_default_columns(), rprog.TimeElapsedColumn(), rprog.MofNCompleteColumn()) as progress:
+            task0 = progress.add_task("[cyan]heap", total=len(status))
             task1 = progress.add_task("[white]alive", total=len(status))
             task2 = progress.add_task("[yellow]close", total=len(status))
             while heap:
@@ -141,15 +143,88 @@ class FMMGeodesicPaths:
 
         return T
 
+    def gradient_descent_to_origin_along_simplices(self, grid, delaunay, distances, start, max_steps=1000, tol=1e-6):
+        path = [grid.valid_points[start]]
+        current = grid.valid_points[start]
+        final_idx = np.argmin(distances)
+        final_point = grid.valid_points[final_idx]
+
+        def get_normalized_gradient(point, simplex):
+            if simplex == -1:
+                print(point)
+                print("Warning: point outside of triangulation.")
+                return np.zeros(self.dim)
+            vertices = delaunay.simplices[simplex]
+            d1, d2, d3 = distances[vertices]
+            p1, p2, p3 = grid.valid_points[vertices]
+            p_mat = np.column_stack((p2 - p1, p3 - p1))
+            d_vec = np.array([d2 - d1, d3 - d1])
+            # grad_embedded = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
+            # grad = np.einsum("ij, j", self.inv_metric(point), grad_embedded)
+            # grad_norm = self.geonorm(point, grad)
+            grad = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
+            grad_norm = np.linalg.norm(grad)
+            return grad / grad_norm
+
+        def intersect_lines(p1, p2, v1, v2):
+            A = np.array([v1, -v2]).T
+            if np.abs(np.linalg.det(A)) < 1e-12:
+                return None
+            b = p2 - p1
+            t = np.linalg.solve(A, b)
+            return (p1 + t[0] * v1, t[0], t[1])
+
+        current_simplex = delaunay.find_simplex(current)
+
+        for _ in range(max_steps):
+            if final_idx in delaunay.simplices[current_simplex]:
+                path.append(final_point)
+                break
+            elif self.dist(current, final_point) < tol:
+                break
+            grad = get_normalized_gradient(current, current_simplex)
+            if not np.any(grad):
+                current = grid.valid_points[grid.point_to_idx(current)]
+                path.append(current)
+                rprint(f"[red]Warning: {current} outside of grid.")
+                return np.array(path)
+            print("----", current, "----")
+            print("triangle :", delaunay.simplices[current_simplex])
+            print("gradient :", grad)
+            for i1, i2 in it.combinations([0, 1,2], 2):
+                ix1, ix2 = delaunay.simplices[current_simplex][[i1, i2]]
+                p1, p2 = grid.valid_points[[ix1, ix2]]
+                edge_vec = p2 - p1
+                res = intersect_lines(current, p1, -grad, edge_vec)
+                print("intersection :", res, " with edge ", p1, p2)
+                if res is None:
+                    continue
+                intersection, t1, t2 = res
+                if t1 > 1e-12 and 0 <= t2 <= 1:
+                    current = intersection
+                    path.append(current)
+                    print(delaunay.neighbors[current_simplex], i1, i2)
+                    current_simplex = delaunay.neighbors[current_simplex][list({0,1,2} - {i1, i2})[0]]
+                    print("next simplex :", current_simplex, ", edges:", delaunay.simplices[current_simplex])
+                    break
+            else:
+                rprint(f"[red]Warning: no intersection found for point {current}, stopping.")
+                break
+
+        return np.array(path)
+
     def gradient_descent_to_origin(self, grid, delaunay, distances, start, step_size=0.01, max_steps=1000, tol=1e-6):
         path = [grid.valid_points[start]]
         current = grid.valid_points[start]
         final_idx = np.argmin(distances)
         final_point = grid.valid_points[final_idx]
 
+        # print("no inverse metric correction")
+
         def get_normalized_gradient(point):
             simplex = delaunay.find_simplex(point)
             if simplex == -1:
+                print(point)
                 print("Warning: point outside of triangulation.")
                 return np.zeros(self.dim)
             vertices = delaunay.simplices[simplex]
@@ -158,25 +233,33 @@ class FMMGeodesicPaths:
             p_mat = np.column_stack((p2 - p1, p3 - p1))
             d_vec = np.array([d2 - d1, d3 - d1])
             grad_embedded = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
-            grad = np.einsum("ij, j", self.inv_metric(current), grad_embedded)
+            grad = np.einsum("ij, j", self.inv_metric(point), grad_embedded)
+            grad_norm = self.geonorm(point, grad)
             # grad = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
-            grad_norm = self.geonorm(current, grad)
+            # grad_norm = np.linalg.norm(grad)
             return grad / grad_norm
 
-        for _ in range(max_steps):
-            true_step = np.min((step_size, step_size / 10 * self.dist(current, final_point)))
-            grad = get_normalized_gradient(current)
-            
-            # RK2
-            next_pred = current - true_step * grad
-            grad_pred = get_normalized_gradient(next_pred)
+        with Progress() as progress:
+            task = progress.add_task("[cyan]distance", total=distances[start])
+            for _ in range(max_steps):
+                true_step = np.min((step_size, step_size / tol / 10 * (self.dist(current, final_point))))
+                grad = get_normalized_gradient(current)
+                if not np.any(grad):
+                    current = grid.valid_points[grid.point_to_idx(current)]
+                    path.append(current)
+                    rprint(f"[red]Warning: {current} outside of grid.")
+                    break
+                # RK2
+                next_pred = current - true_step * grad
+                grad_pred = get_normalized_gradient(next_pred)
 
-            nxt = current - 0.5 * true_step * (grad + grad_pred)
+                nxt = current - 0.5 * true_step * (grad + grad_pred)
 
-            current = nxt
-            path.append(current)
-            if self.dist(current, final_point) < tol:
-                break
+                current = nxt
+                path.append(current)
+                if self.dist(current, final_point) < tol:
+                    break
+                progress.update(task, completed=distances[start] - self.dist(current, final_point))
         return np.array(path)
 
     def gradient_descent_to_origin_along_grid(self, grid, distances, start, tol=1e-6):
@@ -202,8 +285,6 @@ class FMMGeodesicPaths:
             for delta in it.product(*[[1, 0, -1], ]*grid.dim):
                 if not np.any(delta):
                     continue
-                elif np.all(delta):
-                    continue
                 neighbor_idx = grid.neighbor(current_idx, delta)
                 if neighbor_idx != -1:
                     neighbors.append(neighbor_idx)
@@ -217,13 +298,41 @@ class FMMGeodesicPaths:
             current_idx = next_idx
         return np.array(path)
 
-def main_sphere():
-    positions = np.reshape(np.meshgrid(np.linspace(0.001, np.pi-0.001, 50),np.linspace(0, 2*np.pi, 50)), (2, -1)).T
-    triangles = Delaunay(positions).simplices
-    source = 1225
+def main_flat():
+    positions = np.reshape(np.meshgrid(np.linspace(0.001, np.pi-0.001, 100),np.linspace(0, 2*np.pi, 100)), (2, -1)).T
+    delaunay = Delaunay(positions)
+    triangles = delaunay.simplices
+    source = 4851
     print("source:", positions[source])
 
-    geo = FMMGeodesicPaths(metrics.sphereMetric, dim=2)
+    geo = FMMGeodesicPaths(lambda x: np.eye(2), dim=2)
+
+    distances = geo.fast_marching_method(positions, triangles, source)
+    # print("Distances:", distances)
+    plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
+    plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
+    plt.colorbar()
+    plt.show()
+    # plot = (hv.HeatMap((positions[:, 0], positions[:, 1], distances), label='Geodesic Distances').opts(
+    #     colorbar=True, cmap='viridis', tools=["hover",], xlabel='Theta', ylabel='Phi'
+    # ) * hv.Points((*positions[source],), label='Source').opts(color="red",size=10)).opts(
+    #     legend_position='top_left', width=800, height=550, title="Geodesic Paths on Sphere"
+    # )
+    # bkshow(hv.render(plot))
+
+    print(positions[-1], ":", distances[-1])
+    np.savez(f"data/flat_geodesic_paths_x0=({positions[source][0]:.3f}, {positions[source][1]:.3f}).npz", #_high-res
+        positions=positions, distances=distances, source=source, triangles=triangles, grid=None, deluanay=delaunay)
+
+
+def main_sphere():
+    positions = np.reshape(np.meshgrid(np.linspace(0.001, np.pi-0.001, 100),np.linspace(0, 2*np.pi, 100)), (2, -1)).T
+    delaunay = Delaunay(positions)
+    triangles = delaunay.simplices
+    source = 4851
+    print("source:", positions[source])
+
+    geo = FMMGeodesicPaths(metrics.Sphere().metric, dim=2)
 
     distances = geo.fast_marching_method(positions, triangles, source)
     # print("Distances:", distances)
@@ -239,6 +348,8 @@ def main_sphere():
     bkshow(hv.render(plot))
 
     print(positions[-1], ":", distances[-1])
+    np.savez(f"data/sphere_geodesic_paths_x0=({positions[source][0]:.3f}, {positions[source][1]:.3f}).npz", #_high-res
+        positions=positions, distances=distances, source=source, triangles=triangles, grid=None, deluanay=delaunay)
 
 def main_antiferro_old():
     N = 200
@@ -273,7 +384,7 @@ def main_antiferro_old():
 
 def main_antiferro():
     aFmetric = metrics.AntiFerro()
-    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.2, 1.2)], deltas=[0.005, 0.005], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.2, 1.2)], deltas=[0.01, 0.01], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
@@ -317,7 +428,7 @@ def main_antiferro():
 
     # triangles.extend(additional_triangles)
 
-    source = grid.point_to_idx(np.array([0.4, 1.15]))
+    source = grid.point_to_idx(np.array([0.6, 1.]))
 
     geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
 
@@ -328,8 +439,8 @@ def main_antiferro():
     plt.colorbar()
     plt.show()
 
-    np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}_high-res.npz", 
+    np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz", #_high-res
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
 if __name__ == "__main__":
-    main_antiferro()
+    main_flat()

@@ -31,43 +31,23 @@ def fixed_point(func:Callable, start:float, args=(), xtol:float=1e-9, maxiter:in
         warnings.warn(f"Tolerance not reached\nachieved tolerance = {np.max(abs(func(x0, *args) - x0)):.3e} >= {xtol} = required tolerance")
     return x1
 
-def sphereMetric(p):
-        """
-        Compute the metric tensor for a sphere at a given point.
-        Parameters:
-        -----------
-        p : array-like
-            A 2-dimensional vector of the form (theta, phi).
-        Returns:
-        --------
-        numpy.ndarray
-            A 2x2 diagonal matrix representing the metric tensor at the given point.
-            The diagonal elements are equal to the square of the radius of the sphere,
-            where the radius is the Euclidean norm of the input point `p`.
-        """
-        return np.diag([1, np.sin(p[0])**2])
-
 class RMetric:
     def metric(self, p):
         raise NotImplementedError("This method should be implemented in subclasses.")
 
-    def dist(self, a, b, N=100):
+    def dist(self, path):
         """
-        Compute the distance between two points a and b using the metric tensor.
+        Compute the distance of a path.
 
         Parameters:
-        a (array-like): The first point.
-        b (array-like): The second point.
-        N (int): The number of points to sample between a and b for numerical integration.
+        path (array-like): The path. Assumed to be dense enough.
 
         Returns:
-        float: The distance between the two points.
+        float: The distance of the path.
         """
-        if np.all(a == b):
-            return 0
-        t = np.linspace(0, 1, N)
-        path = a + t[:, np.newaxis] * (b - a)
-        return self.dist(path)
+        metric = [self.metric(x) for x in (path[1:, :] + path[:-1, :]) / 2]
+        diffs = np.diff(path, axis=0)
+        return np.sum([np.sqrt(d.T @ m @ d) for d,m in zip(diffs, metric)])
     
     def inv_metric(self, p):
         """
@@ -132,24 +112,34 @@ class RMetric:
         """
         raise NotImplementedError("This method should be implemented in subclasses.")
         
+class Sphere(RMetric):
+    dim = 2
+
+    def metric(self, p):
+        """
+        Compute the metric tensor for a sphere at a given point.
+        Parameters:
+        -----------
+        p : array-like
+            A 2-dimensional vector of the form (theta, phi).
+        Returns:
+        --------
+        numpy.ndarray
+            A 2x2 diagonal matrix representing the metric tensor at the given point.
+            The diagonal elements are equal to the square of the radius of the sphere,
+            where the radius is the Euclidean norm of the input point `p`.
+        """
+        return np.diag([1, np.sin(p[0])**2])  
+
+    def inv_metric(self, p):
+        return np.diag([1, 1/np.sin(p[0])**2])
+    
+    def metric_det(self, p):
+        return np.sin(p[0])**2
 
 class AntiFerro(RMetric):
     dim = 2
     z = 1
-
-    def dist(self, path):
-        """
-        Compute the distance of a path.
-
-        Parameters:
-        path (array-like): The path. Assumed to be dense enough.
-
-        Returns:
-        float: The distance of the path.
-        """
-        metric = [self.metric(x) for x in (path[1:, :] + path[:-1, :]) / 2]
-        diffs = np.diff(path, axis=0)
-        return np.sum([np.sqrt(d.T @ m @ d) for d,m in zip(diffs, metric)])
 
     #                                        x=(T,h)
     def free_energy_non_minimized(self, m_s, x):
