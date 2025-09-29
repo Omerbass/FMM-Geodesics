@@ -158,6 +158,27 @@ class AntiFerro(RMetric):
     #                           x=(T,h) 
     def get_m_sublattices(self, x, grid=500):
         assert np.nan not in x, "x contains NaN values"
+        if self._phase_transition_line(x[0]) == np.abs(x[1]):
+            return (np.sign(x[1]) * np.sqrt(1-x[0]/self.z) ,) * 2
+        elif self._phase_transition_line(x[0]) < np.abs(x[1]) or x[0] > 1/self.z:
+            minim = sp.optimize.minimize(lambda m: np.abs(x[1]-x[0]*np.arctanh(m) - self.z*m), 0.5, bounds=((-1+6e-17,1-6e-17),), method="Powell")
+            if minim.success and minim.fun < 1e-4:
+                m = minim.x[0]
+                return (m, m)
+        elif self._phase_transition_line(x[0]) >= 0.98* np.abs(x[1]):
+            mc = np.sign(x[1]) * np.sqrt(1-x[0]/self.z)
+            hc = np.sign(x[1]) * self._phase_transition_line(x[0])
+            m = mc + (1+3*mc**2)*(x[1]-hc)/2
+            s = np.sqrt(3 * (1 - mc**2) / self.z * (- mc * (x[1]-hc)))
+            return (m+s, m-s)
+        elif x[0] >= 0.98/self.z:
+            mc = np.sign(x[1]) * np.sqrt(1-x[0]/self.z) / 2
+            Tc = (1-mc**2)*self.z
+            hc = np.sign(x[1]) * self._phase_transition_line(Tc)
+            m = mc + (1+3*mc**2)*(x[1]-hc)/2 + (3 *mc - (1 + 3 * mc**2)*np.arctanh(mc))*(x[0]-Tc)/(2 * self.z)
+            s = np.sqrt(3 * (1 - mc**2) / self.z * ((mc*np.arctanh(mc) - 1) * (x[0] - Tc)- mc * (x[1]-hc)))
+            return (m+s, m-s)
+        
         # print(x)
         M1, M2 = np.meshgrid(*np.linspace([-1+1e-3,-1+1e-3],[1-1e-3,1-1e-3],grid).T)
         f = self.free_energy_non_minimized((M1,M2), x)
@@ -328,6 +349,18 @@ class AntiFerro(RMetric):
 
         return np.array([Γ_T_xx, Γ_h_xx])
 
+    def _phase_transition_line(self, T):
+        """
+        Compute the phase transition line for a given temperature T.
+
+        Parameters:
+        T (float): The temperature at which to compute the phase transition line.
+
+        Returns:
+        float: The value of h at the phase transition line.
+        """
+        return T/2 * np.log((1+np.sqrt(1-T/self.z))/(1-np.sqrt(1-T/self.z))) + self.z * np.sqrt(1-T/self.z) if T <= self.z else np.nan
+
     def phase_transition_line(self, T):
         """
         Compute the phase transition line for a given temperature T.
@@ -338,7 +371,7 @@ class AntiFerro(RMetric):
         Returns:
         float: The value of h at the phase transition line.
         """
-        return T/2 * np.log((1+np.sqrt(1-T))/(1-np.sqrt(1-T))) + np.sqrt(1-T) if T <= 1 else np.nan
+        return self._phase_transition_line(T)
 
     def is_ordered_phase(self, x):
         """
@@ -351,5 +384,87 @@ class AntiFerro(RMetric):
         bool: True if the system is in the ordered (Anti-Ferromagnetic) phase, False otherwise.
         """
         T, h = x
-        hc = self.phase_transition_line(T)
+        if T > 1/self.z:
+            return False
+        hc = self._phase_transition_line(T)
         return (h < hc) and (h > -hc)
+    
+class AntiFerroSivak(AntiFerro):
+    Γ = 1
+
+    def get_m_sublattices(self, x, grid=500):
+        (β, βh) = x
+        return super().get_m_sublattices((1/β, βh/β), grid)
+
+    def metric(self, x):
+        z = self.z
+        Γ = self.Γ
+        β, βh = x
+        m1, m2 = self.get_m_sublattices(x)
+
+        if not np.isclose(np.abs(m1), 1, rtol=0, atol=1e-9) and m1 < 1:
+            ζ1 = 1 - m1**2
+        else:
+            ζ1 = 0
+        if not np.isclose(np.abs(m2), 1, rtol=0, atol=1e-9) and m2 < 1:
+            ζ2 = 1 - m2**2
+        else:
+            ζ2 = 0
+        
+        return β/ (Γ * 2 * (1 - β**2 * z**2 * ζ1 * ζ2)**2) * np.array([
+            [z ** 2 * ((1 + β**2 * z**2 * ζ1 * ζ2) * (m1**2 * ζ2 + m2**2 * ζ1) - 4 * β * z * m1 * m2 * ζ1 * ζ2),
+             z * ((1 + β**2 * z**2 * ζ1 * ζ2) * (m1 * ζ2 + m2 * ζ1) - 2 * β * z * (m1 + m2) * ζ1 * ζ2)],
+            [z * ((1 + β**2 * z**2 * ζ1 * ζ2) * (m1 * ζ2 + m2 * ζ1) - 2 * β * z * (m1 + m2) * ζ1 * ζ2),
+             (1 + β**2 * z**2 * ζ1 * ζ2) * (ζ1 + ζ2) - 4 * β * z * ζ1 * ζ2]
+        ])
+
+    def inv_metric(self, x):
+        z = self.z
+        Γ = self.Γ
+        β, βh = x
+        m1, m2 = self.get_m_sublattices(x)
+
+        if not np.isclose(np.abs(m1), 1, rtol=0, atol=1e-9) and m1 < 1:
+            ζ1 = 1 - m1**2
+        else:
+            ζ1 = 0
+        if not np.isclose(np.abs(m2), 1, rtol=0, atol=1e-9) and m2 < 1:
+            ζ2 = 1 - m2**2
+        else:
+            ζ2 = 0
+        if np.isclose(m1, m2, rtol=0, atol=1e-16):
+            m2 += 1e-16
+            print("Warning: m1 and m2 are too close, adjusting m2 slightly to avoid singularity in inverse metric calculation.")
+        
+        return 2*Γ/ ((m1-m2)**2 * β * ζ1 * ζ2 * z**2) * np.array([
+            [(ζ1 + ζ2 - 4 * β * z * ζ1 * ζ2 + z**2 * β**2 * ζ1 * ζ2 * (ζ1 + ζ2)) / z**2,
+             -(m1 * ζ2 *(1-2*z*β * ζ1 + z**2 * β**2 * ζ1 * ζ2) + m2 * ζ1 *(1-2*z*β * ζ2 + z**2 * β**2 * ζ1 * ζ2)) / z],
+            [-(m1 * ζ2 *(1-2*z*β * ζ1 + z**2 * β**2 * ζ1 * ζ2) + m2 * ζ1 *(1-2*z*β * ζ2 + z**2 * β**2 * ζ1 * ζ2)) / z,
+             -4 * z * m1 * m2 * β * ζ1 * (ζ2 + m2**2 + m1**2 * ζ2) * ζ1 *(1+z**2 * β**2 * ζ1 * ζ2)
+        ]])
+    
+    def metric_det(self, x):
+        z = self.z
+        Γ = self.Γ
+        β, βh = x
+        m1, m2 = self.get_m_sublattices(x)
+
+        if not np.isclose(np.abs(m1), 1, rtol=0, atol=1e-9) and m1 < 1:
+            ζ1 = 1 - m1**2
+        else:
+            ζ1 = 0
+        if not np.isclose(np.abs(m2), 1, rtol=0, atol=1e-9) and m2 < 1:
+            ζ2 = 1 - m2**2
+        else:
+            ζ2 = 0
+
+        return (z**2 * β ** 2 * ζ1 * ζ2 * (m1-m2)**2) / (Γ**2 * 4 * (1 - β**2 * z**2 * ζ1 * ζ2)**2)
+
+    def christoffel_func(self, x):
+        return super().christoffel_func(x)
+    
+    def phase_transition_line(self, β):
+        return self._phase_transition_line(1/β) * β
+    
+    def is_ordered_phase(self, x):
+        return super().is_ordered_phase((1/x[0], x[1]/x[0]))

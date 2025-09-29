@@ -382,9 +382,70 @@ def main_antiferro_old():
     plt.colorbar()
     plt.show()
 
+def main_antiferro_extra_triangles():
+    aFmetric = metrics.AntiFerro()
+    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.2, 1.2)], deltas=[0.003, 0.003], dim=2, bound_function = aFmetric.is_ordered_phase)
+
+    positions = grid.valid_points
+
+    delaunay = Delaunay(positions)
+    triangles = delaunay.simplices.tolist()
+
+    additional_triangles = []    
+    with Progress() as progress:
+        task = progress.add_task("[red]Adding triangles", total=len(positions))
+        for idx, point in enumerate(positions):
+            progress.update(task, advance=1)
+            met = aFmetric.metric(point)
+            if not np.isclose(np.linalg.det(met), 0, atol = 1e-5, rtol=0):
+                P = np.abs(met[0,1]) / met[0,0]
+                Q = met[1,1] / np.abs(met[0,1])
+                if P >= 1:
+                    p = P%1
+                    q = Q - P+p
+                else:
+                    p = P
+                    q = Q
+                n = 1
+                while True:
+                    Pn = p*n
+                    Qn = q*n
+                    m = np.ceil(Pn)
+                    if m < Qn:
+                        break
+                    n += 1
+                if P >= 1:
+                    m += np.floor(P)*n
+                if met[0,1] > 0:
+                    n = -n
+                new_triangles = [ tri for tri in ((idx, grid.neighbor(idx, np.array((n, m), dtype=int)), grid.neighbor(idx, np.array((np.sign(n), 0), dtype=int))),
+                    (idx, grid.neighbor(idx, np.array((n, m), dtype=int)), grid.neighbor(idx, np.array((0, np.sign(m)), dtype=int))),
+                    (idx, grid.neighbor(idx, np.array((-n, -m), dtype=int)), grid.neighbor(idx, np.array((-np.sign(n), 0), dtype=int))),
+                    (idx, grid.neighbor(idx, np.array((-n, -m), dtype=int)), grid.neighbor(idx, np.array((0, -np.sign(m)), dtype=int)))) if -1 not in tri]
+                    
+                additional_triangles.extend(new_triangles)
+    
+    rprint(f"[green]Added {len(additional_triangles)} additional triangles ({100*len(additional_triangles)/len(triangles):.2f}%)")
+
+    triangles.extend(additional_triangles)
+
+    source = grid.point_to_idx(np.array([0.6, 1.]))
+
+    geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
+
+    distances = geo.fast_marching_method(positions, triangles, source)
+
+    plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
+    plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
+    plt.colorbar()
+    plt.show()
+
+    np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz", #_high-res
+        positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
+
 def main_antiferro():
     aFmetric = metrics.AntiFerro()
-    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.2, 1.2)], deltas=[0.01, 0.01], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(0.1, 0.999), (-1.2, 1.2)], deltas=[0.003, 0.003], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
@@ -441,6 +502,29 @@ def main_antiferro():
 
     np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz", #_high-res
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
+    
+def main_antiferro_sivak():
+    aFmetric = metrics.AntiFerroSivak()
+    grid = BoundedGrid(cartesian_boundaries=[(1, 10), (-11.35, 11.35)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
+
+    positions = grid.valid_points
+
+    delaunay = Delaunay(positions)
+    triangles = delaunay.simplices.tolist()
+    
+    source = grid.point_to_idx(np.array([5/3, 5/3]))
+
+    geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
+
+    distances = geo.fast_marching_method(positions, triangles, source)
+
+    plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
+    plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
+    plt.colorbar()
+    plt.show()
+
+    np.savez(f"data/sivak_antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz", #_high-res
+        positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
 if __name__ == "__main__":
-    main_flat()
+    main_antiferro()
