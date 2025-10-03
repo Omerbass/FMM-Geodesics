@@ -165,19 +165,29 @@ class AntiFerro(RMetric):
             if minim.success and minim.fun < 1e-4:
                 m = minim.x[0]
                 return (m, m)
-        elif self._phase_transition_line(x[0]) >= 0.98* np.abs(x[1]):
+        elif np.abs(x[1]) >= 0.98*self._phase_transition_line(x[0]):
             mc = np.sign(x[1]) * np.sqrt(1-x[0]/self.z)
             hc = np.sign(x[1]) * self._phase_transition_line(x[0])
             m = mc + (1+3*mc**2)*(x[1]-hc)/2
             s = np.sqrt(3 * (1 - mc**2) / self.z * (- mc * (x[1]-hc)))
-            return (m+s, m-s)
+            if not np.abs(m+s)>1 and not np.abs(m-s)>1:
+                return (m+s, m-s)
+            elif (np.isclose(np.abs(m+s),1, rtol=0, atol=1e-4) and np.abs(m-s)<1):
+                return (np.sign(m+s)*0.99999, m-s)
+            elif (np.isclose(np.abs(m-s),1, rtol=0, atol=1e-4) and np.abs(m+s)<1):
+                return (m+s, np.sign(m-s)*0.99999)
         elif x[0] >= 0.98/self.z:
             mc = np.sign(x[1]) * np.sqrt(1-x[0]/self.z) / 2
             Tc = (1-mc**2)*self.z
             hc = np.sign(x[1]) * self._phase_transition_line(Tc)
             m = mc + (1+3*mc**2)*(x[1]-hc)/2 + (3 *mc - (1 + 3 * mc**2)*np.arctanh(mc))*(x[0]-Tc)/(2 * self.z)
             s = np.sqrt(3 * (1 - mc**2) / self.z * ((mc*np.arctanh(mc) - 1) * (x[0] - Tc)- mc * (x[1]-hc)))
-            return (m+s, m-s)
+            if not np.abs(m+s)>1 and not np.abs(m-s)>1:
+                return (m+s, m-s)
+            elif (np.isclose(np.abs(m+s),1, rtol=0, atol=1e-4) and np.abs(m-s)<1):
+                return (np.sign(m+s)*0.99999, m-s)
+            elif (np.isclose(np.abs(m-s),1, rtol=0, atol=1e-4) and np.abs(m+s)<1):
+                return (m+s, np.sign(m-s)*0.99999)
         
         # print(x)
         M1, M2 = np.meshgrid(*np.linspace([-1+1e-3,-1+1e-3],[1-1e-3,1-1e-3],grid).T)
@@ -405,11 +415,11 @@ class AntiFerroSivak(AntiFerro):
         if not np.isclose(np.abs(m1), 1, rtol=0, atol=1e-9) and m1 < 1:
             ζ1 = 1 - m1**2
         else:
-            ζ1 = 0
+            ζ1 = 1e-18
         if not np.isclose(np.abs(m2), 1, rtol=0, atol=1e-9) and m2 < 1:
             ζ2 = 1 - m2**2
         else:
-            ζ2 = 0
+            ζ2 = 1e-19
         
         return β/ (Γ * 2 * (1 - β**2 * z**2 * ζ1 * ζ2)**2) * np.array([
             [z ** 2 * ((1 + β**2 * z**2 * ζ1 * ζ2) * (m1**2 * ζ2 + m2**2 * ζ1) - 4 * β * z * m1 * m2 * ζ1 * ζ2),
@@ -452,11 +462,11 @@ class AntiFerroSivak(AntiFerro):
         if not np.isclose(np.abs(m1), 1, rtol=0, atol=1e-9) and m1 < 1:
             ζ1 = 1 - m1**2
         else:
-            ζ1 = 0
+            ζ1 = 1e-18
         if not np.isclose(np.abs(m2), 1, rtol=0, atol=1e-9) and m2 < 1:
             ζ2 = 1 - m2**2
         else:
-            ζ2 = 0
+            ζ2 = 1e-18
 
         return (z**2 * β ** 2 * ζ1 * ζ2 * (m1-m2)**2) / (Γ**2 * 4 * (1 - β**2 * z**2 * ζ1 * ζ2)**2)
 
@@ -468,3 +478,7 @@ class AntiFerroSivak(AntiFerro):
     
     def is_ordered_phase(self, x):
         return super().is_ordered_phase((1/x[0], x[1]/x[0]))
+    
+if __name__ == "__main__":
+    afs = AntiFerroSivak()
+    print(afs.metric((1.9, 0.85)))

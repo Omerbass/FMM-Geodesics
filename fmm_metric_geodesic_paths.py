@@ -39,7 +39,12 @@ class FMMGeodesicPaths:
         """
         Compute the norm of a vector, on the geodesic at point p.
         """
-        return np.sqrt(a.T @ self.metric(p) @ a)
+        sqrnorm = a.T @ self.metric(p) @ a
+        if np.isclose(sqrnorm, 0, atol=1e-12, rtol=0) and sqrnorm < 0:
+            return 0.0
+        elif sqrnorm < 0:
+            raise RuntimeWarning(f"Negative squared norm {sqrnorm} at point {p} for vector {a}.\nMetric:\n{self.metric(p)}")
+        return np.sqrt(sqrnorm)
     
     def geoip(self, p, a, b):
         """
@@ -68,6 +73,9 @@ class FMMGeodesicPaths:
 
         u = Tb - Ta
         
+        if np.isinf(u):
+            return np.inf
+
         vec_ab = positions[B] - positions[A]
         vec_ac = positions[C] - positions[A]
 
@@ -505,14 +513,14 @@ def main_antiferro():
     
 def main_antiferro_sivak():
     aFmetric = metrics.AntiFerroSivak()
-    grid = BoundedGrid(cartesian_boundaries=[(1, 10), (-11.35, 11.35)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.7), (-7.9, 7.9)], deltas=[0.05, 0.05], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
     delaunay = Delaunay(positions)
     triangles = delaunay.simplices.tolist()
     
-    source = grid.point_to_idx(np.array([5/3, 5/3]))
+    source = grid.point_to_idx(np.array([4, 2.5]))
 
     geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
 
@@ -527,4 +535,4 @@ def main_antiferro_sivak():
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
 if __name__ == "__main__":
-    main_antiferro()
+    main_antiferro_sivak()
