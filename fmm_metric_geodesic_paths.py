@@ -41,7 +41,7 @@ class FMMGeodesicPaths:
         """
         sqrnorm = a.T @ self.metric(p) @ a
         if np.isclose(sqrnorm, 0, atol=1e-12, rtol=0) and sqrnorm < 0:
-            return 0.0
+            return 1e-25
         elif sqrnorm < 0:
             raise RuntimeWarning(f"Negative squared norm {sqrnorm} at point {p} for vector {a}.\nMetric:\n{self.metric(p)}")
         return np.sqrt(sqrnorm)
@@ -513,7 +513,7 @@ def main_antiferro():
     
 def main_antiferro_sivak():
     aFmetric = metrics.AntiFerroSivak()
-    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.7), (-7.9, 7.9)], deltas=[0.05, 0.05], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.5), (-7.5, 7.5)], deltas=[0.03, 0.03], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
