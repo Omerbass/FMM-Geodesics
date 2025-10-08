@@ -96,7 +96,7 @@ class FMMGeodesicPaths:
         try:
             if u < t and (a * cos_theta <  b * (1 - u/t)) and\
                     (b * (1 - u/t) < (a / cos_theta if cos_theta != 0 else np.inf)):
-                Tc_new = Ta + t
+                Tc_new = min(Tc, Ta + t)
             else:
                 Tc_new = min(Tc, Ta + b * F, Tb + self.dist(positions[C], positions[B]) * F)
         except RuntimeWarning:
@@ -513,7 +513,7 @@ def main_antiferro():
     
 def main_antiferro_sivak():
     aFmetric = metrics.AntiFerroSivak()
-    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.5), (-7.5, 7.5)], deltas=[0.03, 0.03], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.3), (-7.5, 7.5)], deltas=[0.03, 0.03], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
