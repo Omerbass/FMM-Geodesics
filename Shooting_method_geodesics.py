@@ -166,7 +166,6 @@ def main_Sivak():
     
     # Plotting
     fig, ax = plt.subplots(figsize=(8, 6))
-    sivak.metricspace.plot_metric(ax=ax, levels=30)
     ax.plot(path[0, :], path[1, :], 'r-', label='Geodesic Path', linewidth=2)
     ax.plot(x0[0], x0[1], 'go', label='Start Point', markersize=10)
     ax.plot(x1[0], x1[1], 'bo', label='End Point', markersize=10)
