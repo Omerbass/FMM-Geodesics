@@ -115,6 +115,9 @@ class ShootingMethodGeodesics:
             # print(mindist, ":", np.rad2deg(alpharange), np.rad2deg(alphamin))
             if mindist<tol:
                 break
+            elif dalpha < 1e-4:
+                warnings.warn(f"Could not converge to the target within tolerance {tol}. Best distance: {mindist}")
+                break
     
         y0 = np.concatenate([x0, [np.cos(alphamin), np.sin(alphamin)], [0]])
         sol = solve_ivp(self.geodesic_equation_add_total_length, (0, straight_dist*20), y0, 
