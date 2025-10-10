@@ -156,11 +156,12 @@ class AntiFerro(RMetric):
         return np.array([m1, m2])
 
     #                           x=(T,h) 
-    def get_m_sublattices(self, x, grid=500):
+    def get_m_sublattices2(self, x, grid=500):
         assert np.nan not in x, "x contains NaN values"
         if self._phase_transition_line(x[0]) == np.abs(x[1]):
             return (np.sign(x[1]) * np.sqrt(1-x[0]/self.z) ,) * 2
         elif self._phase_transition_line(x[0]) < np.abs(x[1]) or x[0] > 1/self.z:
+            print(x)
             minim = sp.optimize.minimize(lambda m: np.abs(x[1]-x[0]*np.arctanh(m) - self.z*m), 0.5, bounds=((-1+6e-17,1-6e-17),), method="Powell")
             if minim.success and minim.fun < 1e-4:
                 m = minim.x[0]
@@ -200,6 +201,60 @@ class AntiFerro(RMetric):
         # print("m0:", (m1_0, m2_0))
         m_s = fixed_point(self.tranceqn, (m1_0,m2_0), args=(x,))
         return m_s
+    
+    def get_m_sublattices(self, x, grid=30, tol=1e-16):
+            assert np.nan not in x, "x contains NaN values"
+            if self._phase_transition_line(x[0]) == np.abs(x[1]):
+                return (np.sign(x[1]) * np.sqrt(1-x[0]/self.z) ,) * 2
+            elif self._phase_transition_line(x[0]) < np.abs(x[1]) or x[0] > 1/self.z:
+                print(x)
+                minim = sp.optimize.minimize(lambda m: np.abs(x[1]-x[0]*np.arctanh(m) - self.z*m), 0.5, bounds=((-1+6e-17,1-6e-17),), method="Powell")
+                if minim.success and minim.fun < 1e-4:
+                    m = minim.x[0]
+                    return (m, m)
+            elif np.abs(x[1]) >= 0.98*self._phase_transition_line(x[0]):
+                mc = np.sign(x[1]) * np.sqrt(1-x[0]/self.z)
+                hc = np.sign(x[1]) * self._phase_transition_line(x[0])
+                m = mc + (1+3*mc**2)*(x[1]-hc)/2
+                s = np.sqrt(3 * (1 - mc**2) / self.z * (- mc * (x[1]-hc)))
+                if not np.abs(m+s)>1 and not np.abs(m-s)>1:
+                    return (m+s, m-s)
+                elif (np.isclose(np.abs(m+s),1, rtol=0, atol=1e-4) and np.abs(m-s)<1):
+                    return (np.sign(m+s)*0.99999, m-s)
+                elif (np.isclose(np.abs(m-s),1, rtol=0, atol=1e-4) and np.abs(m+s)<1):
+                    return (m+s, np.sign(m-s)*0.99999)
+            elif x[0] >= 0.98/self.z:
+                mc = np.sign(x[1]) * np.sqrt(1-x[0]/self.z) / 2
+                Tc = (1-mc**2)*self.z
+                hc = np.sign(x[1]) * self._phase_transition_line(Tc)
+                m = mc + (1+3*mc**2)*(x[1]-hc)/2 + (3 *mc - (1 + 3 * mc**2)*np.arctanh(mc))*(x[0]-Tc)/(2 * self.z)
+                s = np.sqrt(3 * (1 - mc**2) / self.z * ((mc*np.arctanh(mc) - 1) * (x[0] - Tc)- mc * (x[1]-hc)))
+                if not np.abs(m+s)>1 and not np.abs(m-s)>1:
+                    return (m+s, m-s)
+                elif (np.isclose(np.abs(m+s),1, rtol=0, atol=1e-4) and np.abs(m-s)<1):
+                    return (np.sign(m+s)*0.99999, m-s)
+                elif (np.isclose(np.abs(m-s),1, rtol=0, atol=1e-4) and np.abs(m+s)<1):
+                    return (m+s, np.sign(m-s)*0.99999)
+            
+            def mins_on_grid(rng):
+                M1, M2 = np.meshgrid(*np.linspace(*rng,grid).T)
+                f = self.free_energy_non_minimized((M1,M2), x)
+                ix, iy = np.unravel_index(np.argmin(f), f.shape)
+                return (M1[ix, iy], M2[ix,iy])
+            # print(x)
+            delta = 1
+            rng = np.array([[-1+1e-8,-1+1e-8],[1-1e-8,1-1e-8]])
+            while delta > tol:
+                m1, m2 = mins_on_grid(rng)
+                delta = np.diff(rng, axis=0).max() / (grid - 1)
+                rng = np.array([[max(m1-delta, -1+1e-8), max(m2-delta, -1+1e-8)],
+                                [min(m1+delta, 1-1e-8), min(m2+delta, 1-1e-8)]])
+            if m1 == m2:
+                m1 = np.min([m1 + 1e-5, 0.999])
+                m2 = np.max([m2 - 1e-5, -0.999])
+            # print("m0:", (m1_0, m2_0))
+            m_s = fixed_point(self.tranceqn, (m1,m2), args=(x,))
+            return m_s
 
     #                x=(T,h)
     def metric(self, x):

@@ -520,7 +520,7 @@ def main_antiferro_sivak():
     delaunay = Delaunay(positions)
     triangles = delaunay.simplices.tolist()
     
-    source = grid.point_to_idx(np.array([4, 2.5]))
+    source = grid.point_to_idx(np.array([4, 3.5]))
 
     geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
 

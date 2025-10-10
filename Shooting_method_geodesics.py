@@ -105,7 +105,7 @@ class ShootingMethodGeodesics:
         alpharange = (0, 2*np.pi)
         # mindist=tol+1
         N = 50
-        for _ in range(6):
+        for a in range(6):
             alphas = np.linspace(alpharange[0], alpharange[1], N+1)
             dalpha = (alpharange[1] - alpharange[0])/N
             print("alpharange:", np.rad2deg(alpharange))
@@ -115,9 +115,8 @@ class ShootingMethodGeodesics:
             # print(mindist, ":", np.rad2deg(alpharange), np.rad2deg(alphamin))
             if mindist<tol:
                 break
-            elif dalpha < 1e-4:
-                warnings.warn(f"Could not converge to the target within tolerance {tol}. Best distance: {mindist}")
-                break
+        if a == 5:
+            warnings.warn(f"Could not converge to the target within 6 iterations. Best distance: {mindist}")
     
         y0 = np.concatenate([x0, [np.cos(alphamin), np.sin(alphamin)], [0]])
         sol = solve_ivp(self.geodesic_equation_add_total_length, (0, straight_dist*20), y0, 
@@ -125,7 +124,7 @@ class ShootingMethodGeodesics:
 
         ixf = np.argmin(np.linalg.norm(sol.y[:self.dim,:].T-x1, axis=1))
         geodesic_dist = sol.y[-1, ixf]
-        return alphamin, geodesic_dist,{"mindist": mindist, "alpharange": alpharange, "ixf": ixf, "sol": sol}
+        return alphamin, geodesic_dist, {"mindist": mindist, "alpharange": alpharange, "ixf": ixf, "sol": sol}
 
     def shooting_method(self, x0, x1, tol=1e-2):
         """Find the geodesic path from x0 to x1"""
@@ -148,14 +147,14 @@ class SivakShooting(ShootingMethodGeodesics):
     @eventAttr()
     def hard_limits(self, t, y, *args):
         α_max = self.metricspace.phase_transition_line(y[0])
-        if y[0] < self.z * 1.03 or np.abs(y[1]) * 0.97 > α_max or y[0]>6.5:
+        if y[0] < self.z * 1.03 or np.abs(y[1]) > α_max * 0.97 or y[0]>6.5 or not self.metricspace.is_ordered_phase(y):
             print("reached hard limit, stopping integration\ty =", y)
             return -1
         return 1
 
 def main_Sivak():
     sivak = SivakShooting()
-    x0 = np.array([1.5, -0.5])
+    x0 = np.array([2, 0.5])
     x1 = np.array([3, 1])
     result = sivak.shooting_method(x0, x1, tol=1e-2)
     path = result["path"]
@@ -178,3 +177,18 @@ def main_Sivak():
 
 if __name__ == "__main__":
     main_Sivak()
+    # sivak = SivakShooting()
+    # x0 = np.array([1.5, -0.5])
+    # x1 = np.array([3, 1])
+    # path = sivak.path(x0, np.pi/180*78.74924, dist=10, tol=1e-2, v0 = 100)
+
+    # fig, ax = plt.subplots(figsize=(8, 6))
+    # ax.plot(path[0, :], path[1, :], 'r-', label='Geodesic Path', linewidth=2)
+    # ax.plot(x0[0], x0[1], 'go', label='Start Point', markersize=10)
+    # ax.plot(x1[0], x1[1], 'bo', label='End Point', markersize=10)
+    # ax.set_title('Geodesic Path in Sivak Metric Space')
+    # ax.set_xlabel('β')
+    # ax.set_ylabel('α')
+    # ax.legend()
+    # plt.grid()
+    # plt.show()
