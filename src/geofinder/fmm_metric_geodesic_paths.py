@@ -8,8 +8,8 @@ from rich import print as rprint # noqa: F401
 import itertools as it
 import warnings
 
-import metrics
-from irregular_grids import BoundedGrid
+from . import metrics
+from .irregular_grids import BoundedGrid
 
 import matplotlib.pyplot as plt
 import holoviews as hv
@@ -235,17 +235,31 @@ class FMMGeodesicPaths:
                 print(point)
                 print("Warning: point outside of triangulation.")
                 return np.zeros(self.dim)
+            
             vertices = delaunay.simplices[simplex]
             d1, d2, d3 = distances[vertices]
             p1, p2, p3 = grid.valid_points[vertices]
             p_mat = np.column_stack((p2 - p1, p3 - p1))
             d_vec = np.array([d2 - d1, d3 - d1])
             grad_embedded = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
-            grad = np.einsum("ij, j", self.inv_metric(point), grad_embedded)
-            grad_norm = self.geonorm(point, grad)
-            # grad = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
-            # grad_norm = np.linalg.norm(grad)
-            return grad / grad_norm
+            
+            # Include gradients from neighboring triangles
+            neighbors = delaunay.neighbors[simplex]
+            for neighbor in neighbors:
+                if neighbor != -1:
+                    n_vertices = delaunay.simplices[neighbor]
+                    nd1, nd2, nd3 = distances[n_vertices]
+                    np1, np2, np3 = grid.valid_points[n_vertices]
+                    n_p_mat = np.column_stack((np2 - np1, np3 - np1))
+                    n_d_vec = np.array([nd2 - nd1, nd3 - nd1])
+                    n_grad_embedded = n_p_mat @ np.linalg.solve(n_p_mat.T @ n_p_mat, n_d_vec)
+                    grad_embedded += n_grad_embedded
+            
+            grad_embedded /= (1 + len([n for n in neighbors if n != -1]))  # Average over all triangles
+            return grad_embedded / np.linalg.norm(grad_embedded)
+            # grad = np.einsum("ij, j", self.inv_metric(point), grad_embedded)
+            # grad_norm = self.geonorm(point, grad)
+            # return grad / grad_norm
 
         with Progress() as progress:
             task = progress.add_task("[cyan]distance", total=distances[start])

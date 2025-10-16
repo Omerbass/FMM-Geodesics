@@ -1,15 +1,15 @@
-import itertools
+# import itertools as it
 import numpy as np
-import scipy as sc
+# import scipy as sp
 from scipy.integrate import solve_ivp
 from matplotlib import pyplot as plt
 # from p_tqdm import p_map
-from inspect import signature
-from typing import Callable #, Iterable, Union
+# from inspect import signature
+# from typing import Callable #, Iterable, Union
 import warnings
-import resource
+# import resource
 from functools import wraps
-import metrics
+from . import metrics
 
 def eventAttr():
     def decorator(func):
@@ -155,12 +155,13 @@ class SivakShooting(ShootingMethodGeodesics):
 def main_Sivak():
     sivak = SivakShooting()
     x0 = np.array([2, 0.5])
-    x1 = np.array([3, 1])
+    # x1 = np.array([3, 1])
+    x1 = np.array([3, sivak.metricspace.phase_transition_line(3)*0.99])
     result = sivak.shooting_method(x0, x1, tol=1e-2)
     path = result["path"]
     α0 = result["α0"]
     dist = result["dist"]
-    meta = result["meta"]
+    # meta = result["meta"]
     print(f"Found geodesic from {x0} to {x1} with initial angle {np.rad2deg(α0):.2f}° and distance {dist:.2f}")
     
     # Plotting

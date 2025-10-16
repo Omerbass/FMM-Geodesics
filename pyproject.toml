@@ -1,0 +1,11 @@
+[build-system]
+requires = ["flit_core>=3.9"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "geofinder"
+version = "0.1.0"
+description = "My utilities"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{name="Omer Basri"}]
