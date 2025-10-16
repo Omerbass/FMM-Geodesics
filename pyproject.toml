@@ -1,10 +1,10 @@
 [build-system]
-requires = ["flit_core>=3.9"]
+requires = ["flit_core>=3.9", "rich>=13.0", "numpy>=2.0"]
 build-backend = "flit_core.buildapi"
 
 [project]
 name = "geofinder"
-version = "0.1.0"
+version = "0.1.1"
 description = "My utilities"
 readme = "README.md"
 requires-python = ">=3.11"

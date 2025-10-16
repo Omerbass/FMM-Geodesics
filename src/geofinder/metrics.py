@@ -161,7 +161,7 @@ class AntiFerro(RMetric):
         if self._phase_transition_line(x[0]) == np.abs(x[1]):
             return (np.sign(x[1]) * np.sqrt(1-x[0]/self.z) ,) * 2
         elif self._phase_transition_line(x[0]) < np.abs(x[1]) or x[0] > 1/self.z:
-            print(x)
+            # print(x)
             minim = sp.optimize.minimize(lambda m: np.abs(x[1]-x[0]*np.arctanh(m) - self.z*m), 0.5, bounds=((-1+6e-17,1-6e-17),), method="Powell")
             if minim.success and minim.fun < 1e-4:
                 m = minim.x[0]
@@ -207,7 +207,7 @@ class AntiFerro(RMetric):
             if self._phase_transition_line(x[0]) == np.abs(x[1]):
                 return (np.sign(x[1]) * np.sqrt(1-x[0]/self.z) ,) * 2
             elif self._phase_transition_line(x[0]) < np.abs(x[1]) or x[0] > 1/self.z:
-                print(x)
+                # print(x)
                 minim = sp.optimize.minimize(lambda m: np.abs(x[1]-x[0]*np.arctanh(m) - self.z*m), 0.5, bounds=((-1+6e-17,1-6e-17),), method="Powell")
                 if minim.success and minim.fun < 1e-4:
                     m = minim.x[0]
