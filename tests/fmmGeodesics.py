@@ -164,43 +164,6 @@ def main_antiferro():
 
     delaunay = Delaunay(positions)
     triangles = delaunay.simplices.tolist()
-    # additional_triangles = []    
-    # with Progress() as progress:
-    #     task = progress.add_task("[red]Adding triangles", total=len(positions))
-    #     for idx, point in enumerate(positions):
-    #         progress.update(task, advance=1)
-    #         met = aFmetric.metric(point)
-    #         if not np.isclose(np.linalg.det(met), 0, atol = 1e-5, rtol=0):
-    #             P = np.abs(met[0,1]) / met[0,0]
-    #             Q = met[1,1] / np.abs(met[0,1])
-    #             if P >= 1:
-    #                 p = P%1
-    #                 q = Q - P+p
-    #             else:
-    #                 p = P
-    #                 q = Q
-    #             n = 1
-    #             while True:
-    #                 Pn = p*n
-    #                 Qn = q*n
-    #                 m = np.ceil(Pn)
-    #                 if m < Qn:
-    #                     break
-    #                 n += 1
-    #             if P >= 1:
-    #                 m += np.floor(P)*n
-    #             if met[0,1] > 0:
-    #                 n = -n
-    #             new_triangles = [ tri for tri in ((idx, grid.neighbor(idx, np.array((n, m), dtype=int)), grid.neighbor(idx, np.array((np.sign(n), 0), dtype=int))),
-    #                 (idx, grid.neighbor(idx, np.array((n, m), dtype=int)), grid.neighbor(idx, np.array((0, np.sign(m)), dtype=int))),
-    #                 (idx, grid.neighbor(idx, np.array((-n, -m), dtype=int)), grid.neighbor(idx, np.array((-np.sign(n), 0), dtype=int))),
-    #                 (idx, grid.neighbor(idx, np.array((-n, -m), dtype=int)), grid.neighbor(idx, np.array((0, -np.sign(m)), dtype=int)))) if -1 not in tri]
-                    
-    #             additional_triangles.extend(new_triangles)
-    
-    # rprint(f"[green]Added {len(additional_triangles)} additional triangles ({100*len(additional_triangles)/len(triangles):.2f}%)")
-
-    # triangles.extend(additional_triangles)
 
     source = grid.point_to_idx(np.array([0.6, 1.]))
 
@@ -218,7 +181,7 @@ def main_antiferro():
     
 def main_antiferro_sivak():
     aFmetric = metrics.AntiFerroSivak()
-    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.3), (-7.5, 7.5)], deltas=[0.03, 0.03], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.3), (-7.5, 7.5)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
