@@ -181,7 +181,7 @@ def main_antiferro():
     
 def main_antiferro_sivak():
     aFmetric = metrics.AntiFerroSivak()
-    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.3), (-7.5, 7.5)], deltas=[0.1, 0.1], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.3), (-7.5, 7.5)], deltas=[0.03, 0.03], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 

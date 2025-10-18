@@ -156,7 +156,7 @@ class AntiFerro(RMetric):
         return np.array([m1, m2])
 
     #                           x=(T,h) 
-    def get_m_sublattices2(self, x, grid=500):
+    def get_m_sublattices(self, x, grid=500):
         assert np.nan not in x, "x contains NaN values"
         if self._phase_transition_line(x[0]) == np.abs(x[1]):
             return (np.sign(x[1]) * np.sqrt(1-x[0]/self.z) ,) * 2
@@ -202,7 +202,7 @@ class AntiFerro(RMetric):
         m_s = fixed_point(self.tranceqn, (m1_0,m2_0), args=(x,))
         return m_s
     
-    def get_m_sublattices(self, x, grid=30, tol=1e-16):
+    def get_m_sublattices2(self, x, grid=30, tol=1e-16):
             assert np.nan not in x, "x contains NaN values"
             if self._phase_transition_line(x[0]) == np.abs(x[1]):
                 return (np.sign(x[1]) * np.sqrt(1-x[0]/self.z) ,) * 2
