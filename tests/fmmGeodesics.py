@@ -1,6 +1,6 @@
 import numpy as np
 
-from geofinder import *
+from geofinder import *  # noqa: F403
 from scipy.spatial import Delaunay
 
 from rich import print as rprint
@@ -36,7 +36,6 @@ def main_flat():
     print(positions[-1], ":", distances[-1])
     np.savez(f"data/flat_geodesic_paths_x0=({positions[source][0]:.3f}, {positions[source][1]:.3f}).npz", #_high-res
         positions=positions, distances=distances, source=source, triangles=triangles, grid=None, deluanay=delaunay)
-
 
 def main_sphere():
     positions = np.reshape(np.meshgrid(np.linspace(0.001, np.pi-0.001, 100),np.linspace(0, 2*np.pi, 100)), (2, -1)).T
@@ -179,28 +178,35 @@ def main_antiferro():
     np.savez(f"data/antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz", #_high-res
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
     
-def main_antiferro_sivak():
+def main_antiferro_sivak(x0, show_plot=False):
     aFmetric = metrics.AntiFerroSivak()
-    grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.3), (-7.5, 7.5)], deltas=[0.03, 0.03], dim=2, bound_function = aFmetric.is_ordered_phase)
+    # grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.3), (-7.5, 7.5)], deltas=[0.03, 0.03], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(1.2, 2), (-2.5, 1.3)], deltas=[0.007, 0.007], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
     delaunay = Delaunay(positions)
     triangles = delaunay.simplices.tolist()
     
-    source = grid.point_to_idx(np.array([4, 3.5]))
+    source = grid.point_to_idx(x0)
 
     geo = FMMGeodesicPaths(aFmetric.metric, dim=2)
 
     distances = geo.fast_marching_method(positions, triangles, source)
 
-    plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
-    plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
-    plt.colorbar()
-    plt.show()
+    if show_plot:
+        plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
+        plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
+        plt.colorbar()
+        plt.show()
 
-    np.savez(f"data/sivak_antiferro_geodesic_paths_T0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz", #_high-res
+    np.savez(f"data/sivak_antiferro_geodesic_paths_b0={positions[source, 0]:.3f}_a0={positions[source, 1]:.3f}_nearPT.npz", #_high-res
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
 if __name__ == "__main__":
-    main_antiferro_sivak()
+    # main_antiferro_sivak(np.array([2.5, 0.5]))
+    main_antiferro_sivak(np.array([1.7, -1.6]))
+    # main_antiferro_sivak(np.array([1.7, -1.7]))
+    # main_antiferro_sivak(np.array([4, 2.5]))
+    # main_antiferro_sivak(np.array([4, 3.5]))
+

@@ -65,7 +65,7 @@ class FMMGeodesicPaths:
             Ta, Tb = Tb, Ta
             A, B = B, A
 
-        u = Tb - Ta
+        u = Tb- Ta
         
         if np.isinf(u):
             return np.inf
@@ -134,6 +134,8 @@ class FMMGeodesicPaths:
                         if status[q] != 'alive':
                             r = [v for v in tri if v not in [p, q]][0]
                             if status[r] == 'alive':
+                                if np.sum(np.isinf([T[p], T[r]])) == 2:  
+                                    continue
                                 T_old = T[q]
                                 T[q] = self.update_triangle(T, positions, triangles, p, r, q)
 
@@ -145,75 +147,75 @@ class FMMGeodesicPaths:
 
         return T
 
-    def gradient_descent_to_origin_along_simplices(self, grid, delaunay, distances, start, max_steps=1000, tol=1e-6):
-        path = [grid.valid_points[start]]
-        current = grid.valid_points[start]
-        final_idx = np.argmin(distances)
-        final_point = grid.valid_points[final_idx]
+    # def gradient_descent_to_origin_along_simplices(self, grid, delaunay, distances, start, max_steps=1000, tol=1e-6):
+    #     path = [grid.valid_points[start]]
+    #     current = grid.valid_points[start]
+    #     final_idx = np.argmin(distances)
+    #     final_point = grid.valid_points[final_idx]
 
-        def get_normalized_gradient(point, simplex):
-            if simplex == -1:
-                print(point)
-                print("Warning: point outside of triangulation.")
-                return np.zeros(self.dim)
-            vertices = delaunay.simplices[simplex]
-            d1, d2, d3 = distances[vertices]
-            p1, p2, p3 = grid.valid_points[vertices]
-            p_mat = np.column_stack((p2 - p1, p3 - p1))
-            d_vec = np.array([d2 - d1, d3 - d1])
-            # grad_embedded = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
-            # grad = np.einsum("ij, j", self.inv_metric(point), grad_embedded)
-            # grad_norm = self.geonorm(point, grad)
-            grad = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
-            grad_norm = np.linalg.norm(grad)
-            return grad / grad_norm
+    #     def get_normalized_gradient(point, simplex):
+    #         if simplex == -1:
+    #             print(point)
+    #             print("Warning: point outside of triangulation.")
+    #             return np.zeros(self.dim)
+    #         vertices = delaunay.simplices[simplex]
+    #         d1, d2, d3 = distances[vertices]
+    #         p1, p2, p3 = grid.valid_points[vertices]
+    #         p_mat = np.column_stack((p2 - p1, p3 - p1))
+    #         d_vec = np.array([d2 - d1, d3 - d1])
+    #         # grad_embedded = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
+    #         # grad = np.einsum("ij, j", self.inv_metric(point), grad_embedded)
+    #         # grad_norm = self.geonorm(point, grad)
+    #         grad = p_mat @ np.linalg.solve(p_mat.T @ p_mat, d_vec)
+    #         grad_norm = np.linalg.norm(grad)
+    #         return grad / grad_norm
 
-        def intersect_lines(p1, p2, v1, v2):
-            A = np.array([v1, -v2]).T
-            if np.abs(np.linalg.det(A)) < 1e-12:
-                return None
-            b = p2 - p1
-            t = np.linalg.solve(A, b)
-            return (p1 + t[0] * v1, t[0], t[1])
+    #     def intersect_lines(p1, p2, v1, v2):
+    #         A = np.array([v1, -v2]).T
+    #         if np.abs(np.linalg.det(A)) < 1e-12:
+    #             return None
+    #         b = p2 - p1
+    #         t = np.linalg.solve(A, b)
+    #         return (p1 + t[0] * v1, t[0], t[1])
 
-        current_simplex = delaunay.find_simplex(current)
+    #     current_simplex = delaunay.find_simplex(current)
 
-        for _ in range(max_steps):
-            if final_idx in delaunay.simplices[current_simplex]:
-                path.append(final_point)
-                break
-            elif self.dist(current, final_point) < tol:
-                break
-            grad = get_normalized_gradient(current, current_simplex)
-            if not np.any(grad):
-                current = grid.valid_points[grid.point_to_idx(current)]
-                path.append(current)
-                rprint(f"[red]Warning: {current} outside of grid.")
-                return np.array(path)
-            print("----", current, "----")
-            print("triangle :", delaunay.simplices[current_simplex])
-            print("gradient :", grad)
-            for i1, i2 in it.combinations([0, 1,2], 2):
-                ix1, ix2 = delaunay.simplices[current_simplex][[i1, i2]]
-                p1, p2 = grid.valid_points[[ix1, ix2]]
-                edge_vec = p2 - p1
-                res = intersect_lines(current, p1, -grad, edge_vec)
-                print("intersection :", res, " with edge ", p1, p2)
-                if res is None:
-                    continue
-                intersection, t1, t2 = res
-                if t1 > 1e-12 and 0 <= t2 <= 1:
-                    current = intersection
-                    path.append(current)
-                    print(delaunay.neighbors[current_simplex], i1, i2)
-                    current_simplex = delaunay.neighbors[current_simplex][list({0,1,2} - {i1, i2})[0]]
-                    print("next simplex :", current_simplex, ", edges:", delaunay.simplices[current_simplex])
-                    break
-            else:
-                rprint(f"[red]Warning: no intersection found for point {current}, stopping.")
-                break
+    #     for _ in range(max_steps):
+    #         if final_idx in delaunay.simplices[current_simplex]:
+    #             path.append(final_point)
+    #             break
+    #         elif self.dist(current, final_point) < tol:
+    #             break
+    #         grad = get_normalized_gradient(current, current_simplex)
+    #         if not np.any(grad):
+    #             current = grid.valid_points[grid.point_to_idx(current)]
+    #             path.append(current)
+    #             rprint(f"[red]Warning: {current} outside of grid.")
+    #             return np.array(path)
+    #         print("----", current, "----")
+    #         print("triangle :", delaunay.simplices[current_simplex])
+    #         print("gradient :", grad)
+    #         for i1, i2 in it.combinations([0, 1,2], 2):
+    #             ix1, ix2 = delaunay.simplices[current_simplex][[i1, i2]]
+    #             p1, p2 = grid.valid_points[[ix1, ix2]]
+    #             edge_vec = p2 - p1
+    #             res = intersect_lines(current, p1, -grad, edge_vec)
+    #             print("intersection :", res, " with edge ", p1, p2)
+    #             if res is None:
+    #                 continue
+    #             intersection, t1, t2 = res
+    #             if t1 > 1e-12 and 0 <= t2 <= 1:
+    #                 current = intersection
+    #                 path.append(current)
+    #                 print(delaunay.neighbors[current_simplex], i1, i2)
+    #                 current_simplex = delaunay.neighbors[current_simplex][list({0,1,2} - {i1, i2})[0]]
+    #                 print("next simplex :", current_simplex, ", edges:", delaunay.simplices[current_simplex])
+    #                 break
+    #         else:
+    #             rprint(f"[red]Warning: no intersection found for point {current}, stopping.")
+    #             break
 
-        return np.array(path)
+    #     return np.array(path)
 
     def gradient_descent_to_origin(self, grid, delaunay, distances, start, step_size=0.01, max_steps=1000, tol=1e-6):
         path = [grid.valid_points[start]]
