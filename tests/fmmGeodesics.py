@@ -181,7 +181,7 @@ def main_antiferro():
 def main_antiferro_sivak(x0, show_plot=False):
     aFmetric = metrics.AntiFerroSivak()
     # grid = BoundedGrid(cartesian_boundaries=[(1.01, 6.3), (-7.5, 7.5)], deltas=[0.03, 0.03], dim=2, bound_function = aFmetric.is_ordered_phase)
-    grid = BoundedGrid(cartesian_boundaries=[(1.2, 2), (-2.5, 1.3)], deltas=[0.007, 0.007], dim=2, bound_function = aFmetric.is_ordered_phase)
+    grid = BoundedGrid(cartesian_boundaries=[(1., 4), (-4.5, 4.5)], deltas=[0.005, 0.005], dim=2, bound_function = aFmetric.is_ordered_phase)
 
     positions = grid.valid_points
 
@@ -200,12 +200,12 @@ def main_antiferro_sivak(x0, show_plot=False):
         plt.colorbar()
         plt.show()
 
-    np.savez(f"data/sivak_antiferro_geodesic_paths_b0={positions[source, 0]:.3f}_a0={positions[source, 1]:.3f}_nearPT.npz", #_high-res
+    np.savez(f"data/sivak_antiferro_geodesic_paths_b0={positions[source, 0]:.3f}_a0={positions[source, 1]:.3f}.npz", #_high-res
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
 if __name__ == "__main__":
-    # main_antiferro_sivak(np.array([2.5, 0.5]))
-    main_antiferro_sivak(np.array([1.7, -1.6]))
+    main_antiferro_sivak(np.array([2.51, 1.5]))
+    # main_antiferro_sivak(np.array([1.7, -1.6]))
     # main_antiferro_sivak(np.array([1.7, -1.7]))
     # main_antiferro_sivak(np.array([4, 2.5]))
     # main_antiferro_sivak(np.array([4, 3.5]))
