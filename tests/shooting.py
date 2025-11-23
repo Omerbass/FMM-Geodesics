@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 def main_Sivak():
     sivak = SivakShooting()
     x0 = np.array([2.51, 1.5])
-    x1 = np.array([1.49, 0.51])
+    x1 = np.array([1.7, -1.6])
     # x0 = np.array([3, sivak.metricspace.phase_transition_line(3)*0.9])
     result = sivak.shooting_method(x0, x1, tol=1e-2)
     path = result["path"]
@@ -29,7 +29,7 @@ def main_Sivak():
 def main_shoot_once():
     sivak = SivakShooting()
     x0 = np.array([2.510, 1.5])
-    x1 = np.array([1.0989011 , -0.63918993])
+    x1 = np.array([1.7 , -1.6])
     α0 = np.deg2rad(-50)  # Initial angle in radians
     print(f"Shooting once from {x0} with angle {np.rad2deg(α0):.2f}°")
     

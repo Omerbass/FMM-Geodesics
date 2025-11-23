@@ -426,7 +426,10 @@ class AntiFerro(RMetric):
         Returns:
         float: The value of h at the phase transition line.
         """
-        return T/2 * np.log((1+np.sqrt(1-T/self.z))/(1-np.sqrt(1-T/self.z))) + self.z * np.sqrt(1-T/self.z) if T <= self.z else np.nan
+        if T <= self.z:
+            return T/2 * np.log((1+np.sqrt(1-T/self.z))/(1-np.sqrt(1-T/self.z))) + self.z * np.sqrt(1-T/self.z) 
+        else: 
+            return np.nan
 
     def phase_transition_line(self, T):
         """
