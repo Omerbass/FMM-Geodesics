@@ -1243,7 +1243,31 @@ zetaB * (4 -zetaB + 4 * (beta ** 2) * (6 -11 * zetaB) * zetaB + 12 * \
     
     def is_ordered_phase(self, x):
         return super().is_ordered_phase((1/x[0], x[1]/x[0]))
+
+class interpolatedMetric(RMetric):
+    def __init__(self, metric_meas, ptline_meas=None, ptline_func=None): #, interpolation_method='cubic'):
+        self.metric_meas = metric_meas
+        if ptline_func is not None:
+            self.ptline_func = ptline_func
+        elif self.ptline_meas is not None and self.ptline_func is None:
+            self.ptline_func = sp.interpolate.interp1d(ptline_meas[:, 0], ptline_meas[:, 1], fill_value="extrapolate")
+        # self.interpolation_method = interpolation_method
+        self.metric_interpolator = None
+        self._create_interpolator()
+
+    def _create_interpolator(self):
+        x = self.metric_meas[:, 0]
+        y = self.metric_meas[:, 1]
+        self.metric_interpolator = sp.interpolate.LinearNDInterpolator((x, y), self.metric_meas[:, 2], fill_value="extrapolate")
+
+    def metric(self, x):
+        return self.metric_interpolator(x)
     
+    def phase_transition_line(self, K):
+        return self.ptline_func(K)
+    
+
+
 if __name__ == "__main__":
     afs = AntiFerroSivak()
     print(afs.metric((1.9, 0.85)))
