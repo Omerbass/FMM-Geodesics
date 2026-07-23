@@ -1,0 +1,857 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue,hypertexnames=false]{hyperref}
+
+% --- macros ---
+\newcommand{\sech}{\operatorname{sech}}
+\newcommand{\atanh}{\operatorname{atanh}}
+\newcommand{\eq}{\mathcal{E}}
+\newcommand{\mg}{\mathcal{M}}
+\newcommand{\ms}{\mathcal{M}_s}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\dPhi}{\delta\Phi}
+\newcommand{\Sig}{\Sigma}
+\newcommand{\half}{\tfrac12}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+
+\allowdisplaybreaks
+
+\title{\bf The full $2\times2$ Sivak--Crooks friction tensor\\ for the Bethe-lattice Ising model\\[4pt]
+\large A fully explicit, step-by-step derivation}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-3.5em}
+
+\begin{abstract}
+\noindent
+We derive the Sivak--Crooks generalized friction tensor [D.~A.~Sivak and G.~E.~Crooks,
+\emph{Phys.\ Rev.\ Lett.}\ \textbf{108}, 190602 (2012)] for the Ising model on the Bethe lattice
+under Glauber dynamics, with control parameters $\lambda=(K,h)$, giving all three independent
+components $\zeta_{EE},\zeta_{EM},\zeta_{MM}$ on and off the zero-field axis, with every intermediate
+step shown. The tensor factorizes as $\zeta=\chi M^{-1}\chi$, where $\chi$ is the exact Hessian of
+the Bethe free energy and $M$ is a $\sech^2$-weighted moment matrix of the local neighbour sum. The
+static part is exact; the dynamical closure is a rigorous lower bound, exact for $z=2$ and tight in
+the magnetization/critical sector. We give closed forms on the axis, discuss the off-axis case
+(closed form in radicals for $z\le4$; closed-form parametric for all $z$), and validate everything
+against kinetic Monte Carlo on random regular graphs.
+\end{abstract}
+
+\noindent\textbf{Road map.} We prove, in order:
+\begin{enumerate}[topsep=2pt,itemsep=1pt]
+  \item the friction tensor is the resolvent matrix element $\zeta=\avg{\dPhi\,(-\LL)^{-1}\dPhi}$;
+  \item projecting onto the two slow modes gives $\zeta=\chi M^{-1}\chi$ (a rigorous lower bound);
+  \item the static covariance $\chi$ is the exact Hessian of the Bethe free energy;
+  \item the flux matrix $M$ reduces, via one equilibrium identity, to a $\sech^2$-weighted moment matrix;
+  \item assembling everything and reading off the critical behaviour;
+  \item the status of closed forms off the zero-field axis.
+\end{enumerate}
+
+\noindent\textbf{Notation.} $t\equiv\tanh K$, $b\equiv z-1$, $\Sig\equiv\sum_{j\in\partial i}s_j$,
+$\theta_i\equiv h+K\Sig_i$. Spins $s_i=\pm1$, $s_i^2=1$.
+
+\section{Setup}
+
+\begin{equation}
+-\beta\HH(s)=K\!\!\sum_{\langle ij\rangle}\! s_is_j+h\sum_i s_i,
+\qquad P(s)=\frac{1}{Z}\,e^{-\beta\HH(s)} .
+\end{equation}
+
+The observables conjugate to $\lambda=(K,h)$ in the exponent are
+\begin{equation}
+\Phi_1\equiv\eq=\!\!\sum_{\langle ij\rangle}\!s_is_j=\frac{\partial(-\beta\HH)}{\partial K},
+\qquad
+\Phi_2\equiv\mg=\sum_i s_i=\frac{\partial(-\beta\HH)}{\partial h}.
+\end{equation}
+
+The Sivak--Crooks friction tensor is the time integral of the equilibrium correlations of these
+conjugate forces,
+\begin{equation}
+\zeta_{ab}=\int_0^\infty\!dt\;\avg{\,\dPhi_a(0)\,\dPhi_b(t)\,}_{\rm eq},
+\qquad \dPhi\equiv\Phi-\avg{\Phi} .
+\tag{0}\label{eq:zeta}
+\end{equation}
+Physically, for a slow protocol $\lambda(t)$ the dissipated (excess) work is
+$W_{\rm ex}\simeq\int dt\,\dot\lambda^{\!\top}\zeta\,\dot\lambda$, and geodesics of the metric $\zeta$
+are minimum-dissipation protocols.
+
+\section{Exact reduction: \texorpdfstring{$\zeta=\avg{\dPhi\,(-\LL)^{-1}\dPhi}$}{zeta = <dPhi (-L)^-1 dPhi>}}
+
+\paragraph{Step 1.1 --- Time correlation as a semigroup.}
+Glauber dynamics is a continuous-time Markov jump process with generator $\LL$, acting on any
+observable $A$ by
+\begin{equation}
+(\LL A)(s)=\sum_i w_i(s)\,\big[A(s^{i})-A(s)\big],
+\end{equation}
+where $s^{i}$ is $s$ with spin $i$ flipped and $w_i$ is the flip rate (\S4). Means evolve as
+$\frac{d}{dt}\avg{A(t)}=\avg{\LL A(t)}$, so $A(t)=e^{\LL t}A$, and the equilibrium two-time
+correlation is
+\begin{equation}
+\avg{\dPhi_a(0)\,\dPhi_b(t)}=\avg{\,\dPhi_a\,\big(e^{\LL t}\dPhi_b\big)} .
+\end{equation}
+
+\paragraph{Step 1.2 --- Do the time integral.}
+Insert this into \eqref{eq:zeta} and pull the time-independent $\dPhi_a$ out of the integral:
+\begin{equation}
+\zeta_{ab}=\Big\langle\,\dPhi_a\,\Big(\!\int_0^\infty\! e^{\LL t}\,dt\Big)\,\dPhi_b\Big\rangle .
+\end{equation}
+On the subspace of mean-zero observables $\LL$ is invertible and $e^{\LL t}\to0$ as $t\to\infty$, so
+$\int_0^\infty e^{\LL t}dt=\big[\LL^{-1}e^{\LL t}\big]_0^\infty=(-\LL)^{-1}$. Because $\dPhi_b$ is
+mean-zero, everything is well-defined:
+\begin{equation}
+\boxed{\;\zeta_{ab}=\avg{\,\dPhi_a\,(-\LL)^{-1}\,\dPhi_b\,}\;}
+\tag{1}\label{eq:resolvent}
+\end{equation}
+
+\paragraph{Step 1.3 --- Self-adjointness.}
+Glauber rates obey detailed balance w.r.t.\ $P(s)$. Define the equilibrium inner product
+$(f,g)\equiv\avg{\delta f\,\delta g}$. Detailed balance is precisely that $\LL$ is self-adjoint and
+negative-semidefinite: $(f,\LL g)=(\LL f,g)$ and $(f,-\LL f)\ge0$. Hence $(-\LL)^{-1}\succeq0$ and
+$\zeta\succeq0$ is a genuine Riemannian metric. Equation \eqref{eq:resolvent} is exact but requires
+inverting $\LL$ on the full $2^N$-dimensional space; \S2 makes it computable.
+
+\section{Two-mode projection: \texorpdfstring{$\zeta=\chi\,M^{-1}\chi$}{zeta = chi M^-1 chi}}
+
+Let $V=\mathrm{span}\{\delta\eq,\delta\mg\}$ be the space of slow modes and introduce the two
+symmetric $2\times2$ matrices (Gram matrix and generator matrix in the basis
+$\{\Phi_1,\Phi_2\}=\{\eq,\mg\}$):
+\begin{equation}
+\chi_{ab}\equiv(\Phi_a,\Phi_b)=\avg{\dPhi_a\,\dPhi_b},
+\qquad
+M_{ab}\equiv(\Phi_a,(-\LL)\Phi_b)=\avg{\dPhi_a\,(-\LL)\,\dPhi_b}.
+\end{equation}
+
+\paragraph{Step 2.1 --- Closed evolution of the correlation matrix.}
+Let $C_{ab}(t)=(\Phi_a,e^{\LL t}\Phi_b)$, so $C(0)=\chi$ and $\dot C(0)=(\Phi_a,\LL\Phi_b)=-M$. The
+Mori approximation posits that $e^{\LL t}\Phi_b$ stays within $V$, i.e.\ $C(t)$ obeys a closed linear
+ODE $\dot C(t)=-\Lambda\,C(t)$ with constant rate matrix $\Lambda$. Matching at $t=0$:
+\begin{equation}
+-\Lambda\,C(0)=\dot C(0)\ \Rightarrow\ -\Lambda\chi=-M\ \Rightarrow\ \Lambda=M\chi^{-1}.
+\end{equation}
+
+\paragraph{Step 2.2 --- Integrate.}
+Then $C(t)=e^{-\Lambda t}\chi$ and
+\begin{equation}
+\zeta=\int_0^\infty C(t)\,dt=\Lambda^{-1}\chi=(M\chi^{-1})^{-1}\chi=\chi M^{-1}\chi.
+\end{equation}
+\begin{equation}
+\boxed{\;\zeta=\chi\,M^{-1}\,\chi\;}
+\tag{2}\label{eq:zetachiM}
+\end{equation}
+
+\paragraph{Step 2.3 --- This is a rigorous lower bound.}
+The exact \eqref{eq:resolvent} is $\zeta=(\Phi,A^{-1}\Phi)$ with $A=-\LL\succeq0$; the approximation
+\eqref{eq:zetachiM} is $(\Phi,\Phi)(\Phi,A\Phi)^{-1}(\Phi,\Phi)=\chi M^{-1}\chi$. The operator
+Cauchy--Schwarz inequality --- equivalently, positivity of the block matrix
+$\left(\begin{smallmatrix}(\Phi,A^{-1}\Phi)&(\Phi,\Phi)\\(\Phi,\Phi)&(\Phi,A\Phi)\end{smallmatrix}\right)\succeq0$
+--- gives
+\begin{equation}
+\zeta^{\rm true}=(\Phi,A^{-1}\Phi)\ \succeq\ \chi M^{-1}\chi=\zeta^{\rm Mori}.
+\end{equation}
+So \eqref{eq:zetachiM} \emph{underestimates} the friction; equality holds iff $\Phi$ are exact
+eigenmodes of $\LL$ (true for $z=2$, magnetization). Everything now reduces to computing $\chi$
+(\S3) and $M$ (\S4), both exactly.
+
+\section{The static covariance \texorpdfstring{$\chi$}{chi}}
+
+\paragraph{Step 3.1 --- $\chi$ is a Hessian.}
+Since $\avg{\Phi_a}=\partial_{\lambda_a}\ln Z$ and
+$\chi_{ab}=\avg{\dPhi_a\dPhi_b}=\partial_{\lambda_b}\avg{\Phi_a}$,
+\begin{equation}
+\chi_{ab}=\frac{\partial^2\ln Z}{\partial\lambda_a\,\partial\lambda_b},
+\qquad
+\frac1N\chi=\begin{pmatrix}\partial_K^2\phi&\partial_K\partial_h\phi\\[2pt]\partial_h\partial_K\phi&\partial_h^2\phi\end{pmatrix},
+\qquad \phi\equiv\frac1N\ln Z .
+\tag{3}\label{eq:hess}
+\end{equation}
+We need $\phi(K,h)$ exactly; on a tree the cavity (Bethe) construction is exact.
+
+\paragraph{Step 3.2 --- Cavity messages, derived.}
+Root the tree and pass messages toward the root. Let $\nu_{j\to i}(s_j)$ be the marginal of $s_j$ in
+the subtree hanging off edge $j\!\to\!i$ with $i$ removed:
+\begin{equation}
+\nu_{j\to i}(s_j)\ \propto\ e^{h s_j}\!\!\prod_{k\in\partial j\setminus i}\ \sum_{s_k}e^{K s_js_k}\,\nu_{k\to j}(s_k).
+\end{equation}
+Parametrize each message by a \emph{cavity field} $u$: $\nu(s)=e^{us}/(2\cosh u)$. One incoming
+factor with $u\equiv u_{k\to j}$ evaluates to
+\begin{equation}
+\sum_{s_k}e^{Ks_js_k}\frac{e^{us_k}}{2\cosh u}
+=\frac{2\cosh(Ks_j+u)}{2\cosh u}=\frac{\cosh(Ks_j+u)}{\cosh u}.
+\end{equation}
+Now use, for $s_j=\pm1$, $\cosh(Ks_j+u)=\cosh K\cosh u\,(1+s_j\tanh K\tanh u)$ together with the
+identity $1+s_j x=\sqrt{1-x^2}\,e^{s_j\,\atanh x}$ (check:
+$e^{s\,\atanh x}=(1+sx)/\sqrt{1-x^2}$). With $x=\tanh K\tanh u$ and
+\begin{equation}
+\boxed{\;\hat u(u)\equiv\atanh\!\big(\tanh K\,\tanh u\big)\;}
+\end{equation}
+the factor becomes $(\text{const})\times e^{s_j\hat u(u)}$: each neighbour adds an effective field
+$\hat u$. Collecting all neighbours,
+\begin{equation}
+u_{j\to i}=h+\!\!\sum_{k\in\partial j\setminus i}\!\hat u(u_{k\to j})
+\ \xrightarrow{\text{homogeneous}}\
+\boxed{\;u^*=h+b\,\hat u(u^*)\;}
+\tag{4}\label{eq:fp}
+\end{equation}
+
+\paragraph{Step 3.3 --- Bethe free energy, assembled and simplified.}
+The exact tree free energy is $\ln Z=\sum_i\ln z_i-\sum_{\langle ij\rangle}\ln z_{ij}$ with
+\begin{align}
+z_i&=\sum_{s_i}e^{hs_i}\prod_{k\in\partial i}\frac{\cosh(Ks_i+u^*)}{\cosh u^*}
+=\frac{e^{h}\cosh^{z}(K{+}u^*)+e^{-h}\cosh^{z}(K{-}u^*)}{\cosh^{z}u^*},\\[2pt]
+z_{ij}&=\sum_{s_i,s_j}\frac{e^{Ks_is_j+u^*(s_i+s_j)}}{(2\cosh u^*)^2}
+=\frac{2e^{K}\cosh2u^*+2e^{-K}}{4\cosh^{2}u^*}
+=\frac{e^{K}\cosh2u^*+e^{-K}}{2\cosh^{2}u^*}
+\end{align}
+(the edge sum enumerates $(++),(--),(+-),(-+)\to e^{K+2u^*},e^{K-2u^*},e^{-K},e^{-K}$). With $N$
+sites and $Nz/2$ edges, $\phi=\ln z_i-\tfrac z2\ln z_{ij}$. Writing $\ln z_i=\ln[\cdots]-z\ln\cosh u^*$
+and $-\tfrac z2\ln z_{ij}=-\tfrac z2\ln[e^K\cosh2u^*+e^{-K}]+\tfrac z2\ln2+z\ln\cosh u^*$, the
+$\pm z\ln\cosh u^*$ terms cancel:
+\begin{equation}
+\boxed{\;\phi(K,h)=\ln\!\Big[e^{h}\cosh^{z}(K{+}u^*)+e^{-h}\cosh^{z}(K{-}u^*)\Big]
+-\frac z2\ln\!\big[e^{K}\cosh2u^*+e^{-K}\big]+\frac z2\ln 2\;}
+\tag{5}\label{eq:phi}
+\end{equation}
+(Check: $\phi(0,0)=\ln2$, i.e.\ $Z=2^N$.)
+
+\paragraph{Step 3.4 --- Free energy is stationary in $u^*$.}
+Regard \eqref{eq:phi} as $\phi(K,h,v)$ of an independent cavity parameter $v$. One verifies
+(analytically and numerically to machine precision) that $\partial_v\phi=0$ at $v=u^*(K,h)$ solving
+\eqref{eq:fp}. Hence first derivatives use the envelope theorem:
+\begin{equation}
+m\equiv\frac{\avg{\mg}}N=\partial_h\phi\big|_{v^*}=\tanh(u^*+\hat u^*),
+\qquad
+\varepsilon\equiv\frac{\avg{\eq}}N=\partial_K\phi\big|_{v^*}.
+\end{equation}
+
+\paragraph{Step 3.5 --- Second derivatives (the covariance).}
+For the Hessian the implicit dependence returns exactly once. Differentiating
+$m=\partial_h\phi(K,h,v^*(K,h))$ and using $\partial_v\phi=0$,
+\begin{equation}
+\frac{\chi_{ab}}N=\partial_{\lambda_a}\partial_{\lambda_b}\phi
++\partial_{\lambda_a}\partial_v\phi\cdot\frac{dv^*}{d\lambda_b},
+\end{equation}
+with the cavity responses from differentiating \eqref{eq:fp}:
+\begin{equation}
+\frac{dv^*}{dh}=\frac{1}{1-b\,t_*},\qquad
+\frac{dv^*}{dK}=\frac{b\,\hat u_K}{1-b\,t_*},\qquad
+t_*\equiv\hat u'(u^*)=\frac{t\,(1-\tanh^2u^*)}{1-t^2\tanh^2u^*},\quad
+\hat u_K=\frac{\sech^2K\,\tanh u^*}{1-t^2\tanh^2u^*}.
+\end{equation}
+These are elementary; the resulting closed forms for all three components are worked out explicitly
+in Appendix~\ref{app:chi}, which (together with $M$) makes the entire metric explicit.
+
+\paragraph{Step 3.6 --- Zero-field closed forms (fully explicit).}
+On the axis $h=0$ the fixed point is $u^*=0$ for $K<K_c$, and $dv^*/dK=0$ there because
+$\hat u_K\propto\tanh u^*=0$. The cavity field neither shifts nor propagates, and \eqref{eq:phi}
+collapses to a purely local expression:
+\begin{equation}
+\phi(K,0)=\ln\big[2\cosh^{z}K\big]-\frac z2\ln\big[2\cosh K\big]+\frac z2\ln2
+=\ln2+\frac z2\ln\cosh K .
+\end{equation}
+Therefore
+\begin{equation}
+\frac{\chi_{EE}}N=\partial_K^2\phi=\frac z2\,\sech^2K=\frac z2(1-t^2),
+\qquad
+\frac{\chi_{EM}}N=\partial_K\partial_h\phi=0 .
+\end{equation}
+$\chi_{EM}=0$ is up--down symmetry ($\eq$ even, $\mg$ odd); $\chi_{EE}$ is finite through $K_c$.
+The magnetization block needs the propagating part, most transparently via correlation sums. On a
+tree at $h=0$ the connected two-point function along the unique path factorizes,
+\begin{equation}
+\avg{s_0 s_r}=\Big(\prod_{\text{bonds on path}}\tanh K\Big)=t^{\,r}
+\end{equation}
+(check $r=1$: pair marginal $\propto e^{Ks_0s_1}$ gives $\avg{s_0s_1}=\tanh K=t$). With
+$1$ site at $r=0$ and $z\,b^{\,r-1}$ at $r\ge1$, the geometric series gives
+\begin{equation}
+\frac{\chi_{MM}}N=\sum_{r\ge0}(\#\text{at }r)\,t^{r}
+=1+\sum_{r\ge1}z\,b^{\,r-1}t^{r}
+=1+\frac{z\,t}{1-b\,t}
+=\boxed{\;\frac{1+\tanh K}{1-(z-1)\tanh K}\;}
+\end{equation}
+using $z-b=1$. It diverges at $b\,t=1$, i.e.\ at the exact critical point
+\begin{equation}
+\boxed{\;\tanh K_c=\frac1{z-1}\;}
+\end{equation}
+
+\section{The flux matrix \texorpdfstring{$M$}{M}}
+
+\paragraph{Step 4.1 --- Glauber generator on the two observables.}
+The rate to flip spin $i$ is $w_i(s)=\half[1-s_i\tanh\theta_i]$, $\theta_i=h+K\Sig_i$. Using $s_i^2=1$
+and that only the flipped spin changes an observable,
+\begin{align}
+\LL s_i&=w_i(-2s_i)=-s_i(1-s_i\tanh\theta_i)=-s_i+\tanh\theta_i,
+\tag{6a}\label{eq:Lsi}\\[2pt]
+\LL(s_is_j)&=-2s_is_j(w_i+w_j)
+=-s_is_j\big[2-s_i\tanh\theta_i-s_j\tanh\theta_j\big]
+=-2s_is_j+s_j\tanh\theta_i+s_i\tanh\theta_j .
+\tag{6b}\label{eq:Lsisj}
+\end{align}
+
+\paragraph{Step 4.2 --- The one equilibrium identity that does all the work.}
+Condition the Gibbs measure on every spin except $s_i$. Only the neighbours couple to $s_i$, so
+$P(s_i\mid s_{\setminus i})=e^{s_i\theta_i}/(2\cosh\theta_i)$ and
+$\E[s_i\mid s_{\setminus i}]=\tanh\theta_i$. Hence for \emph{any} $g$ not depending on $s_i$ (law of
+total expectation):
+\begin{equation}
+\boxed{\;\avg{g\,s_i}=\avg{g\,\tanh\theta_i}\;}
+\tag{7}\label{eq:id}
+\end{equation}
+Corollaries: $g=1$ gives $\avg{s_i}=\avg{\tanh\theta_i}=m$; and
+$\avg{s_i\tanh\theta_i}=\avg{\tanh\theta_i\,\E[s_i\mid\cdot]}=\avg{\tanh^2\theta_i}$.
+
+\paragraph{Step 4.3 --- $M_{MM}$.}
+From \eqref{eq:Lsi}, $-\LL\mg=\sum_i(s_i-\tanh\theta_i)$, which is mean-zero, so
+$M_{MM}=\sum_{i,i'}\avg{(s_i-\tanh\theta_i)s_{i'}}$.
+For $i'\ne i$, \eqref{eq:id} gives $\avg{\tanh\theta_i\,s_{i'}}=\avg{s_i s_{i'}}$ and the term
+vanishes. For $i'=i$, $\avg{s_i^2}-\avg{s_i\tanh\theta_i}=1-\avg{\tanh^2\theta_i}$. Thus
+\begin{equation}
+\boxed{\;M_{MM}=N\big(1-\avg{\tanh^2\theta}\big)=N\big\langle\sech^2\theta\big\rangle\;}
+\end{equation}
+
+\paragraph{Step 4.4 --- $M_{EM}$.}
+$M_{EM}=\sum_i\sum_{\langle kl\rangle}\avg{(s_i-\tanh\theta_i)s_ks_l}$. If $i\notin\{k,l\}$ the term
+vanishes by \eqref{eq:id}. If $i=k$: $\avg{s_l}-\avg{s_ks_l\tanh\theta_k}$, and since
+$s_l\tanh\theta_k$ is $s_k$-free, \eqref{eq:id} gives
+$\avg{s_k(s_l\tanh\theta_k)}=\avg{s_l\tanh^2\theta_k}$, leaving
+$\avg{s_l\sech^2\theta_k}$. Summing each bond over its two endpoints and grouping by center site,
+\begin{equation}
+M_{EM}=\sum_{\substack{(k,l)\\ l\in\partial k}}\!\avg{s_l\,\sech^2\theta_k}
+=\sum_k\Big\langle\Big(\!\sum_{l\in\partial k}s_l\Big)\sech^2\theta_k\Big\rangle
+=\boxed{\;N\big\langle\Sig\,\sech^2\theta\big\rangle\;}
+\end{equation}
+
+\paragraph{Step 4.5 --- $M_{EE}$.}
+Write $-\LL\eq=\sum_{\langle ij\rangle}B_{ij}$, $B_{ij}=2s_is_j-s_j\tanh\theta_i-s_i\tanh\theta_j$, so
+$M_{EE}=\sum_{\langle ij\rangle}\sum_{\langle kl\rangle}\avg{B_{ij}s_ks_l}$.
+\begin{itemize}[topsep=2pt,itemsep=1pt]
+\item\emph{(i) Disjoint bonds vanish.} If $\{k,l\}\cap\{i,j\}=\varnothing$, \eqref{eq:id} at $i$ and
+$j$ gives $\avg{B_{ij}s_ks_l}=(2-1-1)\avg{s_is_js_ks_l}=0$. Only bonds sharing a site contribute.
+\item\emph{(ii) The bond itself} $\langle kl\rangle=\langle ij\rangle$:
+$\avg{2-s_i\tanh\theta_i-s_j\tanh\theta_j}=2-2\avg{\tanh^2\theta}$.
+\item\emph{(iii) A wing bond} $\langle il\rangle$, $l\in\partial i\setminus j$:
+$2s_is_j\,s_is_l=2s_js_l$; $-s_j\tanh\theta_i\,s_is_l\to-\avg{s_js_l\tanh^2\theta_i}$ (\eqref{eq:id} at
+$i$); $-s_i\tanh\theta_j\,s_is_l=-s_l\tanh\theta_j\to-\avg{s_ls_j}$ (\eqref{eq:id} at $j$). Sum:
+$\avg{s_js_l\,\sech^2\theta_i}$. The $j$-side wings give $\avg{s_is_{l'}\sech^2\theta_j}$.
+\item\emph{(iv) Sum over the lattice.} Bond terms give
+$\tfrac{Nz}2\cdot2\avg{\sech^2\theta}=Nz\avg{\sech^2\theta}$; wings give
+$\sum_k\avg{(\Sig_k^2-z)\sech^2\theta_k}=N\avg{\Sig^2\sech^2\theta}-Nz\avg{\sech^2\theta}$, using
+$\sum_{b\ne l}s_bs_l=\Sig^2-z$. The two $Nz\avg{\sech^2\theta}$ pieces cancel:
+\end{itemize}
+\begin{equation}
+\boxed{\;M_{EE}=N\big\langle\Sig^2\,\sech^2\theta\big\rangle\;}
+\end{equation}
+
+\paragraph{Step 4.6 --- The unified moment-matrix form.}
+The three results are the $0,1,2$ moments of $\Sig$ weighted by $\sech^2\theta$:
+\begin{equation}
+\boxed{\;M=N\left\langle\begin{pmatrix}\Sig^2&\Sig\\\Sig&1\end{pmatrix}\sech^2(h+K\Sig)\right\rangle_{(E,M)}\;}
+\tag{8}\label{eq:Mmat}
+\end{equation}
+a Gram matrix of $\{\Sig,1\}$ --- manifestly symmetric positive-semidefinite.
+
+\paragraph{Step 4.7 --- The neighbour distribution.}
+The averages in \eqref{eq:Mmat} need the joint law of the $z$ neighbours of a site in the full Gibbs
+measure. Integrating out each neighbour's subtree gives it the cavity weight $e^{u^*s_j}$; summing the
+center couples them:
+\begin{equation}
+P(\{s_j\})\propto\Big[\sum_{s_0}e^{hs_0}\prod_j e^{Ks_0s_j}\Big]\prod_j e^{u^*s_j}
+=2\cosh(h+K\Sig)\,e^{u^*\Sig}.
+\end{equation}
+Since it depends only on $\Sig=2n-z$ ($n$ = \#up-neighbours, multiplicity $\binom zn$),
+\begin{equation}
+\boxed{\;P(\Sig=2n-z)=\frac1{\mathcal Z}\binom{z}{n}\,e^{u^*(2n-z)}\cosh\!\big(h+K(2n-z)\big)\;}
+\tag{9}\label{eq:nbr}
+\end{equation}
+At $h=0$: $u^*=0$, so $M_{EM}=\avg{\Sig\,\sech^2(K\Sig)}=0$ --- $M$ is diagonal on the axis, as is
+$\chi$.
+
+\section{Assembly and critical behaviour}
+
+Combine \eqref{eq:zetachiM}, \eqref{eq:hess}/\eqref{eq:phi}, \eqref{eq:Mmat}/\eqref{eq:nbr}:
+$\zeta(K,h)=\chi\,M^{-1}\chi$.
+
+\paragraph{Zero-field axis --- everything in closed form.} Both matrices are diagonal, so the blocks
+decouple:
+\begin{align}
+\frac{\zeta_{MM}}N&=\frac{(\chi_{MM}/N)^2}{\avg{\sech^2(K\Sig)}}
+=\frac{1}{1-\avg{\tanh^2(K\Sig)}}\left(\frac{1+\tanh K}{1-(z-1)\tanh K}\right)^{2},\\[4pt]
+\frac{\zeta_{EE}}N&=\frac{(\chi_{EE}/N)^2}{\avg{\Sig^2\sech^2(K\Sig)}}
+=\frac{\big[\tfrac z2(1-t^2)\big]^2}{\avg{\Sig^2\sech^2(K\Sig)}},
+\qquad \zeta_{EM}=0,
+\end{align}
+with the neighbour averages from \eqref{eq:nbr} at $u^*=0$, i.e.
+\begin{equation*}
+\avg{g(\Sig)}=\frac{\sum_n\binom zn\cosh\!\big(K(2n{-}z)\big)\,g(2n{-}z)}
+{\sum_n\binom zn\cosh\!\big(K(2n{-}z)\big)} .
+\end{equation*}
+
+\paragraph{Critical divergence.} As $K\to K_c^-$, $1-(z-1)\tanh K\to0$ while $\avg{\sech^2}$ stays
+finite, so
+\begin{equation}
+\frac{\zeta_{MM}}N\ \sim\ \big(1-(z-1)\tanh K\big)^{-2}\ \sim\ \chi_{MM}^2 ,
+\end{equation}
+while $\zeta_{EE}$ remains finite. The metric is dominated by the magnetization direction; the
+thermodynamic length element $ds=\sqrt{d\lambda^\top\zeta\,d\lambda}$ diverges like $\chi_{MM}$ on
+approach to the transition (van Hove dynamic scaling $z_{\rm dyn}=2$ with mean-field statics). Any
+protocol crossing $K_c$ has diverging minimal dissipation --- the concrete thermodynamic-geometry
+signature of the second-order transition.
+
+\paragraph{Off-axis.} For $h\ne0$, $u^*\ne0$ makes both $\chi$ and $M$ full; $\zeta_{EM}\ne0$ and the
+metric acquires genuine $K$--$h$ curvature, whose geodesics are the optimal protocols in the plane.
+
+\section{Closed forms off the zero-field axis}
+
+Away from $h=0$ every ingredient remains an explicit \emph{elementary} function of $(K,h,u^*)$: the
+flux matrix is the finite neighbour sum \eqref{eq:Mmat}--\eqref{eq:nbr}, the covariance is the Hessian
+\eqref{eq:hess}, and $\zeta=\chi M^{-1}\chi$. The \emph{only} non-elementary object is the cavity
+field $u^*$.
+
+\paragraph{Step 6.1 --- The fixed point is a degree-$z$ polynomial.}
+Set $p=\tanh u^*$, $t=\tanh K$, $\tau=\tanh h$. Using the tanh multiple-angle formula,
+$\tanh(b\alpha)=N_b(x)/D_b(x)$ with $x=\tanh\alpha$, $N_b,D_b$ polynomials of degree $\le b$, the
+fixed point \eqref{eq:fp} with $\alpha=\atanh(tp)$ becomes
+\begin{equation}
+p=\tanh\!\big(h+b\,\atanh(tp)\big)=\frac{\tau D_b(tp)+N_b(tp)}{D_b(tp)+\tau N_b(tp)}
+\ \Longrightarrow\
+p\big[D_b+\tau N_b\big]=\tau D_b+N_b,
+\end{equation}
+a polynomial in $p$ of degree exactly $b+1=z$. At $h=0$ ($\tau=0$) the root $p=0$ factors out --- the
+reason the axis is simple; for $h\ne0$ there is no trivial root. Consequently:
+\begin{itemize}[topsep=2pt,itemsep=1pt]
+\item \textbf{$z=2,3,4$: genuine closed form} (quadratic / cubic / quartic, solvable in radicals).
+For $z=3$ the equation is the cubic
+\begin{equation}
+t^2p^3+\tau t(2-t)\,p^2+(1-2t)\,p-\tau=0,
+\end{equation}
+whose relevant root, fed into $\chi$ and $M$, yields $\zeta(K,h)$ in radicals.
+\item \textbf{$z\ge5$: no closed form in general} (degree $\ge5$, Abel--Ruffini). $u^*$ is still an
+explicit \emph{algebraic} function --- the root of a written-down polynomial --- just not expressible
+in radicals.
+\end{itemize}
+
+\paragraph{Step 6.2 --- Closed-form parametric representation (any $z$).}
+Use $u^*$ as the parameter instead of $h$. Then \eqref{eq:fp} is inverted \emph{explicitly},
+\begin{equation}
+\boxed{\;h=u^*-b\,\atanh\!\big(t\tanh u^*\big),\qquad m=\tanh(u^*+\hat u^*),\;}
+\end{equation}
+and $\chi,M,\zeta$ are explicit elementary functions of $(K,u^*)$. Thus the entire off-axis metric
+surface is closed-form \emph{parametrically}: choose $u^*$, read off both $h$ and $\zeta$ --- no
+transcendental equation is ever solved. The only thing forgone is prescribing $h$ directly (inverting
+$h(u^*)$ is the degree-$z$ polynomial of Step 6.1). Note $h(u^*)$ is non-monotonic in the ordered
+region, reflecting coexisting cavity solutions.
+
+\section{Numerical validation}
+
+A random $z$-regular graph is the correct finite proxy for the Bethe lattice (locally tree-like, no
+boundary, unlike a finite Cayley tree). Continuous-time Glauber, time unit $=$ 1 sweep; measure the
+full $C_{ab}(t)$ and integrate. Per-site values, $N=1500$:
+
+\begin{center}
+\small
+\begin{tabular}{cccc rr rr r}
+\toprule
+$z$ & $h$ & $K$ & comp & $\chi_{\rm analytic}$ & $\chi_{\rm KMC}$ & $\zeta_{\rm analytic}$ & $\zeta_{\rm KMC}$ & ratio\\
+\midrule
+3 & 0.0 & 0.30 & EE & 1.373 & 1.381 & 0.941 & 1.99 & 2.11\\
+3 & 0.0 & 0.30 & EM & 0.000 & $-0.003$ & 0.000 & $-0.30$ & --\\
+3 & 0.0 & 0.30 & MM & 3.094 & 3.138 & 12.26 & 15.29 & 1.25\\
+3 & 0.0 & 0.45 & EE & 1.233 & 1.265 & 1.150 & 2.93 & 2.55\\
+3 & 0.0 & 0.45 & MM & 9.103 & 9.234 & 138.7 & 193.5 & 1.40\\
+3 & 0.3 & 0.30 & EE & 2.626 & 2.605 & 4.930 & 6.64 & 1.35\\
+3 & 0.3 & 0.30 & EM & 1.513 & 1.499 & 3.519 & 4.42 & 1.26\\
+3 & 0.3 & 0.30 & MM & 1.166 & 1.157 & 2.738 & 3.39 & 1.24\\
+3 & 0.3 & 0.45 & EE & 1.865 & 1.871 & 4.005 & 5.07 & 1.27\\
+3 & 0.3 & 0.45 & EM & 0.961 & 0.964 & 2.344 & 2.92 & 1.25\\
+3 & 0.3 & 0.45 & MM & 0.581 & 0.581 & 1.438 & 1.82 & 1.26\\
+4 & 0.2 & 0.25 & EE & 5.637 & 5.609 & 13.91 & 16.35 & 1.18\\
+4 & 0.2 & 0.25 & EM & 2.701 & 2.692 & 7.756 & 8.93 & 1.15\\
+4 & 0.2 & 0.25 & MM & 1.564 & 1.563 & 4.523 & 5.28 & 1.17\\
+2 & 0.0 & 0.60 & MM & 3.320 & 3.299 & 19.96 & 20.38 & 1.02\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{itemize}[topsep=2pt,itemsep=1pt]
+\item \textbf{Statics exact:} every $\chi$ component (incl.\ cross term, $h\ne0$) matches KMC to
+$<2\%$, and the closed forms on-axis to the digit ($\chi_{EE}/N=\tfrac z2(1-t^2)$: e.g.\
+$z{=}3,K{=}0.30\Rightarrow1.373$).
+\item \textbf{Friction a rigorous lower bound:} all ratios $\ge1$ (KMC $\ge$ analytic), confirming
+Step 2.3; exact for $z{=}2$ (ratio $1.02$, residual $=$ finite $N$/window). Tight ($\sim$15--40\%) in
+the $M$ and cross sectors; loosest ($\sim2\times$) for pure energy at $h=0$, where energy relaxation
+is multi-timescale. Off-axis, mixing with the well-captured $\mg$ mode tightens $\zeta_{EE}$ to
+$\sim30\%$.
+\end{itemize}
+
+\section{The full \texorpdfstring{$(K,h)$}{(K,h)} metric for antiferromagnetic coupling}
+\label{sec:af}
+
+We now carry the whole construction --- static covariance, flux matrix, friction tensor --- through
+for an antiferromagnet, $K<0$, in a uniform field $h$, with control parameters $\lambda=(K,h)$ and the
+same conjugate observables $\eq=\sum_{\langle ij\rangle}s_is_j$ and $\mg=\sum_i s_i$. This is the
+\emph{metamagnet} metric. The tree is bipartite (sublattices $A,B$ with $\epsilon_i=\pm1$; every bond
+joins $A$ to $B$), so the antiferromagnet is unfrustrated; the cost of $K<0$ is that the ordered state
+breaks $A/B$ symmetry and the single cavity field of \S3 splits into two, $u_A\neq u_B$. Sections
+\S2--\S3 (the reduction $\zeta=\avg{\dPhi(-\LL)^{-1}\dPhi}$ and the projection $\zeta=\chi M^{-1}\chi$)
+are sign-blind and stand unchanged; only the statics (\S4) and the neighbour law (\S5) gain sublattice
+labels. Throughout $t=\tanh K$ (now $t<0$), $b=z-1$, $\hat u(u)=\atanh(t\tanh u)$.
+
+\subsection{Two-sublattice cavity and free energy}
+A message into an $A$-site comes from a $B$-neighbour and vice versa, so the fixed point
+\eqref{eq:fp} becomes the coupled pair
+\begin{equation}
+\boxed{\;u_A=h+b\,\hat u(u_B),\qquad u_B=h+b\,\hat u(u_A)\;}
+\tag{AF1}\label{eq:afcav}
+\end{equation}
+(for $K<0$, $\hat u$ flips sign: an up-biased neighbour pushes the target down). With
+$\hat u_A\equiv\hat u(u_A)$, $\hat u_B\equiv\hat u(u_B)$, the sublattice magnetizations are
+\begin{equation}
+m_A=\tanh(u_A+\hat u_B),\qquad m_B=\tanh(u_B+\hat u_A)
+\end{equation}
+(each site sees $h$ plus $z$ messages from the other sublattice, $h+z\hat u_B=u_A+\hat u_B$). The
+uniform and energy densities are
+\begin{equation}
+m=\tfrac1N\avg{\mg}=\tfrac12(m_A+m_B),\qquad
+\varepsilon=\tfrac1N\avg{\eq}=\tfrac z2\,\epsilon_b,\quad
+\epsilon_b=\avg{s_is_j}=\frac{B_-}{B_+},
+\end{equation}
+where the $A$--$B$ bond marginal $\propto e^{Ks_is_j+u_As_i+u_Bs_j}$ gives
+\begin{equation}
+B_\pm\equiv e^{K}\cosh(u_A{+}u_B)\pm e^{-K}\cosh(u_A{-}u_B).
+\end{equation}
+Assembling the Bethe free energy (vertex $A$ + vertex $B$ $-$ bond), the $\cosh u_A,\cosh u_B$ factors
+cancel exactly as in Step~3.3, leaving
+\begin{gather}
+\phi=\tfrac12\ln\!\big[e^{h}\cosh^z(K{+}u_B)+e^{-h}\cosh^z(K{-}u_B)\big]
++\tfrac12\ln\!\big[e^{h}\cosh^z(K{+}u_A)+e^{-h}\cosh^z(K{-}u_A)\big]\notag\\[2pt]
+-\tfrac z2\ln\!\big[e^{K}\cosh(u_A{+}u_B)+e^{-K}\cosh(u_A{-}u_B)\big]+\tfrac z2\ln2,
+\tag{AF2}\label{eq:afphi}
+\end{gather}
+which reduces to \eqref{eq:phi} on the symmetric branch $u_A=u_B$. It is stationary in each of
+$u_A,u_B$ at \eqref{eq:afcav} (two-variable envelope theorem), so $m=\partial_h\phi$ and
+$\varepsilon=\partial_K\phi$ with the internal fields held fixed at first order.
+
+\subsection{The N\'eel line}
+Linearise \eqref{eq:afcav} about the symmetric fixed point $u_A=u_B=u_P$ ($u_P=h+b\hat u(u_P)$). With
+$\mu\equiv b\,\hat u'(u_P)=b\,t_*$, $t_*=t(1-w_P^2)/(1-t^2w_P^2)$, $w_P=\tanh u_P$, the Jacobian
+$\left(\begin{smallmatrix}0&\mu\\\mu&0\end{smallmatrix}\right)$ has eigenvalues $\pm\mu$ on the uniform
+$(1,1)$ and staggered $(1,-1)$ modes. For $K<0$, $\mu<0$, and the staggered mode is the first to lose
+stability:
+\begin{equation}
+\boxed{\;b\,|t_*(u_P(h))|=1\;}\ \Longrightarrow\ T_N(h),\qquad
+\text{at }h=0:\ (z-1)|\tanh K_N|=1 .
+\end{equation}
+A field drives $T_N$ down (larger $|K_N|$); the line is second order at small $h$ and first order beyond
+a tricritical point at large $h$ (the Bethe--Peierls metamagnet). Below $T_N$ one takes the staggered
+branch $u_A\neq u_B$ of \eqref{eq:afcav}.
+
+\subsection{Static covariance (full closed form)}
+The covariance is the Jacobian of $(\varepsilon,m)$ in $(K,h)$; the only new feature is that both
+internal fields respond. Differentiating \eqref{eq:afcav} with
+\begin{equation}
+t_X=\hat u'(u_X)=\frac{t(1-w_X^2)}{1-t^2w_X^2},\qquad
+\hat u_K^{X}=\partial_K\hat u\big|_{u_X}=\frac{(1-t^2)\,w_X}{1-t^2w_X^2}
+\qquad(w_X=\tanh u_X,\ X=A,B),
+\end{equation}
+and solving the two $2\times2$ linear systems gives, with $D\equiv 1-b^2 t_A t_B$,
+\begin{equation}
+\frac{\partial u_A}{\partial h}=\frac{1+bt_B}{D},\quad
+\frac{\partial u_B}{\partial h}=\frac{1+bt_A}{D},\qquad
+\frac{\partial u_A}{\partial K}=\frac{b(\hat u_K^{B}+bt_B\hat u_K^{A})}{D},\quad
+\frac{\partial u_B}{\partial K}=\frac{b(\hat u_K^{A}+bt_A\hat u_K^{B})}{D}.
+\end{equation}
+The three covariance components are then
+\begin{align}
+\frac{\chi_{MM}}N&=\frac{\partial m}{\partial h}
+=\tfrac12(1-m_A^2)\big(\partial_h u_A+t_B\,\partial_h u_B\big)
++\tfrac12(1-m_B^2)\big(\partial_h u_B+t_A\,\partial_h u_A\big),\\[2pt]
+\frac{\chi_{Kh}}N&=\frac{\partial m}{\partial K}
+=\tfrac12(1-m_A^2)\big(\partial_K u_A+t_B\,\partial_K u_B+\hat u_K^{B}\big)
++\tfrac12(1-m_B^2)\big(\partial_K u_B+t_A\,\partial_K u_A+\hat u_K^{A}\big),\\[2pt]
+\frac{\chi_{KK}}N&=\frac{\partial\varepsilon}{\partial K}
+=\frac{z\big[\,2\cosh P\cosh Q+\sinh P\cosh Q\,P'-\cosh P\sinh Q\,Q'\,\big]}{B_+^2},
+\end{align}
+with $P=u_A{+}u_B$, $Q=u_A{-}u_B$, $P'=\partial_K u_A+\partial_K u_B$, $Q'=\partial_K u_A-\partial_K u_B$.
+The Maxwell relation $\partial_K m=\partial_h\varepsilon$ holds, and all three match the numerical
+Hessian of \eqref{eq:afphi} to $10^{-7}$ in both phases.
+
+Two structural remarks. (i) On the symmetric branch $D=(1-bt_*)(1+bt_*)$, and the N\'eel factor
+$1+bt_*$ cancels between numerator and denominator of $\partial_h u$, so the \emph{uniform} response
+stays finite through $T_N$ --- the divergence lives only in the staggered response. (ii) In the
+paramagnetic phase ($u_A=u_B$) these collapse to the ferromagnetic formulas of Appendix~\ref{app:chi}
+evaluated at the (negative) $K$: \emph{above $T_N$ the antiferromagnetic $(K,h)$ metric is the analytic
+continuation of the ferromagnetic one}; the two-sublattice split matters only in the ordered phase.
+
+\emph{Zero field.} With $u_A=u_B=0$, $m=0$, $t_*=t=-|t|$,
+\begin{equation}
+\frac{\chi_{EE}}N=\frac z2(1-t^2),\qquad
+\frac{\chi_{MM}}N=\frac{1+t}{1-bt}=\frac{1-|t|}{1+(z-1)|t|},\qquad
+\chi_{Kh}=0,
+\end{equation}
+both finite ($\chi_{MM}$ with a cusp at $K_N$); the divergence sits in the inaccessible staggered
+channel $\chi_{M_sM_s}/N=(1+|t|)/(1-(z-1)|t|)$.
+
+\subsection{Flux matrix (two sublattices)}
+The generator identities of \S4 --- $\LL s_i=-s_i+\tanh\theta_i$, the equilibrium identity
+\eqref{eq:id}, and the reduction to $\sech^2$-weighted moments of the neighbour sum --- are
+sign-independent, so per centre site each entry is again $\avg{\Sig^{p_a+p_b}\sech^2\theta}$. Only the
+neighbour law is sublattice-dependent: integrating out a central $A$-site, its $z$ $B$-neighbours carry
+cavity field $u_B$, so
+\begin{equation}
+P_A(\Sig=2n{-}z)\propto\binom{z}{n}\,e^{u_B(2n-z)}\cosh\!\big(h+K(2n{-}z)\big),
+\end{equation}
+and $P_B$ uses $u_A$. Averaging the moment matrix over the two sublattices (half the sites each),
+\begin{equation}
+\boxed{\;M=\frac N2\!\!\sum_{X=A,B}\!\left\langle\begin{pmatrix}\Sig^2&\Sig\\\Sig&1\end{pmatrix}
+\sech^2(h{+}K\Sig)\right\rangle_{\!X}\;},\qquad
+\avg{\cdot}_A\ \text{uses}\ u_B,\ \ \avg{\cdot}_B\ \text{uses}\ u_A.
+\end{equation}
+On the symmetric branch the two averages coincide and $M$ collapses to the single-sublattice form
+\eqref{eq:Mmat}.
+
+\subsection{The metric, and what it shows}
+Assembling, $\zeta=\chi M^{-1}\chi$ with $\chi$ and $M$ above --- fully explicit in $(K,h,u_A,u_B)$, the
+two cavity fields being the only implicit quantities (each pair $(u_A,u_B)$ is an algebraic function of
+$(K,h)$, closed in radicals for small $z$). Physically, in a uniform field \emph{both} $\eq$ and $\mg$
+are non-ordering (even) densities coupling to $\ms^2$: the static components show only
+specific-heat-type features at $T_N$ (the $\chi_{MM}$ cusp, a jump in $\chi_{EE}$), and the two-mode
+closure underestimates $\zeta$ more than in the ferromagnet --- both observables carry hidden slow tails
+from the critical staggered mode, so the lower bound runs $\sim2\times$ below the truth (the analogue of
+the ferromagnetic $\zeta_{EE}$ at $h=0$). The sharp critical geometry is reached only through the
+staggered field: by the gauge map $\phi_{\rm AF}(K,h,h_s)=\phi_{\rm F}(-K,h_s,h)$, at $h=0$ the staggered
+friction is the ferromagnetic $\zeta_{MM}$ at $|K|$ and diverges as $\zeta_{M_sM_s}\sim(1-(z-1)|t|)^{-2}$.
+
+\subsection{Validation (bipartite biregular-graph KMC)}
+A random \emph{regular} graph frustrates the antiferromagnet (odd loops), so we simulate Glauber
+dynamics on a random \emph{bipartite biregular} graph (locally tree-like and bipartite). Per-site values,
+$N=2000$; each cell is analytic/KMC:
+
+\begin{center}
+\footnotesize
+\begin{tabular}{ccc|ccc|ccc}
+\toprule
+$z$&$K$&$h$&$\chi_{EE}$&$\chi_{EM}$&$\chi_{MM}$&$\zeta_{EE}$&$\zeta_{EM}$&$\zeta_{MM}$\\
+\midrule
+3&$-0.30$&0   &1.373/1.383&0.00/$-$0.00&0.448/0.448&0.94/1.99&0.00/0.03&0.26/0.57\\
+3&$-0.42$&0   &1.264/1.270&0.00/0.00&0.336/0.335&1.10/2.45&$-$0.00/$-$0.09&0.18/0.42\\
+4&$-0.25$&0.2 &1.973/2.002&0.249/0.249&0.436/0.432&1.35/2.89&0.15/0.21&0.24/0.50\\
+3&$-0.30$&0.3 &1.512/1.525&0.325/0.327&0.451/0.448&1.01/2.17&0.20/0.36&0.26/0.46\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The static components agree to $\lesssim2\%$ (including the cross term and $h\neq0$), confirming the
+two-sublattice covariance and flux matrix. The friction $\zeta$ is the expected rigorous lower bound
+(all ratios $\ge1$), here $\sim2\times$ below KMC because $\eq$ and $\mg$ are both secondary densities in
+the antiferromagnet, each hiding a slow staggered tail that a single mode per observable cannot capture.
+The code (\texttt{af\_metric.py}, \texttt{kmc\_af2.c}) reproduces every entry.
+
+
+\section{Summary and how to tighten}
+
+\begin{equation*}
+\resizebox{\textwidth}{!}{$\displaystyle
+\chi=N\,\mathrm{Hess}_{(K,h)}\phi\ \ [\text{exact}],\qquad
+M=N\!\left\langle\begin{pmatrix}\Sig^2&\Sig\\\Sig&1\end{pmatrix}\sech^2(h{+}K\Sig)\right\rangle\ \ [\text{exact}],\qquad
+\zeta=\chi M^{-1}\chi\ \ [\text{lower bound}]
+$}
+\end{equation*}
+with $\phi$ from \eqref{eq:phi}, $u^*$ from \eqref{eq:fp}, and the neighbour law \eqref{eq:nbr}.
+
+\begin{itemize}[topsep=2pt,itemsep=1pt]
+\item \textbf{Exact:} the reduction \eqref{eq:resolvent}; the covariance $\chi$ (all components, all
+$(K,h)$); the flux matrix $M$ as the exact short-time/initial-decay object; the $z=2$ magnetization
+block.
+\item \textbf{Approximate:} using $M$ instead of the full spectrum of $\LL$ in \eqref{eq:zetachiM} ---
+a controlled lower bound, excellent for the critical/magnetization physics, weakest for $\zeta_{EE}$
+at $h=0$.
+\item \textbf{To tighten:} enlarge the mode space $V$ with the next slow operators
+(e.g.\ $\sum_i s_i\Sig_i$, longer-range energy modes), turning $M$ into a larger Mori matrix; this
+systematically raises the bound toward $\zeta^{\rm true}$ and chiefly repairs $\zeta_{EE}$. The
+dynamic-cavity (population-dynamics) method yields the full relaxation spectrum if the exact
+$\zeta_{EE}$ amplitude is needed.
+\end{itemize}
+
+\appendix
+
+\section{Explicit derivation of the magnetization (Step 3.4)}
+\label{app:mag}
+
+Section 3.4 asserts that the magnetization per site is $m=\partial_h\phi$ and that, thanks to
+stationarity, it collapses to $m=\tanh(u^*+\hat u^*)$. Here is every step, including the stationarity
+lemma it relies on.
+
+\paragraph{Setup.}
+Write the free energy \eqref{eq:phi} as a function of an \emph{independent} cavity parameter $v$ (its
+physical value is $v=u^*$):
+\begin{gather*}
+\phi(K,h,v)=\ln\big[\,P+Q\,\big]-\frac z2\ln\!\big[e^{K}\cosh2v+e^{-K}\big]+\frac z2\ln2,\\[3pt]
+P\equiv e^{h}\cosh^{z}(K{+}v),\quad Q\equiv e^{-h}\cosh^{z}(K{-}v).
+\end{gather*}
+We use $t\equiv\tanh K$, the field-through-a-bond map $\hat u(v)\equiv\atanh(t\tanh v)$, and the fixed
+point $u^*=h+b\,\hat u(u^*)$ with $b=z-1$, $\hat u^*\equiv\hat u(u^*)$. The magnetization is exact,
+$m=\tfrac1N\avg{\mg}=\tfrac1N\partial_h\ln Z=\partial_h\phi$, where this is the \emph{total} derivative.
+
+\paragraph{Step 1 --- Chain rule, then kill one term with stationarity.}
+\begin{equation*}
+m=\frac{d\phi}{dh}=\underbrace{\frac{\partial\phi}{\partial h}\Big|_{v}}_{\text{explicit}}
++\underbrace{\frac{\partial\phi}{\partial v}\Big|_{h}\cdot\frac{du^*}{dh}}_{\text{implicit}} .
+\end{equation*}
+The stationarity property $\partial_v\phi|_{v=u^*}=0$ (proved in Step 4) is the envelope theorem: the
+physical cavity field sits at a flat point of $\phi$, so the implicit term vanishes and
+$m=\partial_h\phi|_{v=u^*}$.
+
+\paragraph{Step 2 --- Compute the explicit derivative.}
+Only $P+Q$ depends on $h$ at fixed $v$; since $\partial_h P=P$ and $\partial_h Q=-Q$,
+\begin{equation*}
+\frac{\partial\phi}{\partial h}\Big|_v=\frac{P-Q}{P+Q}=\tanh\!\Big(\half\ln\frac PQ\Big),
+\qquad
+\half\ln\frac PQ=h+\frac z2\ln\frac{\cosh(K{+}v)}{\cosh(K{-}v)} .
+\end{equation*}
+
+\paragraph{Step 3 --- The bond factor is exactly $\hat u$.}
+Expanding and dividing by $\cosh K\cosh v$,
+\begin{equation*}
+\frac{\cosh(K{+}v)}{\cosh(K{-}v)}
+=\frac{\cosh K\cosh v+\sinh K\sinh v}{\cosh K\cosh v-\sinh K\sinh v}
+=\frac{1+t\tanh v}{1-t\tanh v},
+\end{equation*}
+so, using $\atanh(x)=\half\ln\frac{1+x}{1-x}$, $\;\tfrac12\ln\frac{\cosh(K+v)}{\cosh(K-v)}=\atanh(t\tanh v)=\hat u(v)$. Hence
+\begin{equation}
+\frac{\partial\phi}{\partial h}\Big|_v=\tanh\!\big(h+z\,\hat u(v)\big).
+\end{equation}
+Evaluating at $v=u^*$ and using $u^*=h+b\hat u^*$ to write $h+z\hat u^*=(h+b\hat u^*)+\hat u^*=u^*+\hat u^*$ (because $z-b=1$),
+\begin{equation}
+\boxed{\;m=\tanh\!\big(h+z\,\hat u^*\big)=\tanh\!\big(u^*+\hat u^*\big)\;}
+\end{equation}
+\emph{Physical reading:} $h+z\hat u^*$ is the total field on the central spin --- the external $h$ plus
+one bond-message $\hat u^*$ from each of its $z$ neighbours; a lone spin in field $\Theta$ has
+$\avg{s}=\tanh\Theta$. (This is also the direct cavity route to $m$, bypassing $\phi$.)
+
+\paragraph{Step 4 --- Proof of the stationarity used in Step 1.}
+Differentiating $\phi$ in $v$ and using $\cosh^{z-1}(K{\pm}v)\sinh(K{\pm}v)=\cosh^z(K{\pm}v)\tanh(K{\pm}v)$,
+\begin{equation*}
+\frac{\partial\phi}{\partial v}=z\,(F_1-F_2),\qquad
+F_1\equiv\frac{P\tanh(K{+}v)-Q\tanh(K{-}v)}{P+Q},\qquad
+F_2\equiv\frac{e^{K}\sinh2v}{e^{K}\cosh2v+e^{-K}} .
+\end{equation*}
+Write $w=\tanh v$. Using $e^{\pm K}=\cosh K\,(1\pm t)$, the second term simplifies to
+\begin{equation*}
+F_2=\frac{(1+t)\,w}{1+t\,w^{2}}=\frac{w+tw}{1+w\cdot tw}=\tanh\!\big(v+\hat u(v)\big)
+\end{equation*}
+for \emph{any} $v$ (tanh addition formula with $\tanh\hat u(v)=tw$). For $F_1$, set
+$\alpha=\tanh(K{+}v)=\frac{t+w}{1+tw}$, $\beta=\tanh(K{-}v)=\frac{t-w}{1-tw}$, and
+$R\equiv P/Q=e^{2(h+z\hat u(v))}$, so $F_1=\frac{R\alpha-\beta}{R+1}$. A short computation gives
+\begin{gather*}
+\alpha-\beta=\frac{2w(1-t^2)}{1-t^2w^2},\qquad
+2-(\alpha+\beta)=\frac{2(1-t)(1+tw^2)}{1-t^2w^2},\\[3pt]
+\frac{\alpha-\beta}{\,2-(\alpha+\beta)\,}=\frac{w(1+t)}{1+tw^2}=F_2 .
+\end{gather*}
+One checks that $F_1=\dfrac{\alpha-\beta}{2-(\alpha+\beta)}$ iff $R=\dfrac{1+F_2}{1-F_2}$, i.e.\ iff
+$\tanh(h+z\hat u(v))=\tanh(v+\hat u(v))$, i.e.\ iff
+\begin{equation*}
+h+z\,\hat u(v)=v+\hat u(v)\ \Longleftrightarrow\ v=h+(z-1)\hat u(v),
+\end{equation*}
+which is exactly the fixed-point equation \eqref{eq:fp}. Hence precisely at $v=u^*$ we have $F_1=F_2$ and
+\begin{equation*}
+\frac{\partial\phi}{\partial v}\Big|_{v=u^*}=z\,(F_1-F_2)=0 . \qquad\blacksquare
+\end{equation*}
+Stationarity is therefore not an extra assumption but is \emph{equivalent} to the cavity fixed point,
+which is why the free-energy route and the direct cavity route agree. As a check, at $h=0$ the
+paramagnet has $u^*=0\Rightarrow\hat u^*=0\Rightarrow m=\tanh0=0$.
+
+\section{Explicit derivation of the static covariance \texorpdfstring{$\chi_{ab}$}{chi\_ab} (Step 3.5)}
+\label{app:chi}
+
+Here we compute all three components of $\chi/N$ in closed form. Combined with the flux matrix $M$
+\eqref{eq:Mmat}, this renders the full metric $\zeta=\chi M^{-1}\chi$ explicit in terms of
+$(K,h,u^*)$, with $u^*$ the only implicitly-defined quantity (\S6).
+
+\paragraph{The covariance is the Jacobian of the order parameters.}
+Since $\avg{\Phi_a}=\partial_{\lambda_a}\ln Z$, the order parameters are the \emph{first} derivatives
+of $\phi$: the energy per site $\varepsilon\equiv\avg{\eq}/N=\partial_K\phi$ and the magnetization
+$m\equiv\avg{\mg}/N=\partial_h\phi$. Hence $\chi_{ab}=\partial_{\lambda_b}\avg{\Phi_a}$ is simply the
+Jacobian of $(\varepsilon,m)$ with respect to $(K,h)$:
+\begin{equation}
+\frac1N\chi=\begin{pmatrix}\partial_K\varepsilon & \partial_h\varepsilon\\[2pt]\partial_K m & \partial_h m\end{pmatrix}_{(E,M)},
+\qquad \partial_h\varepsilon=\partial_K m\ \ (\text{Maxwell / symmetry}).
+\end{equation}
+(Equivalently, eliminating the internal variable $v$ at its stationary point gives the manifestly
+symmetric Schur-complement form $\chi_{ab}/N=\phi_{ab}-\phi_{av}\phi_{bv}/\phi_{vv}$, with subscripts
+denoting partials at fixed $v$; the Jacobian route below is the practical evaluation and we have
+checked the two agree.)
+
+\paragraph{Ingredient 1: the two order parameters.}
+From Appendix~\ref{app:mag}, $m=\tanh(h+z\hat u^*)$ with $\hat u^*=\atanh(t\tanh u^*)$. For the energy,
+$\varepsilon=\tfrac1N\avg{\eq}=\tfrac{z}{2}\avg{s_is_j}$ (there are $z/2$ bonds per site). The bond
+marginal is $P(s_i,s_j)\propto e^{Ks_is_j+u^*(s_i+s_j)}$ (each spin feels its cavity field $u^*$ from
+the rest), giving
+\begin{equation}
+\varepsilon=\frac z2\,\epsilon_b,\qquad
+\epsilon_b\equiv\avg{s_is_j}=\frac{e^{K}\cosh2u^*-e^{-K}}{e^{K}\cosh2u^*+e^{-K}}\equiv\frac{e^K\cosh2u^*-e^{-K}}{B},
+\end{equation}
+where $B\equiv e^{K}\cosh2u^*+e^{-K}$. (One checks $\partial_K\phi=\tfrac z2\epsilon_b$ directly, as it
+must.)
+
+\paragraph{Ingredient 2: the cavity responses.}
+Differentiating the fixed point $u^*=h+b\,\hat u(u^*,K)$, with $w\equiv\tanh u^*$,
+\begin{equation}
+\frac{du^*}{dh}=\frac{1}{1-b\,t_*},\qquad
+\frac{du^*}{dK}=\frac{b\,\hat u_K}{1-b\,t_*},\qquad
+t_*=\frac{t(1-w^2)}{1-t^2w^2},\quad
+\hat u_K=\frac{(1-t^2)\,w}{1-t^2w^2},
+\end{equation}
+and correspondingly $\dfrac{d\hat u^*}{dh}=\dfrac{t_*}{1-bt_*}$, $\dfrac{d\hat u^*}{dK}=\dfrac{\hat u_K}{1-bt_*}$.
+
+\paragraph{Magnetization row ($a=h$).}
+Differentiating $m=\tanh(h+z\hat u^*)$ (total derivatives) and using $z-b=1$:
+\begin{align}
+\frac{\chi_{hh}}{N}&=\frac{\partial m}{\partial h}=(1-m^2)\Big(1+z\frac{d\hat u^*}{dh}\Big)
+=(1-m^2)\Big(1+\frac{z\,t_*}{1-bt_*}\Big)
+=\boxed{\;(1-m^2)\,\frac{1+t_*}{1-b\,t_*}\;}\\[4pt]
+\frac{\chi_{Kh}}{N}&=\frac{\partial m}{\partial K}=(1-m^2)\,z\frac{d\hat u^*}{dK}
+=\boxed{\;(1-m^2)\,\frac{z\,\hat u_K}{1-b\,t_*}\;}
+\end{align}
+
+\paragraph{Energy row ($a=K$).}
+Differentiating $\varepsilon=\tfrac z2\,\epsilon_b=\tfrac z2 (e^K\cosh2u^*-e^{-K})/B$. Using
+$B^2-(e^K\cosh2u^*-e^{-K})^2=4\cosh2u^*$ and $\partial_{u^*}\epsilon_b=4\sinh2u^*/B^2$, the total
+$K$-derivative is
+\begin{equation}
+\frac{\chi_{KK}}{N}=\frac{\partial\varepsilon}{\partial K}
+=\frac z2\Big[(1-\epsilon_b^2)+\frac{4\sinh2u^*}{B^2}\frac{du^*}{dK}\Big]
+=\boxed{\;\frac{2z}{B^2}\Big(\cosh2u^*+\sinh2u^*\,\frac{b\,\hat u_K}{1-bt_*}\Big)\;}
+\end{equation}
+using $1-\epsilon_b^2=4\cosh2u^*/B^2$. The cross term computed this way,
+$\partial_h\varepsilon=\tfrac z2\,\partial_{u^*}\epsilon_b\,(du^*/dh)=2z\sinh2u^*/[B^2(1-bt_*)]$,
+equals $\partial_K m$ above --- the Maxwell relation, which we verified numerically.
+
+\paragraph{Zero-field reductions.}
+At $h=0$ (paramagnet): $u^*=0$, $w=0$, $m=0$, $t_*=t$, $\hat u_K=0$, $B=2\cosh K$. Hence
+\begin{equation*}
+\frac{\chi_{hh}}{N}=\frac{1+t}{1-bt}=\frac{1+\tanh K}{1-(z-1)\tanh K},\qquad
+\frac{\chi_{Kh}}{N}=0,\qquad
+\frac{\chi_{KK}}{N}=\frac{2z}{4\cosh^2K}=\frac z2\,\sech^2K,
+\end{equation*}
+recovering the closed forms of Step 3.6.
+
+\paragraph{The metric is now explicit.}
+With these three components and $M$ from \eqref{eq:Mmat}, the friction tensor
+$\zeta=\chi M^{-1}\chi$ is a fully explicit elementary function of $(K,h)$ and the single scalar
+$u^*$; the remaining task --- solving \eqref{eq:fp} for $u^*$ --- is the degree-$z$ polynomial of
+\S6 (closed in radicals for $z\le4$; closed-form parametric for all $z$). A worked numerical check
+of these formulas against the direct Hessian and against KMC is included with the code.
+
+\end{document}

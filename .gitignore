@@ -205,3 +205,17 @@ __marimo__/
 .streamlit/secrets.toml
 
 .DS_Store
+
+# LaTeX
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.log
+*.pdf
+*.run*
+*.pdf
+*.fdb*
+*.fls
+*.out
+*.synctex.gz

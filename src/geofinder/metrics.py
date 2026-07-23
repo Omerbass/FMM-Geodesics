@@ -1244,6 +1244,103 @@ zetaB * (4 -zetaB + 4 * (beta ** 2) * (6 -11 * zetaB) * zetaB + 12 * \
     def is_ordered_phase(self, x):
         return super().is_ordered_phase((1/x[0], x[1]/x[0]))
 
+class BetheIsing(RMetric):
+    """
+    Sivak-Crooks generalized friction tensor for the Ising model on a Bethe
+    lattice (coordination number z), coordinates x=(K,h) with
+    -βH = K Σ s_i s_j + h Σ s_i. See Derivations/Bethe_full_2x2_derivation.TEX.
+
+    Valid for both signs of K, including both ordered phases: spontaneous
+    ferromagnetic order (K>0, below Kc=atanh(1/(z-1))) and Neel/staggered
+    antiferromagnetic order (K<0, below T_N where (z-1)|tanh K|=1), via the
+    two-sublattice cavity fields (u_A,u_B) of derivation §7. On the
+    disordered branch (u_A=u_B) this reduces exactly to the original
+    single-field formulas of §3-§5.
+    """
+    dim = 2  # coordinates x = (K, h)
+
+    def __init__(self, z=3):
+        self.z = z  # lattice coordination number
+
+    def get_cavity_fields(self, x):
+        """Solve the two-sublattice cavity equations (eq. AF1):
+        u_A = h + b*atanh(t*tanh(u_B)),  u_B = h + b*atanh(t*tanh(u_A)).
+        Seeded off the symmetric line so Picard iteration can find a
+        staggered (Neel) solution when one is stable; on the disordered
+        branch (or for the ferromagnet) it converges back to u_A = u_B,
+        reproducing the original single-field result exactly.
+
+        Updates u_A then u_B sequentially (Gauss-Seidel) rather than
+        simultaneously: a simultaneous update can get trapped in a
+        non-convergent 2-cycle when the uniform (ferromagnetic) mode is
+        the unstable one, since it never mixes in the just-computed value.
+        """
+        K, h = x
+        b = self.z - 1
+        t = np.tanh(K)
+        def cavity_map(u, h, b, t):
+            u_A_new = h + b * np.arctanh(t * np.tanh(u[1]))
+            u_B_new = h + b * np.arctanh(t * np.tanh(u_A_new))
+            return np.array([u_A_new, u_B_new])
+        return fixed_point(cavity_map, start=np.array([0.05, -0.05]), args=(h, b, t))
+
+    def metric(self, x):
+        """Per-site Sivak-Crooks friction tensor  ζ/N = χ̃ M̃⁻¹ χ̃  in (K,h) coords."""
+        K, h = x
+        z, b = self.z, self.z - 1
+        t = np.tanh(K)
+        u_A, u_B = self.get_cavity_fields(x)
+        w_A, w_B = np.tanh(u_A), np.tanh(u_B)
+
+        # cavity responses per sublattice (derivation §7.3)
+        t_A = t * (1 - w_A**2) / (1 - t**2 * w_A**2)
+        t_B = t * (1 - w_B**2) / (1 - t**2 * w_B**2)
+        u_hat_K_A = (1 - t**2) * w_A / (1 - t**2 * w_A**2)
+        u_hat_K_B = (1 - t**2) * w_B / (1 - t**2 * w_B**2)
+        u_hat_A = np.arctanh(t * w_A)
+        u_hat_B = np.arctanh(t * w_B)
+        m_A = np.tanh(u_A + u_hat_B)
+        m_B = np.tanh(u_B + u_hat_A)
+
+        D = 1 - b**2 * t_A * t_B
+        du_A_dh = (1 + b*t_B) / D
+        du_B_dh = (1 + b*t_A) / D
+        du_A_dK = b*(u_hat_K_B + b*t_B*u_hat_K_A) / D
+        du_B_dK = b*(u_hat_K_A + b*t_A*u_hat_K_B) / D
+
+        # chi (static covariance), per site, basis (K,h)
+        chi_hh = (0.5*(1 - m_A**2)*(du_A_dh + t_B*du_B_dh)
+                  + 0.5*(1 - m_B**2)*(du_B_dh + t_A*du_A_dh))
+        chi_Kh = (0.5*(1 - m_A**2)*(du_A_dK + t_B*du_B_dK + u_hat_K_B)
+                  + 0.5*(1 - m_B**2)*(du_B_dK + t_A*du_A_dK + u_hat_K_A))
+
+        P, Q = u_A + u_B, u_A - u_B
+        Pp, Qp = du_A_dK + du_B_dK, du_A_dK - du_B_dK
+        B_plus = np.exp(K)*np.cosh(P) + np.exp(-K)*np.cosh(Q)
+        chi_KK = z*(2*np.cosh(P)*np.cosh(Q) + np.sinh(P)*np.cosh(Q)*Pp
+                    - np.cosh(P)*np.sinh(Q)*Qp) / B_plus**2
+
+        chi = np.array([[chi_KK, chi_Kh], [chi_Kh, chi_hh]])
+
+        # M (flux/moment matrix), per site, via the neighbour-sum distribution (eq. 9),
+        # averaged over the two sublattices (derivation §7.4)
+        def neighbor_moments(u_cavity):
+            n = np.arange(z + 1)
+            sigma = 2*n - z
+            log_w = (sp.special.gammaln(z + 1) - sp.special.gammaln(n + 1) - sp.special.gammaln(z - n + 1)
+                      + u_cavity*sigma + np.log(np.cosh(h + K*sigma)))
+            weights = np.exp(log_w - log_w.max())
+            weights /= weights.sum()
+            sech2 = 1 / np.cosh(h + K*sigma)**2
+            return np.sum(weights*sigma**2*sech2), np.sum(weights*sigma*sech2), np.sum(weights*sech2)
+
+        M00_A, M01_A, M11_A = neighbor_moments(u_B)  # A's z neighbours are B-sites, carry u_B
+        M00_B, M01_B, M11_B = neighbor_moments(u_A)  # B's neighbours carry u_A
+        M = 0.5 * np.array([[M00_A + M00_B, M01_A + M01_B],
+                             [M01_A + M01_B, M11_A + M11_B]])
+
+        return chi @ np.linalg.solve(M, chi)
+
 class interpolatedMetric(RMetric):
     def __init__(self, metric_meas, ptline_meas=None, ptline_func=None): #, interpolation_method='cubic'):
         self.metric_meas = metric_meas
