@@ -1341,6 +1341,29 @@ class BetheIsing(RMetric):
 
         return chi @ np.linalg.solve(M, chi)
 
+    def phase_transition_line(self, K):
+        """
+        Neel line h_N(K): closed-form field at which the antiferromagnetic
+        (staggered) mode of the symmetric fixed point loses stability
+        (derivation §7.2, "The Neel line, closed form"). Only defined for
+        K < 0 with |tanh K| >= 1/(z-1) (the branch that can order at all);
+        returns NaN outside that range, where no finite h gives Neel order.
+        """
+        b = self.z - 1
+        t = np.tanh(K)
+        if t > -1/b:
+            return np.nan
+        w = np.sqrt((1 + b*t) / (t*(t + b)))
+        return np.arctanh(w) - b*np.arctanh(t*w)
+
+    def is_ordered_phase(self, x):
+        """True iff x=(K,h) lies in the Neel-ordered (staggered) phase."""
+        K, h = x
+        hc = self.phase_transition_line(K)
+        if np.isnan(hc):
+            return False
+        return abs(h) < hc
+
 class interpolatedMetric(RMetric):
     def __init__(self, metric_meas, ptline_meas=None, ptline_func=None): #, interpolation_method='cubic'):
         self.metric_meas = metric_meas

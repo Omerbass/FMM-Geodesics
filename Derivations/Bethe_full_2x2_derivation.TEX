@@ -554,8 +554,28 @@ stability:
 \text{at }h=0:\ (z-1)|\tanh K_N|=1 .
 \end{equation}
 A field drives $T_N$ down (larger $|K_N|$); the line is second order at small $h$ and first order beyond
-a tricritical point at large $h$ (the Bethe--Peierls metamagnet). Below $T_N$ one takes the staggered
-branch $u_A\neq u_B$ of \eqref{eq:afcav}.
+a tricritical point at large $h$ (the Bethe--Peierls metamagnet).
+
+\emph{The line in closed form.} It can be solved explicitly in the whole $(K,h)$ plane. The instability
+condition $b\,t_*=-1$ with $t_*=t(1-w^2)/(1-t^2w^2)$, $w=\tanh u_P$, is linear in $w^2$ and fixes it in
+terms of $t=\tanh K$; the fixed point $u_P=h+b\hat u(u_P)$, i.e.\ $h=\atanh w-b\atanh(tw)$, then fixes
+$h$:
+\begin{equation}
+\boxed{\;w^2=\frac{1+bt}{t\,(t+b)},\qquad h_N=\atanh(w)-b\,\atanh(tw)\;}
+\end{equation}
+a fully explicit $h_N(K)$ (with $t=\tanh K<0$, on the branch $1/b\le|t|<1$). Eliminating $w$ gives a
+clean first-order ODE for the line depending on $K$ alone:
+\begin{equation}
+\boxed{\;\frac{dh}{dK}=-\frac{b^2-1}{(t+b)\,w}=-\,z(z-2)\sqrt{\frac{|\tanh K|}
+{\big(z{-}1{-}|\tanh K|\big)\big((z{-}1)|\tanh K|-1\big)}}\;}
+\end{equation}
+(using $b^2-1=z(z-2)$). Two limits check: at the N\'eel point $|t|\to1/b$ the factor
+$(z{-}1)|t|-1\to0$, so $dh/dK\to-\infty$ ($dK/dh\to0$) --- the line leaves the $h=0$ axis vertically and
+the N\'eel coupling shifts quadratically, $K_N(h)-K_N(0)\propto h^2$; and as $K\to-\infty$ ($T\to0$),
+$dh/dK\to-z$, so $h_N\simeq z|K|$ --- the zero-temperature spin-flip field. This closed expression is the
+second-order line (equivalently the paramagnetic spinodal); past the tricritical point the true
+first-order boundary lies just inside it. Below $T_N$ one takes the staggered branch $u_A\neq u_B$ of
+\eqref{eq:afcav}.
 
 \subsection{Static covariance (full closed form)}
 The covariance is the Jacobian of $(\varepsilon,m)$ in $(K,h)$; the only new feature is that both
