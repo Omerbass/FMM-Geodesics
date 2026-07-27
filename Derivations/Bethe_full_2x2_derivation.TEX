@@ -26,6 +26,7 @@
 \newcommand{\E}{\mathbb{E}}
 
 \allowdisplaybreaks
+\emergencystretch=2em
 
 \title{\bf The full $2\times2$ Sivak--Crooks friction tensor\\ for the Bethe-lattice Ising model\\[4pt]
 \large A fully explicit, step-by-step derivation}
@@ -553,8 +554,10 @@ stability:
 \boxed{\;b\,|t_*(u_P(h))|=1\;}\ \Longrightarrow\ T_N(h),\qquad
 \text{at }h=0:\ (z-1)|\tanh K_N|=1 .
 \end{equation}
-A field drives $T_N$ down (larger $|K_N|$); the line is second order at small $h$ and first order beyond
-a tricritical point at large $h$ (the Bethe--Peierls metamagnet).
+A field drives $T_N$ down (larger $|K_N|$). The line stays \emph{second order along its entire length}:
+Appendix~\ref{app:crit} shows the staggered Landau quartic coefficient is constant and positive, so ---
+unlike a generic metamagnet --- there is no tricritical point and no first-order segment for this
+nearest-neighbour model.
 
 \emph{The line in closed form.} It can be solved explicitly in the whole $(K,h)$ plane. The instability
 condition $b\,t_*=-1$ with $t_*=t(1-w^2)/(1-t^2w^2)$, $w=\tanh u_P$, is linear in $w^2$ and fixes it in
@@ -572,9 +575,9 @@ clean first-order ODE for the line depending on $K$ alone:
 (using $b^2-1=z(z-2)$). Two limits check: at the N\'eel point $|t|\to1/b$ the factor
 $(z{-}1)|t|-1\to0$, so $dh/dK\to-\infty$ ($dK/dh\to0$) --- the line leaves the $h=0$ axis vertically and
 the N\'eel coupling shifts quadratically, $K_N(h)-K_N(0)\propto h^2$; and as $K\to-\infty$ ($T\to0$),
-$dh/dK\to-z$, so $h_N\simeq z|K|$ --- the zero-temperature spin-flip field. This closed expression is the
-second-order line (equivalently the paramagnetic spinodal); past the tricritical point the true
-first-order boundary lies just inside it. Below $T_N$ one takes the staggered branch $u_A\neq u_B$ of
+$dh/dK\to-z$, so $h_N\simeq z|K|$ --- the zero-temperature spin-flip field. Because the transition is
+continuous everywhere (Appendix~\ref{app:crit}), this instability line \emph{is} the phase boundary,
+with no spinodal/coexistence gap. Below $T_N$ one takes the staggered branch $u_A\neq u_B$ of
 \eqref{eq:afcav}.
 
 \subsection{Static covariance (full closed form)}
@@ -873,5 +876,101 @@ $\zeta=\chi M^{-1}\chi$ is a fully explicit elementary function of $(K,h)$ and t
 $u^*$; the remaining task --- solving \eqref{eq:fp} for $u^*$ --- is the degree-$z$ polynomial of
 \S6 (closed in radicals for $z\le4$; closed-form parametric for all $z$). A worked numerical check
 of these formulas against the direct Hessian and against KMC is included with the code.
+
+\section{Critical behaviour of the cavity field}
+\label{app:crit}
+
+Near the transition $u^*$ is small, so the self-consistency equation \eqref{eq:fp} can be expanded.
+Writing $t=\tanh K$, $b=z-1$, the message map has the Taylor series
+\begin{equation}
+\hat u(u)=\atanh(t\tanh u)=t\,u-\frac{t(1-t^2)}{3}\,u^3-\frac{t(1-t^2)(3t^2-2)}{15}\,u^5+O(u^7).
+\end{equation}
+Keeping the cubic term, $u^*=h+b\hat u(u^*)$ becomes a Landau equation of state,
+\begin{equation}
+\boxed{\;r\,u^*+g\,(u^*)^3=h,\qquad r=1-bt=1-(z-1)\tanh K,\quad g=\frac{bt(1-t^2)}{3}\;}
+\label{eq:landau}
+\end{equation}
+so $u^*$ is a mean-field order parameter ($r$ is the reduced temperature, $>0$ paramagnet, $<0$ ordered;
+$g>0$). Three regimes follow:
+\begin{align}
+\text{ordered, }h=0,\ K\!\gtrsim\!K_c:\quad
+&u^*=\sqrt{-r/g}
+\ \xrightarrow{K\to K_c^+}\ \frac{b\sqrt3}{\sqrt{b^2-1}}\sqrt{(z{-}1)\tanh K-1}\ \sim(K{-}K_c)^{1/2},\\
+\text{critical isotherm, }K\!=\!K_c:\quad
+&u^*=\Big(\tfrac{h}{g_c}\Big)^{1/3}=\Big(\tfrac{3b^2h}{b^2-1}\Big)^{1/3}\ \sim h^{1/3},\qquad g_c=\tfrac{b^2-1}{3b^2},\\
+\text{paramagnet, }K\!<\!K_c:\quad
+&u^*\approx\frac{h}{r}=\frac{h}{1-(z-1)\tanh K},
+\end{align}
+giving the mean-field exponents $\beta=\tfrac12$, $\delta=3$, $\gamma=1$ (the last matching
+$\chi_{MM}/N\sim1/r$ of \S3.6). Since $m=\tanh(z\hat u^*)\approx\tfrac{z}{z-1}u^*$ near $K_c$, the cavity
+field is proportional to the magnetization.
+
+\paragraph{Range of validity.}
+The small quantity controlling the truncation is $(u^*)^2\sim\epsilon$, where
+$\epsilon\equiv(z-1)\tanh K-1=-r$ is the reduced distance from criticality. Feeding the $u^5$ term back
+into the cubic root, the relative error of \eqref{eq:landau} is
+\begin{equation}
+\frac{u^*-u^*_{\rm cubic}}{u^*}\approx\frac{3\,(2b^2-3)}{10\,(b^2-1)}\,\epsilon
+=\begin{cases}0.50\,\epsilon&(z=3)\\[1pt]0.56\,\epsilon&(z=4)\\[1pt]\to0.6\,\epsilon&(z\to\infty),\end{cases}
+\end{equation}
+i.e.\ about $\tfrac12\epsilon$. Numerically ($z=3$, ordered phase), $K{-}K_c=0.02,0.05,0.10$ give
+$\epsilon=0.029,0.072,0.143$ with errors $1.4\%,3.4\%,6.2\%$ --- close to $\epsilon/2$. In practice the
+cubic is good to $\sim1\%$ for $\epsilon\lesssim0.02$, $\sim5\%$ for $\epsilon\lesssim0.1$, and
+$\sim10\%$ for $\epsilon\lesssim0.2$; using $\epsilon\approx\tfrac{b^2-1}{b}(K{-}K_c)$, for $z=3$ these
+are $K{-}K_c\lesssim0.013,\,0.07,\,0.13$.
+
+Crucially, this window is $O(1)$ and not squeezed to zero by a Ginzburg criterion. The Bethe lattice is a
+tree (no loops), so mean-field theory is \emph{asymptotically exact} at the transition --- the exponents
+above are the true ones, and the corrections are ordinary analytic $O(\epsilon)$ Taylor terms. The cubic
+truncation fails only when $u^*$ itself grows to $O(1)$, i.e.\ when $\epsilon=O(1)$; there is no shrinking
+fluctuation region.
+
+\subsection*{Antiferromagnet: the staggered cavity field}
+For antiferromagnetic coupling the order parameter is the \emph{staggered} cavity field. Decompose the
+two-sublattice fields of \S9 into symmetric and staggered parts, $s=\tfrac12(u_A+u_B)$,
+$\phi=\tfrac12(u_A-u_B)$; adding and subtracting the cavity equations \eqref{eq:afcav} gives the exact
+pair
+\begin{equation*}
+s=h+\tfrac{b}{2}\big[\hat u(s{+}\phi)+\hat u(s{-}\phi)\big],\qquad
+\phi=-\tfrac{b}{2}\big[\hat u(s{+}\phi)-\hat u(s{-}\phi)\big].
+\end{equation*}
+Expanding in the small staggered field $\phi$ (the second line is odd, the first even) and letting the
+background shift $\delta s=s-s_0$ respond at $O(\phi^2)$,
+\begin{equation*}
+\phi=-b\,\hat u'(s)\,\phi-\tfrac{b}{6}\hat u'''(s)\,\phi^3+O(\phi^5),\qquad
+\delta s=\frac{b\,\hat u''(s_0)}{2\,(1-b\hat u'(s_0))}\,\phi^2+O(\phi^4),
+\end{equation*}
+where $s_0=u_P(h)$ is the paramagnetic background. Feeding $\delta s$ back into the first line yields the
+staggered Landau equation
+\begin{equation}
+r_s\,\phi+g_s\,\phi^3=h_s,\qquad
+r_s=1+b\,\hat u'(u_P),\qquad
+g_s=\frac{b}{6}\hat u'''(u_P)+\frac{b^2\,[\hat u''(u_P)]^2}{2\,(1-b\hat u'(u_P))},
+\end{equation}
+with $h_s$ the (small) staggered ordering field. The reduced temperature $r_s=1+bt_*$ vanishes exactly on
+the N\'eel line $b|t_*|=1$ of \S9.2, and the uniform field enters \emph{only} through the background
+$u_P(h)$: it tunes the position along the line, while $h_s$ is the field conjugate to $\phi$.
+
+The quartic coefficient is remarkable. Using $b\hat u'(u_P)=-1$ on the line (so $1-b\hat u'=2$) and the
+line constraint, a short symbolic calculation shows it is \emph{constant} along the entire N\'eel line,
+independent of $h$:
+\begin{equation}
+\boxed{\;g_s=\frac{b^2-1}{3b^2}>0\ \ \text{everywhere on the N\'eel line.}\;}
+\end{equation}
+Since $g_s$ never changes sign, the staggered order rises continuously,
+\begin{equation}
+\phi=\sqrt{-r_s/g_s}\ \sim\ (K_N-K)^{1/2},\qquad m_s=\tfrac12(m_A-m_B)\propto\phi,
+\end{equation}
+at \emph{every} field: \textbf{the N\'eel line is second order along its whole length --- there is no
+tricritical point and no first-order segment}. (Direct simulation of the ordered branch confirms
+$m_s\sim(K_N{-}K)^{1/2}$ from $h=0$ up to strong fields.) This corrects the generic metamagnet
+expectation: a tricritical point requires competing intra-sublattice couplings, which nearest-neighbour
+bonds on a bipartite tree do not provide.
+
+At $h=0$ the background vanishes, $u_P=0$, and $\hat u''(0)=0$ ($\hat u$ is odd), so the background term
+drops and $g_s=\tfrac{b}{6}\hat u'''(0)=-\tfrac{bt(1-t^2)}{3}$, which equals $g_c=(b^2-1)/(3b^2)$ at
+$|t|=1/b$ --- exactly the ferromagnetic value, consistent with the gauge map. The mean-field exponents
+$\beta=\tfrac12,\ \delta=3$ (in $h_s$), $\gamma=1$ hold along the whole line, and the cubic truncation has
+the same accuracy $\approx\tfrac12\epsilon$ as the ferromagnet, now in $\epsilon=b|t_*|-1$.
 
 \end{document}

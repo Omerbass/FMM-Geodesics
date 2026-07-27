@@ -1244,6 +1244,25 @@ zetaB * (4 -zetaB + 4 * (beta ** 2) * (6 -11 * zetaB) * zetaB + 12 * \
     def is_ordered_phase(self, x):
         return super().is_ordered_phase((1/x[0], x[1]/x[0]))
 
+def _hat_u(u, t):
+    """Message map hat_u(u) = atanh(t*tanh(u)) (Bethe_full_2x2_derivation.TEX)."""
+    return np.arctanh(t * np.tanh(u))
+
+def _hat_u1(u, t):
+    """d(hat_u)/du."""
+    w = np.tanh(u)
+    return t * (1 - w**2) / (1 - t**2 * w**2)
+
+def _hat_u2(u, t):
+    """d^2(hat_u)/du^2. Vanishes at u=0 (hat_u is odd)."""
+    w = np.tanh(u)
+    return -2*t*(1 - t**2)*w*(1 - w**2) / (1 - t**2*w**2)**2
+
+def _hat_u3(u, t):
+    """d^3(hat_u)/du^3. At u=0: -2*t*(1-t**2), matching the TEX's cubic Taylor coefficient."""
+    w = np.tanh(u)
+    return -2*t*(1 - t**2)*(1 - w**2)*(1 - 3*w**2 + t**2*w**2*(3 - w**2)) / (1 - t**2*w**2)**3
+
 class BetheIsing(RMetric):
     """
     Sivak-Crooks generalized friction tensor for the Ising model on a Bethe
@@ -1259,10 +1278,18 @@ class BetheIsing(RMetric):
     """
     dim = 2  # coordinates x = (K, h)
 
-    def __init__(self, z=3):
+    def __init__(self, z=3, landau_epsilon=0.15):
         self.z = z  # lattice coordination number
+        # Distance-from-transition threshold (in the reduced "temperature" r
+        # or r_s, see get_cavity_fields) below which the closed-form Landau
+        # cubic approximation of Bethe_full_2x2_derivation.TEX
+        # "Critical behaviour of the cavity field" is used instead of the
+        # exact self-consistent solve. 0.15 matches the TEX's own accuracy
+        # table (error <~5-10% for epsilon <~ 0.1-0.2). Set to 0 to disable
+        # and always use the exact solver.
+        self.landau_epsilon = landau_epsilon
 
-    def get_cavity_fields(self, x):
+    def _exact_cavity_fields(self, x):
         """Solve the two-sublattice cavity equations (eq. AF1):
         u_A = h + b*atanh(t*tanh(u_B)),  u_B = h + b*atanh(t*tanh(u_A)).
         Seeded off the symmetric line so Picard iteration can find a
@@ -1274,6 +1301,10 @@ class BetheIsing(RMetric):
         simultaneously: a simultaneous update can get trapped in a
         non-convergent 2-cycle when the uniform (ferromagnetic) mode is
         the unstable one, since it never mixes in the just-computed value.
+
+        This iteration's own convergence rate degrades to zero exactly at
+        the transition (critical slowing down); see get_cavity_fields for
+        the closed-form fast path used instead near the transition.
         """
         K, h = x
         b = self.z - 1
@@ -1283,6 +1314,92 @@ class BetheIsing(RMetric):
             u_B_new = h + b * np.arctanh(t * np.tanh(u_A_new))
             return np.array([u_A_new, u_B_new])
         return fixed_point(cavity_map, start=np.array([0.05, -0.05]), args=(h, b, t))
+
+    def _paramagnetic_background(self, h, b, t):
+        """Exact symmetric (disordered) root u_P of u = h + b*hat_u(u,t),
+        found by bisection rather than Picard iteration: this equation's
+        own Picard derivative is b*hat_u1(u_P,t) = r_s - 1, which passes
+        through the same marginal value as the two-sublattice iteration,
+        at the same (Neel) transition, so naive fixed-point iteration is
+        unstable exactly where this is needed. For K<0 (t<0), hat_u1(u,t)
+        is provably bounded in [t, 0) for all u, so
+        F(u) = u - h - b*hat_u(u,t) has F'(u) = 1 - b*hat_u1(u,t) > 1
+        everywhere: F is strictly increasing for any h, so u_P is always
+        unique and safely bracketed below.
+        """
+        margin = b * np.arctanh(abs(t)) + 1
+        lo, hi = h - margin, h + margin
+        return sp.optimize.brentq(lambda u: u - h - b * _hat_u(u, t), lo, hi)
+
+    def _landau_ferro_root(self, r, g, h, b, t, residual_tol=1e-3):
+        """Physical root of the ferromagnetic Landau cubic g*u**3 + r*u = h
+        (Bethe_full_2x2_derivation.TEX eq. landau), or None if no valid
+        root is found (falls back to the exact solver).
+
+        For r>=0 there is exactly one real root. For r<0 (ordered) there
+        are up to 3; the physical (thermodynamically selected) one has
+        sign(u) == sign(h) -- the unstable middle root always has the
+        opposite sign -- tie-broken to the negative branch at h==0 to
+        match _exact_cavity_fields' seed convention.
+
+        Near K_c the susceptibility diverges (chi_hh ~ 1/r), so u* ~ h/r
+        can be large for fixed h!=0 even as r->0: abs(r) < landau_epsilon
+        alone does not guarantee the small-u truncation is valid, so the
+        chosen root is checked against the exact equation's residual.
+        """
+        roots = np.roots([g, 0, r, -h])
+        real_roots = roots[np.abs(roots.imag) < 1e-9 * np.maximum(1, np.abs(roots.real))].real
+        if len(real_roots) == 0:
+            return None
+        if h == 0:
+            u = np.min(real_roots)  # negative branch, matching the exact solver's seed
+        else:
+            candidates = real_roots[np.sign(real_roots) == np.sign(h)]
+            if len(candidates) != 1:
+                return None
+            u = candidates[0]
+        if abs(u - h - b * np.arctanh(t * np.tanh(u))) > residual_tol:
+            return None
+        return u
+
+    def get_cavity_fields(self, x):
+        """Dispatch to the closed-form Landau cubic approximation of
+        Bethe_full_2x2_derivation.TEX "Critical behaviour of the cavity
+        field" when near the relevant transition (fast, and avoids the
+        exact solver's critical slowing down there), falling back to
+        _exact_cavity_fields deep within either phase.
+
+        Note: near K_c, the exact solver's fixed Picard seed is
+        history-dependent, not a pure function of (K,h) -- for a small
+        range of small h>0 just past K_c it can still return the
+        field-misaligned (negative) branch. The closed-form path instead
+        deterministically reports the thermodynamically dominant branch
+        via sign(h), so the two can disagree within that (bistable, both
+        locally valid) window right at the K>=0 switch boundary. This
+        branch is not currently reached by any grid/is_ordered_phase code
+        (only K<0 has a nonempty ordered region), so the practical impact
+        today is limited to direct calls at K>=0.
+        """
+        K, h = x
+        b = self.z - 1
+        t = np.tanh(K)
+        if K >= 0:
+            r = 1 - b * t
+            if self.landau_epsilon and abs(r) < self.landau_epsilon:
+                g = b * t * (1 - t**2) / 3
+                if abs(g) > 1e-12:
+                    u = self._landau_ferro_root(r, g, h, b, t)
+                    if u is not None:
+                        return np.array([u, u])
+        else:
+            u_P = self._paramagnetic_background(h, b, t)
+            t_P = _hat_u1(u_P, t)
+            r_s = 1 + b * t_P
+            if self.landau_epsilon and abs(r_s) < self.landau_epsilon:
+                g_s = (b/6) * _hat_u3(u_P, t) + b**2 * _hat_u2(u_P, t)**2 / (2 * (1 - b*t_P))
+                phi = np.sqrt(-r_s/g_s) if (r_s < 0 and g_s > 0) else 0.0
+                return np.array([u_P + phi, u_P - phi])
+        return self._exact_cavity_fields(x)
 
     def metric(self, x):
         """Per-site Sivak-Crooks friction tensor  ζ/N = χ̃ M̃⁻¹ χ̃  in (K,h) coords."""

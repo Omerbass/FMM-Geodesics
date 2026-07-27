@@ -225,6 +225,50 @@ class FMMGeodesicPaths:
 
         # print("no inverse metric correction")
 
+        # mesh boundary graph: vertex -> adjacent vertices sharing an edge with no
+        # neighboring triangle (delaunay.neighbors == -1), i.e. the triangulation's edge
+        boundary_neighbors = {}
+        for tri, nbrs in zip(delaunay.simplices, delaunay.neighbors):
+            for i in range(3):
+                if nbrs[i] == -1:
+                    a, b = tri[(i + 1) % 3], tri[(i + 2) % 3]
+                    boundary_neighbors.setdefault(a, set()).add(b)
+                    boundary_neighbors.setdefault(b, set()).add(a)
+        boundary_vertex_ids = np.array(list(boundary_neighbors.keys()))
+        boundary_vertex_pts = grid.valid_points[boundary_vertex_ids]
+
+        def nearest_boundary_vertex(point):
+            """Snap a point that's about to leave the mesh to the closest boundary vertex."""
+            grid_idx = grid.point_to_idx(point)
+            if grid_idx in boundary_neighbors:
+                return grid_idx
+            d2 = np.sum((boundary_vertex_pts - point) ** 2, axis=1)
+            return boundary_vertex_ids[np.argmin(d2)]
+
+        def would_exit(point, direction, step_len):
+            """Would stepping step_len along direction from point leave the mesh?"""
+            return delaunay.find_simplex(point + step_len * direction) == -1
+
+        def discrete_grid_hop(point):
+            """Fall back to the grid neighbor with the lowest distance (same greedy
+            hop as gradient_descent_to_origin_along_grid), for use when the
+            continuous RK2 step becomes unreliable. Returns None if no improving
+            neighbor exists."""
+            current_idx = grid.point_to_idx(point)
+            neighbors = []
+            for delta in it.product(*[[1, 0, -1], ] * grid.dim):
+                if not np.any(delta):
+                    continue
+                neighbor_idx = grid.neighbor(current_idx, delta)
+                if neighbor_idx != -1:
+                    neighbors.append(neighbor_idx)
+            if not neighbors:
+                return None
+            next_idx = min(neighbors, key=lambda idx: distances[idx])
+            if distances[next_idx] > distances[current_idx] + tol:
+                return None
+            return next_idx
+
         def get_normalized_gradient(point):
             simplex = delaunay.find_simplex(point)
             if simplex == -1:
@@ -257,21 +301,70 @@ class FMMGeodesicPaths:
             # grad_norm = self.geonorm(point, grad)
             # return grad / grad_norm
 
+        boundary_vertex = None  # set to a vertex index while following the mesh boundary (1D)
+
         with Progress() as progress:
             task = progress.add_task("[cyan]distance", total=distances[start])
             for _ in range(max_steps):
-                true_step = np.min((step_size, step_size / tol / 10 * (self.dist(current, final_point))))
+                if boundary_vertex is not None:
+                    # follow the mesh boundary downhill instead of stepping off the mesh
+                    neighbors = boundary_neighbors.get(boundary_vertex, ())
+                    next_idx = min(neighbors, key=lambda idx: distances[idx], default=None)
+                    if next_idx is None or distances[next_idx] > distances[boundary_vertex] + tol:
+                        break  # local minimum along the boundary; nothing more to do
+                    boundary_vertex = next_idx
+                    current = grid.valid_points[boundary_vertex]
+                    path.append(current)
+                    if self.dist(current, final_point) < tol:
+                        break
+                    progress.update(task, completed=distances[start] - self.dist(current, final_point))
+
+                    inner_grad = get_normalized_gradient(current)
+                    if np.any(inner_grad) and not would_exit(current, -inner_grad, step_size):
+                        boundary_vertex = None  # gradient points back inside; resume normal descent
+                    continue
+
+                true_step = np.min((step_size, self.dist(current, final_point)))
                 grad = get_normalized_gradient(current)
                 if not np.any(grad):
                     current = grid.valid_points[grid.point_to_idx(current)]
                     path.append(current)
                     rprint(f"[red]Warning: {current} outside of grid.")
                     break
-                # RK2
-                next_pred = current - true_step * grad
-                grad_pred = get_normalized_gradient(next_pred)
 
-                nxt = current - 0.5 * true_step * (grad + grad_pred)
+                if would_exit(current, -grad, true_step):
+                    boundary_vertex = nearest_boundary_vertex(current)
+                    current = grid.valid_points[boundary_vertex]
+                    path.append(current)
+                    if self.dist(current, final_point) < tol:
+                        break
+                    progress.update(task, completed=distances[start] - self.dist(current, final_point))
+                    continue
+
+                # RK2, with adaptive step-halving when predictor/corrector disagree:
+                # if grad @ grad_pred < 0 the two point more than 90 degrees apart, so
+                # their average collapses toward zero and the step becomes unreliable.
+                rk2_step = true_step
+                for _ in range(5):
+                    next_pred = current - rk2_step * grad
+                    grad_pred = get_normalized_gradient(next_pred)
+                    if grad @ grad_pred >= 0:
+                        break
+                    rk2_step /= 2
+                else:
+                    # still disagreeing at the smallest step: the continuous estimate
+                    # is unreliable here, so fall back to a discrete hop to the best
+                    # neighboring grid vertex instead
+                    next_idx = discrete_grid_hop(current)
+                    if next_idx is not None:
+                        current = grid.valid_points[next_idx]
+                        path.append(current)
+                        if self.dist(current, final_point) < tol:
+                            break
+                        progress.update(task, completed=distances[start] - self.dist(current, final_point))
+                        continue
+
+                nxt = current - 0.5 * rk2_step * (grad + grad_pred)
 
                 current = nxt
                 path.append(current)
