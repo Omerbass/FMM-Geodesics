@@ -228,11 +228,78 @@ def main_bethe_antiferro(x0, show_plot=False):
     np.savez(f"data/bethe_antiferro_geodesic_paths_K0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz",
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
+def _graded_1d_points(anchors, lo, hi, fine_delta, coarse_delta, band_half_width):
+    """
+    1D point set covering [lo, hi]: fine_delta resolution within band_half_width
+    of any point in `anchors`, coarse_delta everywhere else. NaN anchors are
+    skipped. Used to concentrate grid points near the phase transition line
+    without paying for uniform fine resolution across the whole domain.
+    """
+    coarse = np.arange(lo, hi, coarse_delta)
+    keep = np.ones(len(coarse), dtype=bool)
+    parts = []
+    for a in anchors:
+        if np.isnan(a):
+            continue
+        f_lo, f_hi = max(lo, a - band_half_width), min(hi, a + band_half_width)
+        if f_hi > f_lo:
+            parts.append(np.arange(f_lo, f_hi, fine_delta))
+        keep &= ~((coarse >= f_lo) & (coarse <= f_hi))
+    parts.append(coarse[keep])
+    return np.unique(np.round(np.concatenate(parts), 8))
+
+def main_bethe_antiferro_transition(x0, show_plot=False, K_bounds=(-3.0, -0.55), dK=0.01,
+                                     h_bounds=(-8.5, 8.5), fine_delta=0.005, coarse_delta=0.05,
+                                     band_half_width=1.0):
+    """
+    Like main_bethe_antiferro, but spans both the Neel-ordered and disordered
+    phases -- no BoundedGrid/is_ordered_phase filtering -- so geodesics can run
+    *through* the phase transition instead of stopping at its boundary.
+
+    Point density is graded per-row (see _graded_1d_points): fine_delta
+    resolution within band_half_width of the transition lines
+    h = +-phase_transition_line(K), coarse_delta everywhere else. This keeps
+    the total point count manageable despite covering roughly twice the (K,h)
+    area of main_bethe_antiferro (which only filled the ordered diamond).
+    Since the per-row h-grid depends on K (through phase_transition_line(K)),
+    the resulting positions are an unstructured point cloud, not a regular
+    grid -- Delaunay only needs the raw points, so this is fine, but there is
+    no BoundedGrid object to save/return (grid=None in the output), and no
+    point_to_idx: the source index is picked by nearest point instead.
+    """
+    betheMetric = metrics.BetheIsing(z=3)
+    Ks = np.arange(K_bounds[0], K_bounds[1], dK)
+    hcs = np.array([betheMetric.phase_transition_line(K) for K in Ks])
+
+    rows = []
+    for K, hc in zip(Ks, hcs):
+        hs = _graded_1d_points([hc, -hc], h_bounds[0], h_bounds[1], fine_delta, coarse_delta, band_half_width)
+        rows.append(np.column_stack([np.full(hs.shape, K), hs]))
+    positions = np.concatenate(rows, axis=0)
+
+    delaunay = Delaunay(positions)
+    triangles = delaunay.simplices.tolist()
+
+    source = np.argmin(np.linalg.norm(positions - x0, axis=1))
+
+    geo = FMMGeodesicPaths(betheMetric.metric, dim=2)
+
+    distances = geo.fast_marching_method(positions, triangles, source)
+
+    if show_plot:
+        plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5, s=2)
+        plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
+        valid = ~np.isnan(hcs)
+        plt.plot(Ks[valid], hcs[valid], 'w--', linewidth=1)
+        plt.plot(Ks[valid], -hcs[valid], 'w--', linewidth=1)
+        plt.colorbar()
+        plt.show()
+
+    np.savez(f"data/bethe_antiferro_transition_geodesic_paths_K0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz",
+        positions=positions, distances=distances, source=source, triangles=triangles, grid=None, deluanay=delaunay)
+
 if __name__ == "__main__":
     # main_antiferro_sivak(np.array([2.51, 1.5]))
-    # main_antiferro_sivak(np.array([1.7, -1.6]))
-    # main_antiferro_sivak(np.array([1.7, -1.7]))
-    # main_antiferro_sivak(np.array([4, 2.5]))
-    # main_antiferro_sivak(np.array([4, 3.5]))
-    main_bethe_antiferro(np.array([-0.9, 0.6]))
+    # main_bethe_antiferro(np.array([-0.9, 0.6]))
+    main_bethe_antiferro_transition(np.array([-1.0, 1.95]))
 
