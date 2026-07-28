@@ -1362,6 +1362,36 @@ class BetheIsing(RMetric):
             return None
         return u
 
+    def _landau_af_fields(self, h, b, t, u_P, r_s, residual_tol=1e-3):
+        """Closed-form staggered solution near the Neel line (no root-finding:
+        h_s=0 always, see get_cavity_fields), or None if the reconstructed
+        (u_A,u_B) doesn't actually satisfy the exact two-sublattice equations
+        to residual_tol (falls back to the exact solver).
+
+        Reconstructing u_A,u_B needs the O(phi**2) background shift
+        delta_s = s-u_P on top of the phi=0 background u_P (TEX "Critical
+        behaviour...", the same expansion that produces g_s's second term):
+        omitting it leaves an O(phi**2) error even though phi itself solves
+        the correct effective cubic -- this produced a visible jump right at
+        the switch boundary before this fix, since phi is O(1) (not small)
+        there even though r_s is. Even with delta_s, the cubic truncation
+        itself carries a ~epsilon/2 relative error (TEX's own accuracy
+        table), so a plain abs(r_s)<landau_epsilon gate is not by itself
+        enough for a seamless handoff -- hence the residual check, exactly
+        mirroring _landau_ferro_root's guard for the same reason.
+        """
+        one_minus_b_t_P = 1 - b * _hat_u1(u_P, t)
+        g_s = (b/6) * _hat_u3(u_P, t) + b**2 * _hat_u2(u_P, t)**2 / (2 * one_minus_b_t_P)
+        phi = np.sqrt(-r_s/g_s) if (r_s < 0 and g_s > 0) else 0.0
+        delta_s = b * _hat_u2(u_P, t) * phi**2 / (2 * one_minus_b_t_P)
+        s = u_P + delta_s
+        u_A, u_B = s + phi, s - phi
+        res_A = u_A - h - b * np.arctanh(t * np.tanh(u_B))
+        res_B = u_B - h - b * np.arctanh(t * np.tanh(u_A))
+        if max(abs(res_A), abs(res_B)) > residual_tol:
+            return None
+        return np.array([u_A, u_B])
+
     def get_cavity_fields(self, x):
         """Dispatch to the closed-form Landau cubic approximation of
         Bethe_full_2x2_derivation.TEX "Critical behaviour of the cavity
@@ -1393,12 +1423,11 @@ class BetheIsing(RMetric):
                         return np.array([u, u])
         else:
             u_P = self._paramagnetic_background(h, b, t)
-            t_P = _hat_u1(u_P, t)
-            r_s = 1 + b * t_P
+            r_s = 1 + b * _hat_u1(u_P, t)
             if self.landau_epsilon and abs(r_s) < self.landau_epsilon:
-                g_s = (b/6) * _hat_u3(u_P, t) + b**2 * _hat_u2(u_P, t)**2 / (2 * (1 - b*t_P))
-                phi = np.sqrt(-r_s/g_s) if (r_s < 0 and g_s > 0) else 0.0
-                return np.array([u_P + phi, u_P - phi])
+                fields = self._landau_af_fields(h, b, t, u_P, r_s)
+                if fields is not None:
+                    return fields
         return self._exact_cavity_fields(x)
 
     def metric(self, x):
