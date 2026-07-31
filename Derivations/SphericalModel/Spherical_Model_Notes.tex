@@ -1,0 +1,231 @@
+
+
+\section{Equilibrium Thermodynamics of the Planar Antiferromagnetic Spherical Model}
+
+In this notes we derive the results of the manuscript for the $3D$  planar spherical model, which was proposed and analyzed in \cite{knops1973antiferromagnetic}
+
+
+\subsection{The Model and Hamiltonian}
+We consider a simple cubic bipartite lattice with $N$ sites, divided into two interpenetrating sublattices, $A$ and $B$, each containing $N/2$ sites. To natively capture the expected transition of an antiferromagnet without the pathological properties of a scalar spherical constraint, we utilize the planar spherical model. The spins are two-dimensional vectors confined to a plane, $\vec{s}_i = (s_i^x, s_i^z)$. 
+
+The system interacts via a nearest-neighbor antiferromagnetic coupling $K$ (where $K > 0$, corresponding to $J < 0$ in standard notation). It is subjected to a uniform magnetic field $h$ along the longitudinal ($z$) axis, and a staggered magnetic field $h'$ along the transverse ($x$) axis, which acts as the conjugate ordering field. 
+
+The reduced Hamiltonian (absorbing the inverse temperature $\beta$) is:
+\begin{equation}
+-\beta \mathcal{H} = -\beta K \sum_{\langle i,j \rangle} \vec{s}_i \cdot \vec{s}_j + \beta h \sum_{i} s_i^z 
+\end{equation}
+
+Instead of rigid individual spin constraints, the planar spherical model imposes two global constraints over the sublattices:
+\begin{equation}
+\sum_{i \in A} (s_i^x)^2 + (s_i^z)^2 = \frac{N}{2}, \quad \sum_{j \in B} (s_j^x)^2 + (s_j^z)^2 = \frac{N}{2}
+\end{equation}
+In the planar model, the spins are two-dimensional vectors with both a longitudinal component ($s_i^z$) and a transverse component ($s_i^x$). This extra dimension gives the spins a physical ``escape route'': 
+\begin{itemize}
+    \item The uniform magnetic field $h$ pulls the spins along the $z$-axis.
+    \item To satisfy their antiferromagnetic urge to point in opposite directions, the spins tilt away from the $z$-axis and into the $x$-axis.
+    \item Sublattice $A$ tilts into the $+x$ direction, and Sublattice $B$ tilts into the $-x$ direction.
+\end{itemize}
+
+This phenomenon is known as a \textbf{spin-flop transition}, and it solves the known problem of the scalar 3D antiferromagnetic spherical model \cite{knops1973antiferromagnetic}.
+
+\subsection{Derivation of the Partition Function and Massieu Potential}
+
+To calculate the canonical partition function ${Z}$, we integrate over all continuous planar spin vectors $\vec{s}_i$ subject to the global sublattice constraints. We enforce these strict macroscopic constraints by relaxing the system into the grand canonical (mean spherical) ensemble. This is achieved by introducing two conjugate Lagrange multipliers—the spherical fields $z_A$ and $z_B$—via the integral representation of the Dirac delta function:
+\begin{equation}
+{Z} \propto \int_{-i\infty}^{i\infty} dz_A \int_{-i\infty}^{i\infty} dz_B \int \prod_{i=1}^N d\vec{s}_i \exp\left[ -\beta \mathcal{H}(\vec s_i) - z_A \left( \sum_{i \in A} \vec{s}_i^2 - \frac{N}{2} \right) - z_B \left( \sum_{j \in B} \vec{s}_j^2 - \frac{N}{2} \right) \right]
+\end{equation}
+
+To decouple the spatial interactions in the Hamiltonian, we transform the real-space spin variables into Fourier space:
+\begin{equation}
+\vec{s}(\vec{k}) = \sqrt{\frac{2}{N}} \sum_{j} \vec{s}_j e^{-i \vec{k} \cdot \vec{r}_j}
+\end{equation}
+where the sum runs over the respective sublattice sites, and $\vec{k}$ spans the first Brillouin zone of the sublattices. 
+
+In Fourier space, the bipartite nearest-neighbor interaction mixes the $A$ and $B$ modes. This allows the exponent of the partition function to be restructured into a sum of independent $2 \times 2$ quadratic forms for each wavevector $\vec{k}$:
+\begin{equation}
+-\frac{1}{2} \sum_{\vec{k}} \begin{pmatrix} \vec{s}_A(-\vec{k}) & \vec{s}_B(-\vec{k}) \end{pmatrix} \begin{pmatrix} 2z_A & 2\beta K(\vec{k}) \\ 2\beta K(\vec{k}) & 2z_B \end{pmatrix} \begin{pmatrix} \vec{s}_A(\vec{k}) \\ \vec{s}_B(\vec{k}) \end{pmatrix} + \text{field terms}
+\end{equation}
+where $K(\vec{k}) = \frac{1}{2} K \sum_{\delta} e^{i \vec{k} \cdot \vec{\delta}}$ is the Fourier transform of the nearest-neighbor exchange interactions (we used the factor $1/2$ to match with \cite{knops1973antiferromagnetic} notation).
+
+Because the integration over the continuous spin fields is now strictly Gaussian, it can be evaluated exactly by computing the determinant of the coupling matrix. For each non-zero mode, the Gaussian integration yields a logarithmic term proportional to $\ln[z_A z_B - \beta^2 K^2(\vec{k})]$. The zero-mode ($\vec{k} = \vec{0}$), which couples to the macroscopic uniform and staggered fields, is evaluated separately and yields the terms proportional to $h^2$ .
+
+In the thermodynamic limit ($N \to \infty$), the sum over discrete wavevectors transitions into a continuous integral over half the Brillouin zone. The complex contour integrals over the spherical fields $z_A$ and $z_B$ can then be evaluated using the saddle-point method. The equilibrium Massieu potential per spin, $\psi = \lim_{N \to \infty} \frac{1}{N} \ln {Z}$, is exclusively determined by the maximum of the integrand, yielding the exact expression:
+\begin{equation}
+\psi = \frac{1}{2}(z_A + z_B) - \frac{1}{2} \int \frac{d^3k}{(2\pi)^3} \ln \left[ z_A z_B - \beta^2 K^2(\vec{k}) \right] + \frac{\beta^2 h^2}{z_A + z_B + 2\beta K(\vec{0})} 
+\end{equation}
+
+The equilibrium values of $z_A$ and $z_B$ are thus entirely fixed by the saddle-point conditions $\partial \psi / \partial z_A = 0$ and $\partial \psi / \partial z_B = 0$. Because the Massieu potential is symmetric in $z_A$ and $z_B$, the two equations are identical.
+
+When writing the saddle point equations, it is useful to use the macroscopic uniform and staggered magnetizations, $m$ and $m'$, which are defined thermodynamically as the first derivatives of the Massieu potential with respect to their conjugate fields:
+\begin{equation}
+m = \frac{\partial \psi}{\partial (\beta h)} = \frac{2\beta h}{z_A + z_B + 2\beta K(\vec{0})}
+\end{equation}
+
+When differentiating the field-dependent terms of the Massieu potential with respect to $z_A$ or $z_B$, the resulting expressions are algebraically equivalent to $-\frac{1}{4}m^2$. 
+
+Substituting these macroscopic averages directly into the saddle-point conditions and multiplying by $2$ to clear the leading fractions yields the macroscopic equations of state for the system:
+\begin{equation}
+1 = \int \frac{d^3k}{(2\pi)^3} \frac{z_B}{z_A z_B - \beta^2 K^2(\vec{k})} + \frac{1}{2}m^2
+\end{equation}
+
+\subsection{Phase Boundary and the Order Parameter}
+The phase transition occurs when the spherical fields hit the boundary of their allowed domain to keep the integrals convergent. This boundary is defined by:
+\begin{equation}
+z_A z_B = \beta^2 K^2(\vec{0})
+\end{equation}
+
+In the disordered phase, the uniform field forces $z_A = z_B = z$, and the staggered magnetization $m'$ vanishes. In the ordered phase, the spherical fields ``stick'' to the constraint $z_A z_B = \beta^2 K^2(\vec{0})$, allowing a macroscopic fraction of the spins to occupy the lowest energy mode, which physically manifests as a non-zero $m'$ even in the limit $h' \to 0$. The exact critical surface $T_c(h, h')$ separating these phases is found by setting the spontaneous order parameter to zero while strictly enforcing the boundary condition.
+
+\subsection{The Analytic Phase Boundary}
+
+A major analytical advantage of the spherical model is that the critical surface separating the disordered and ordered phases can be determined exactly in a closed algebraic form. We restrict our analysis to the physical parameter space where the staggered field is zero ($h' = 0$), implying the symmetry $z_A = z_B \equiv z$ and a vanishing staggered magnetization $m' = 0$ in the disordered phase. 
+
+The onset of the phase transition occurs exactly when the spherical field hits the boundary of its allowed domain, $z = \beta K(\vec{0})$. At this boundary, the complex momentum integral in the saddle-point equation simplifies significantly. We can factor out the temperature dependence to define the zero-field critical temperature $T_c^0$:
+\begin{equation}
+1 = \int \frac{d^3k}{(2\pi)^3} \frac{\beta_c^0 K(\vec{0})}{(\beta_c^0 K(\vec{0}))^2 - (\beta_c^0 K(\vec{k}))^2} \implies \frac{T}{T_c^0} = \int \frac{d^3k}{(2\pi)^3} \frac{K(\vec{0})}{K^2(\vec{0}) - K^2(\vec{k})}
+\end{equation}
+
+Furthermore, at this boundary, the macroscopic uniform magnetization reduces to a strictly linear, temperature-independent function of the applied uniform field:
+\begin{equation}
+m_c = \frac{2\beta h}{2\beta K(\vec{0}) + 2\beta K(\vec{0})} = \frac{h}{2K(\vec{0})}
+\end{equation}
+
+Substituting these exact boundary values back into the simplified macroscopic equation of state, $1 = \text{Integral} + \frac{1}{2}m^2$, yields the algebraic relation:
+\begin{equation}
+1 = \frac{T}{T_c^0} + \frac{1}{2} \left( \frac{h}{2K(\vec{0})} \right)^2 = \frac{T}{T_c^0} + \frac{h^2}{8K^2(\vec{0})}
+\end{equation}
+
+Inverting this relation provides the exact analytic equation for the phase boundary $T_c(h)$ in the uniform parameter space:
+\begin{equation}
+T_c(h) = T_c^0 \left[ 1 - \frac{h^2}{8K^2(\vec{0})} \right]
+\end{equation}
+
+This defines a perfectly parabolic critical line in the $(T, h)$ plane, as plotted in \ref{fig:3DSpherical_PhaseDiagram} . Any finite-time driving protocol that connects a state in the high-temperature disordered phase to a state in the low-temperature transverse spin-flop phase must geometrically cross this exact parabolic boundary.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{PRL_revisions/PhaseDiagram.png}
+    \caption{The phase diagram of the 3D spherical model}
+    \label{fig:3DSpherical_PhaseDiagram}
+\end{figure}
+
+
+\section{Relaxation Dynamics and the Temporal Response}
+
+To construct the thermodynamic dissipation metric $g_{\mu\nu}$, we must determine the temporal response matrix of the system, which dictates how fast the macroscopic observables relax to equilibrium following a perturbation in the control parameters. Because the spherical model lacks intrinsic dynamics, we couple the spins to a hypothetical thermal bath inducing purely dissipative, non-conserved stochastic dynamics (Model A).
+
+\subsection{Langevin Dynamics in Fourier Space}
+The time evolution of the continuous planar spins is governed by the overdamped Langevin equation. To enforce the global sublattice constraints dynamically within the linear response regime, we evolve the system according to an effective Hamiltonian $\mathcal{H}_{\text{eff}}$, which incorporates the equilibrium spherical fields $z_A$ and $z_B$ as thermodynamic restoring forces:
+\begin{equation}
+\beta \mathcal{H}_{\text{eff}} = -\beta K \sum_{\langle i,j \rangle} \vec{s}_i \cdot \vec{s}_j + z_A \sum_{i \in A} \vec{s}_i^2 + z_B \sum_{j \in B} \vec{s}_j^2 + \text{field terms}
+\end{equation}
+
+The phenomenological equation of motion for a microscopic spin is $\partial_t \vec{s}_i = -\Gamma \nabla_{\vec{s}_i} (\beta \mathcal{H}_{\text{eff}}) + \vec{\eta}_i(t)$, where $\Gamma$ is the microscopic kinetic coefficient and $\vec{\eta}_i(t)$ is a standard Gaussian white noise satisfying $\langle \eta_i^\alpha(t) \eta_j^\beta(t') \rangle = 2\Gamma \delta_{ij} \delta^{\alpha\beta} \delta(t-t')$.
+
+Transitioning to Fourier space diagonalizes the spatial interactions, reducing the coupled many-body problem into independent two-dimensional stochastic differential equations for each wavevector $\vec{k}$. For the fluctuation modes ($\vec{k} \neq \vec{0}$), the Langevin equations in matrix form are:
+\begin{equation}
+\frac{\partial}{\partial t} \begin{pmatrix} \vec{s}_A(\vec{k}, t) \\ \vec{s}_B(\vec{k}, t) \end{pmatrix} = -\Gamma \begin{pmatrix} 2z_A & 2\beta K(\vec{k}) \\ 2\beta K(\vec{k}) & 2z_B \end{pmatrix} \begin{pmatrix} \vec{s}_A(\vec{k}, t) \\ \vec{s}_B(\vec{k}, t) \end{pmatrix} + \vec{\eta}(\vec{k}, t)
+\end{equation}
+where the coupling matrix is identically the Hessian of the static effective Hamiltonian.
+
+\subsection{Relaxation Timescales}
+The dynamic relaxation of the system is governed by the eigenvalues of this coupling matrix. By diagonalizing the matrix, we find the two characteristic relaxation rates (inverse timescales) for each momentum mode:
+\begin{equation}
+\lambda_{\pm}(\vec{k}) = \Gamma \left( (z_A + z_B) \pm \sqrt{(z_A - z_B)^2 + 4\beta^2 K^2(\vec{k})} \right)
+\end{equation}
+
+The macroscopic relaxation times of the system, which enter the dissipation metric, are strictly governed by the uniform ($\vec{k}=\vec{0}$) zero-modes. Due to the bipartite nature of the lattice, the relevant observable dynamics separate into a uniform relaxation mode governing the total magnetization $m$, and a staggered relaxation mode governing the order parameter $m'$:
+Because our protocol operates under the condition $h'=0$, the symmetry $z_A = z_B \equiv z$ holds. Under this symmetry, the exact eigenvalues drastically simplify, yielding the macroscopic relaxation times:
+\begin{equation}
+\tau_m = \frac{1}{\lambda_{+}(\vec{0})} = \frac{1}{2\Gamma (z + \beta K(\vec{0}))}
+\end{equation}
+\begin{equation}
+\tau_{m'} = \frac{1}{\lambda_{-}(\vec{0})} = \frac{1}{2\Gamma (z - \beta K(\vec{0}))}
+\end{equation}
+
+\section{The Thermodynamic Dissipation Metric}
+
+To construct the thermodynamic metric tensor $g_{\mu\nu}$, we require both the dynamical relaxation timescales and the static covariance matrix (the Hessian) of the equilibrium system. By restricting our analysis to protocols where the staggered field is strictly zero ($h' = 0$), the symmetry of the bipartite lattice dictates that the sublattice spherical fields must be equal: $z_A = z_B \equiv z$. We therefore define our reduced space of control parameters as $\lambda = (\lambda_1, \lambda_2) = (\beta, \beta h)$.
+
+\subsection{The Static Covariance Matrix}
+The static covariance matrix $\chi_{\mu\nu}$ represents the sensitivities of the macroscopic conjugate variables to changes in the control parameters. With the symmetry $z_A = z_B = z$, the Massieu potential $\psi(z, \lambda)$ depends on the control parameters both explicitly and implicitly through the single equilibrium spherical field. We must compute the total second derivative:
+\begin{equation}
+\chi_{\mu\nu} = \frac{d^2 \psi}{d\lambda_\mu d\lambda_\nu} = \frac{d}{d\lambda_\nu} \left( \frac{\partial \psi}{\partial \lambda_\mu} + \frac{\partial \psi}{\partial z} \frac{\partial z}{\partial \lambda_\mu} \right)
+\end{equation}
+
+By definition of the saddle-point condition, $\partial \psi / \partial z = 0$. Thus, the macroscopic observables $X_\mu = d\psi/d\lambda_\mu$ are given purely by the explicit partial derivatives. However, when computing the second total derivative, the implicit dependence of $z$ on the control parameters $\lambda$ emerges:
+\begin{equation}
+\chi_{\mu\nu} = \frac{\partial^2 \psi}{\partial \lambda_\mu \partial \lambda_\nu} + \frac{\partial^2 \psi}{\partial \lambda_\mu \partial z} \frac{\partial z}{\partial \lambda_\nu}
+\end{equation}
+
+To evaluate the response of the spherical field $\partial z / \partial \lambda_\nu$, we differentiate the saddle-point equation $f = \partial \psi / \partial z = 0$ with respect to $\lambda_\nu$:
+\begin{equation}
+\frac{d f}{d \lambda_\nu} = \frac{\partial^2 \psi}{\partial z \partial \lambda_\nu} + \frac{\partial^2 \psi}{\partial z^2} \frac{\partial z}{\partial \lambda_\nu} = 0
+\end{equation}
+
+Because we only have a single spherical constraint, this trivially rearranges to give the exact response of the spherical field:
+\begin{equation}
+\frac{\partial z}{\partial \lambda_\nu} = - \left( \frac{\partial^2 \psi}{\partial z^2} \right)^{-1} \frac{\partial^2 \psi}{\partial z \partial \lambda_\nu}
+\end{equation}
+
+Substituting this back into our expression for the static covariance matrix yields a completely generalized and exact algebraic form for the purely static susceptibilities:
+\begin{equation}
+\chi_{\mu\nu} = \frac{\partial^2 \psi}{\partial \lambda_\mu \partial \lambda_\nu} - \left( \frac{\partial^2 \psi}{\partial z^2} \right)^{-1} \left( \frac{\partial^2 \psi}{\partial z \partial \lambda_\mu} \right) \left( \frac{\partial^2 \psi}{\partial z \partial \lambda_\nu} \right)
+\end{equation}
+
+\subsection{The Metric Tensor}
+The full $2 \times 2$ dissipation metric $g_{\mu\nu}$ in the $(\beta, \beta h)$ parameter space is determined by integrating the temporal correlation functions of the conjugate variables. Utilizing the linear-response properties of our Model A Langevin dynamics, the purely static susceptibilities are weighted by the macroscopic relaxation timescale of the uniform mode. The metric components scale as:
+\begin{equation}
+g_{\mu\nu} = \beta \tau_m \chi_{\mu\nu}
+\end{equation}
+where $\tau_m = [2\Gamma(z + \beta K(\vec{0}))]^{-1}$ is the characteristic relaxation time of the uniform zero-mode under the $z_A = z_B$ symmetry. The divergence of this metric tensor near the critical line $z = \beta K(\vec{0})$ dictates the geometric thermodynamic length across the phase transition.
+
+\subsection{Critical Scaling and Finite Thermodynamic Length}
+
+As a sanity check, we next evaluate the asymptotic scaling of the spherical metric $g_{\mu\nu} = \beta \tau_m \chi_{\mu\nu}$ near the phase boundary to demonstrate how 3D spatial fluctuations regularize this geometry.
+
+To find the critical scaling, we define the parameter $\epsilon = z - \beta K(\vec{0})$, which measures the deviation of the spherical field from the critical boundary. As the system approaches the phase transition from the disordered phase, $\epsilon \to 0$. The singular behavior of the system is governed by the asymptotic expansion of the generalized Watson integral in three dimensions \cite{}. 
+
+The behavior of the continuous momentum integral is entirely dominated by the lowest energy modes, which occur at very small wavevectors ($|\vec{k}| \to 0$). Near the origin, the Fourier transform of the nearest-neighbor interaction for a simple cubic lattice can be Taylor expanded quadratically:
+$$K(\vec{k}) \approx K(\vec{0}) - a k^2$$
+where $a$ is a positive constant related to the lattice geometry. Substituting this into the denominator of the integral yields:
+$$\epsilon + \beta K(\vec{0}) - \beta \left(K(\vec{0}) - a k^2\right) = \epsilon + \beta a k^2$$
+
+Because we are in 3D momentum space, the continuous integral transitions into spherical coordinates, where the volume element is proportional to $k^2 dk$. Grouping all the constant prefactors into a single constant $C$, the integral near the critical point becomes:
+$$W(\epsilon) = C \int_0^{k_{max}} \frac{k^2}{\epsilon + \beta a k^2} dk$$
+
+To evaluate this integral, we use an algebraic trick by adding and subtracting $\epsilon$ in the numerator:
+$$k^2 = \frac{1}{\beta a} \left( \epsilon + \beta a k^2 - \epsilon \right)$$
+This allows us to cleanly split the fraction into two separate, easily solvable integrals,
+$$W(\epsilon) = \frac{C}{\beta a} \int_0^{k_{max}} 1 \, dk - \frac{C\epsilon}{\beta a} \int_0^{k_{max}} \frac{1}{\epsilon + \beta a k^2} dk$$
+
+The first integral evaluates to a finite constant. This constant represents the value of the integral exactly at the critical point, $W(0)$. The second integral is a standard arctangent integral:
+$$- \frac{C\epsilon}{\beta a} \left[ \frac{1}{\sqrt{\epsilon \beta a}} \arctan\left(k \sqrt{\frac{\beta a}{\epsilon}}\right) \right]_0^{k_{max}}$$
+As $\epsilon \to 0$, the argument of the arctangent at the upper bound approaches infinity, evaluating to $\pi/2$. Simplifying the prefactor gives $\epsilon / \sqrt{\epsilon} = \sqrt{\epsilon}$. Thus, the singular part of the integral scales exactly as $-\sqrt{\epsilon}$. We arrive at the asymptotic expansion:
+$$W(\epsilon) \approx W(0) - c \sqrt{\epsilon}$$
+
+Substituting this expansion back into the macroscopic equation of state yields:
+$$1 \approx \frac{1}{2} W(0) - \frac{c}{2} \sqrt{\epsilon} + m^2$$
+Exactly at the critical boundary, $\epsilon = 0$ and the magnetization is $m_c$. Expanding the magnetization as $m \approx m_c + \delta m$, the equation of state near the boundary simplifies to:
+$$\frac{c}{2} \sqrt{\epsilon} = m^2 - m_c^2 \approx 2m_c \delta m$$
+
+Because the uniform magnetization $m = \beta h / (z + \beta K(\vec{0}))$ is an analytic function of the control parameters $\lambda = (\beta, \beta h)$ everywhere except possibly at the boundary, the deviation $\delta m$ scales linearly with the distance to the critical temperature, $\Delta \beta = \beta_c - \beta$. Therefore, we find the critical scaling of the spherical field deviation:
+$$\sqrt{\epsilon} \propto \Delta \beta \implies \epsilon \propto (\Delta \beta)^2$$
+
+This quadratic scaling, $\epsilon \propto (\Delta \beta)^2$, reveals a smoothing effect caused by 3D spatial fluctuations. Because $z = \beta K(\vec{0}) + \epsilon$, the first derivative of the spherical field with respect to the control parameters, $\partial z / \partial \lambda_\mu$, is entirely continuous across the phase transition. Consequently,
+\begin{itemize}
+    \item The static covariance matrix $\chi_{\mu\nu}$, which depends strictly on the first derivatives of $z$ and $m$, is finite and continuous at the phase boundary.
+    \item The macroscopic relaxation time of the uniform mode, $\tau_m = [2\Gamma(z + \beta K(\vec{0}))]^{-1}$, converges to a strictly finite, non-zero constant $\tau_m^c = [4\Gamma \beta K(\vec{0})]^{-1}$ at the transition.
+\end{itemize}
+
+Therefore,  the thermodynamic dissipation metric $g_{\mu\nu}$ for the uniform control space $(\beta, \beta h)$ contains no divergences in this model. The metric tensor is completely regular across the second-order phase transition. It immediately follows that the thermodynamic length, defined by the line integral $L = \int \sqrt{g_{\mu\nu} d\lambda^\mu d\lambda^\nu}$, is strictly finite. By utilizing the 3D spherical model, we demonstrate that incorporating finite correlation lengths perfectly regularizes the geometry of the uniform control space, guaranteeing the existence of finite-dissipation protocols that cross the critical line.
+
+\subsection{Applicability of the Linear Response Regime}
+
+The thermodynamic metric tensor defined in this framework explicitly relies on linear response theory, which requires a strict separation of timescales: the driving protocol must be slow enough that the system's relaxation rate can continually keep up with the rate of change of the control parameters. Near a second-order phase transition, this assumption typically breaks down due to critical slowing down, where the characteristic relaxation time diverges as $\tau \propto (\lambda_\mu)^{-\kappa}$ for a reduced control parameter $\lambda_\mu \to 0$. 
+
+To maintain the system within the linear response regime, the protocol must be dynamically slowed down as it approaches the critical point, taking the form $\dot{\lambda}_\mu \propto (\lambda_\mu)^a$ with $a > \kappa$. However, to ensure that the protocol can cross the phase transition in a strictly finite amount of time, the total driving time integral must converge, which enforces the mathematical requirement that $a < 1$. Consequently, finite-time driving protocols that remain entirely within the linear response regime exist if and only if the divergence parameter satisfies $\kappa < 1$.
+
+In the case of the 3D planar antiferromagnetic spherical model restricted to the uniform parameter space $(\beta, \beta h)$, this condition is trivially and safely satisfied. Critical slowing down exclusively affects the critical ordering mode. Because the ordering field for the antiferromagnetic transition is the staggered magnetic field, the uniform macroscopic magnetization $m$ acts as a non-critical mode. 
+
+As demonstrated in the asymptotic expansion, the uniform relaxation timescale $\tau_m$ does not diverge at the phase boundary, but instead converges to a finite constant. Because there is no divergence in the relevant relaxation time, the scaling exponent is exactly $\kappa = 0$. Since $0 < 1$, it is mathematically guaranteed that finite-time, finite-dissipation protocols exist. The thermal fluctuations remain well-bounded and centered around equilibrium, ensuring that the linear response approximation remains robust and physically valid across the entire continuous phase transition.
