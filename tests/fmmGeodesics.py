@@ -336,7 +336,7 @@ def main_bethe_antiferro_transition(x0, show_plot=False, K_bounds=(-3.0, -0.55),
 if __name__ == "__main__":
     # main_antiferro_sivak(np.array([2.51, 1.5]))
     # main_bethe_antiferro(np.array([-0.9, 0.6]))
-    # main_bethe_antiferro_transition(np.array([-1.0, 1.95]), fine_delta=0.002, coarse_delta=0.01, band_half_width=0.5)
-    main_spherical(np.array([0.7, 1]), show_plot=False, 
-                   beta_bounds=(0.3, 1.3), H_bounds=(-4.0, 4.0), n=1000)
+    main_bethe_antiferro_transition(np.array([-1.0, 2.3]), fine_delta=0.002, coarse_delta=0.01, band_half_width=0.5)
+    # main_spherical(np.array([0.7, 1]), show_plot=False, 
+                #    beta_bounds=(0.3, 1.3), H_bounds=(-4.0, 4.0), n=1000)
 
