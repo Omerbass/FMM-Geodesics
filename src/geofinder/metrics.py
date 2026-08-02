@@ -1510,6 +1510,216 @@ class BetheIsing(RMetric):
             return False
         return abs(h) < hc
 
+def _sc_gamma(kx, ky, kz):
+    """
+    Normalized nearest-neighbor structure function of the simple cubic
+    lattice, gamma(k) = K(k)/K(0) = (cos kx + cos ky + cos kz)/3
+    (Derivations/SphericalModel/Spherical_Model_Notes.tex, eq. after (48)).
+    """
+    return (np.cos(kx) + np.cos(ky) + np.cos(kz)) / 3.0
+
+class SphericalModel(RMetric):
+    """
+    Thermodynamic dissipation metric for the 3D planar antiferromagnetic
+    spherical model on a simple cubic lattice (Derivations/SphericalModel/
+    Spherical_Model_Notes.tex). Coordinates x=(beta, H) with H=beta*h,
+    matching the control space lambda=(beta, beta*h) of the notes' §"The
+    Thermodynamic Dissipation Metric".
+
+    Restricted to h'=0 (no staggered field), so by A/B symmetry z_A=z_B=z,
+    a single spherical field. Only the DISORDERED phase (z > beta*K0, i.e.
+    T > Tc(h)) is implemented: below Tc(h) the field "sticks" to the
+    boundary and the missing constraint weight condenses into a macroscopic
+    staggered order parameter m', but the notes only describe that
+    qualitatively (§"Phase Boundary and the Order Parameter") without
+    giving a closed-form susceptibility there, so is_ordered_phase() should
+    be used to keep grids/paths out of that region.
+    """
+    dim = 2  # coordinates x = (beta, beta*h)
+    _zeta_table = None  # class-level cache: universal lattice sums, shared across instances
+
+    def __init__(self, K0=1.0, Gamma=1.0):
+        self.K0 = K0      # K(0), the k=0 Fourier component of the exchange coupling
+        self.Gamma = Gamma  # microscopic Model-A kinetic coefficient
+
+    @staticmethod
+    def _bz_gauss_grid(n=140):
+        """
+        Product Gauss-Legendre grid/weights over the simple-cubic BZ octant
+        [0,pi]^3, weights pre-divided by pi^3 so that sum(W*f(gamma)) is
+        directly the BZ average of f. Gauss-Legendre nodes cluster near the
+        interval endpoints, and gamma's k=0 singular point sits exactly at
+        one such endpoint -- so this fixed-order rule resolves the
+        near-critical peak (see _build_zeta_table) far better than its
+        order would suggest, and is orders of magnitude faster than
+        adaptive quadrature (scipy.integrate.tplquad) since the whole grid
+        is evaluated vectorized in one shot, reused for every zeta.
+        """
+        x, w = np.polynomial.legendre.leggauss(n)
+        k = 0.5 * np.pi * (x + 1)
+        wk = 0.5 * np.pi * w
+        kx, ky, kz = np.meshgrid(k, k, k, indexing='ij')
+        gamma = _sc_gamma(kx, ky, kz)
+        W = np.einsum('i,j,l->ijl', wk, wk, wk) / np.pi**3
+        return gamma, W
+
+    @classmethod
+    def _build_zeta_table(cls, n_grid=140, n_zeta=110, zeta_max=100.0, eps=1e-6):
+        """
+        Tabulate, over the reduced field zeta = z/(beta*K0), the five
+        Brillouin-zone averages that the saddle-point equation and the
+        psi-derivatives reduce to exactly (see get_zeta/metric):
+            J1 = < zeta/(zeta^2-g^2) >          (saddle-point eq., eq. 68)
+            J2 = < (zeta^2+g^2)/(zeta^2-g^2)^2 > (psi_zz)
+            J3 = < g^2/(zeta^2-g^2)^2 >          (psi_z,beta)
+            J4 = < g^2/(zeta^2-g^2) >            (psi_beta)
+            J5 = < g^4/(zeta^2-g^2)^2 >          (psi_beta,beta)
+        with g=gamma(k). z, beta, K0, H only enter through overall
+        prefactors (see metric()), so tabulating in zeta once avoids
+        repeating the lattice sum at every grid point.
+
+        J2, J3, J5 diverge as (zeta-1)^-1/2 at the phase boundary
+        (Spherical_Model_Notes.tex §"Critical Scaling"); J1, J4 stay
+        finite there. The table therefore only covers zeta in
+        (1+eps, zeta_max]; lookups clip to that range (see _J), which is
+        safe as long as callers stay out of the ordered phase.
+        """
+        gamma, W = cls._bz_gauss_grid(n_grid)
+        zetas = 1.0 + np.logspace(np.log10(eps), np.log10(zeta_max - 1), n_zeta)
+
+        Js = {k: np.empty(n_zeta) for k in ("J1", "J2", "J3", "J4", "J5")}
+        for i, zeta in enumerate(zetas):
+            D = zeta**2 - gamma**2
+            Js["J1"][i] = np.sum(W * zeta / D)
+            Js["J2"][i] = np.sum(W * (zeta**2 + gamma**2) / D**2)
+            Js["J3"][i] = np.sum(W * gamma**2 / D**2)
+            Js["J4"][i] = np.sum(W * gamma**2 / D)
+            Js["J5"][i] = np.sum(W * gamma**4 / D**2)
+
+        table = {"zeta_min": zetas[0], "zeta_max": zetas[-1]}
+        for k, y in Js.items():
+            table[k] = sp.interpolate.PchipInterpolator(zetas, y, extrapolate=True)
+        return table
+
+    @classmethod
+    def _J(cls, name, zeta):
+        if cls._zeta_table is None:
+            cls._zeta_table = cls._build_zeta_table()
+        t = cls._zeta_table
+        zeta = np.clip(zeta, t["zeta_min"], t["zeta_max"])
+        return t[name](zeta)
+
+    def watson_integral(self):
+        """
+        J1(zeta=1) = < 1/(1-gamma(k)^2) > over the simple-cubic BZ: the
+        classic (finite) Watson integral, computed directly on a fresh
+        Gauss-Legendre grid (J1 has no singularity at zeta=1 to avoid).
+        """
+        gamma, W = self._bz_gauss_grid()
+        return np.sum(W / (1.0 - gamma**2))
+
+    @property
+    def Tc0(self):
+        """Zero-field critical temperature (eq. 85): Tc0 = K0 / watson_integral()."""
+        if not hasattr(self, "_Tc0"):
+            self._Tc0 = self.K0 / self.watson_integral()
+        return self._Tc0
+
+    def phase_transition_line(self, T):
+        """
+        Analytic critical field h_c(T) (eq. 100): Tc(h) = Tc0*(1-h^2/(8*K0^2)),
+        inverted for h given T. NaN for T > Tc0 (no ordering at any field).
+        """
+        if T > self.Tc0:
+            return np.nan
+        return np.sqrt(8 * self.K0**2 * (1 - T / self.Tc0))
+
+    def is_ordered_phase(self, x):
+        """
+        True iff x=(beta, H=beta*h) lies in the ordered (Neel) phase,
+        i.e. T=1/beta < Tc(h) with h=H/beta.
+        """
+        beta, H = x
+        T, h = 1 / beta, H / beta
+        hc = self.phase_transition_line(T)
+        if np.isnan(hc):
+            return False
+        return abs(h) < hc
+
+    def get_zeta(self, beta, h):
+        """
+        Solve the saddle-point equation (eq. 68, symmetric z_A=z_B=z case)
+        1 = J1(zeta)/(beta*K0) + h^2/(2*K0^2*(zeta+1)^2)
+        for the reduced spherical field zeta=z/(beta*K0) > 1 (disordered
+        phase only -- raises if the point is well within the ordered
+        region, where no such root exists).
+
+        Points that are genuinely disordered (per is_ordered_phase's
+        closed-form boundary, eq. 100) but whose true root sits closer to
+        1 than the zeta-table resolves (_build_zeta_table's eps) are
+        clamped to zeta_min with a warning instead of raised: this only
+        happens within a sliver of the boundary curve thinner than eps,
+        where the metric is (numerically confirmed, see class docstring)
+        continuous anyway, so clamping is a negligible approximation --
+        unlike a genuine ordered-phase point, which is qualitatively wrong
+        for this class to evaluate at all.
+        """
+        K0 = self.K0
+        t = self._zeta_table if self._zeta_table is not None else self._build_zeta_table()
+        SphericalModel._zeta_table = t
+
+        def f(zeta):
+            return self._J("J1", zeta) / (beta * K0) + h**2 / (2 * K0**2 * (zeta + 1)**2) - 1
+
+        f_min = f(t["zeta_min"])
+        if f_min <= 0:
+            if f_min > -1e-3:
+                warnings.warn(f"x=(beta={beta}, h={h}) is within the zeta-table's resolution "
+                               f"of the phase boundary; clamping zeta to {t['zeta_min']}.")
+                return t["zeta_min"]
+            raise ValueError(f"x=(beta={beta}, h={h}) is not in the disordered phase "
+                              "(no free saddle point for zeta > 1); check is_ordered_phase first.")
+        if f(t["zeta_max"]) >= 0:
+            raise ValueError(f"x=(beta={beta}, h={h}) needs zeta beyond the tabulated range "
+                              f"({t['zeta_max']:.3g}); increase zeta_max in _build_zeta_table.")
+        return sp.optimize.brentq(f, t["zeta_min"], t["zeta_max"], xtol=1e-12, rtol=1e-12)
+
+    def metric(self, x):
+        """
+        Dissipation metric g_munu = beta*tau_m*chi_munu in (beta, H=beta*h)
+        coordinates (eqs. 172-179), with chi_munu the constrained static
+        covariance (second derivative of psi w.r.t. (beta,H), correcting
+        for the implicit dependence of the spherical field z on (beta,H)
+        via the saddle-point condition) and tau_m=[2*Gamma*(z+beta*K0)]^-1
+        the uniform-mode relaxation time (eq. 140).
+        """
+        beta, H = x
+        h = H / beta
+        K0, Gamma = self.K0, self.Gamma
+
+        zeta = self.get_zeta(beta, h)
+        z = beta * K0 * zeta
+
+        I2 = self._J("J2", zeta) / (beta**2 * K0**2)
+        I3 = self._J("J3", zeta) / (beta**4 * K0**2)
+        I4 = self._J("J4", zeta) / beta**2
+        I5 = self._J("J5", zeta) / beta**4
+
+        zpbK0 = z + beta * K0
+        psi_zz = I2 + H**2 / zpbK0**3
+        psi_zbeta = -2 * beta * z * I3 + K0 * H**2 / zpbK0**3
+        psi_zH = -H / zpbK0**2
+        psi_betabeta = I4 + 2 * beta**2 * I5 + K0**2 * H**2 / zpbK0**3
+        psi_betaH = -K0 * H / zpbK0**2
+        psi_HH = 1 / zpbK0
+
+        chi_bb = psi_betabeta - psi_zbeta**2 / psi_zz
+        chi_bH = psi_betaH - psi_zbeta * psi_zH / psi_zz
+        chi_HH = psi_HH - psi_zH**2 / psi_zz
+
+        tau_m = 1 / (2 * Gamma * zpbK0)
+        return beta * tau_m * np.array([[chi_bb, chi_bH], [chi_bH, chi_HH]])
+
 class interpolatedMetric(RMetric):
     def __init__(self, metric_meas, ptline_meas=None, ptline_func=None): #, interpolation_method='cubic'):
         self.metric_meas = metric_meas

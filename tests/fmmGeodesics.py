@@ -228,6 +228,41 @@ def main_bethe_antiferro(x0, show_plot=False):
     np.savez(f"data/bethe_antiferro_geodesic_paths_K0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz",
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
+def main_spherical(x0, show_plot=False, beta_bounds=(0.3, 1.3), H_bounds=(-4.0, 4.0), n=1000):
+    """
+    Geodesics for the 3D planar antiferromagnetic spherical model
+    (Derivations/SphericalModel/Spherical_Model_Notes.tex), coordinates
+    x=(beta, H=beta*h). metrics.SphericalModel only implements the
+    disordered phase (T > Tc(h); see its docstring), so beta_bounds is kept
+    below 1/Tc0 (~1.516) -- i.e. T stays above Tc0 for every h, since h only
+    ever lowers Tc(h) below Tc0. That keeps the whole rectangular grid
+    disordered without needing to cut a Neel-ordered island out of the
+    middle of it: Delaunay triangulates the convex hull of whatever points
+    it's given regardless of any such hole, so its triangles (and the
+    edge-midpoints FMM evaluates the metric at) would bridge straight
+    across an excised island instead of going around it.
+    """
+    sphMetric = metrics.SphericalModel()
+    assert 1 / beta_bounds[0] > sphMetric.Tc0, "beta_bounds must stay entirely in the disordered phase"
+
+    positions = np.reshape(np.meshgrid(np.linspace(*beta_bounds, n), np.linspace(*H_bounds, n)), (2, -1)).T
+    delaunay = Delaunay(positions)
+    triangles = delaunay.simplices
+    source = np.argmin(np.linalg.norm(positions - x0, axis=1))
+
+    geo = FMMGeodesicPaths(sphMetric.metric, dim=2)
+
+    distances = geo.fast_marching_method(positions, triangles, source)
+
+    if show_plot:
+        plt.scatter(positions[:, 0], positions[:, 1], c=distances, cmap='viridis', alpha=0.5)
+        plt.scatter(positions[source, 0], positions[source, 1], c='red', s=10, label='Source')
+        plt.colorbar()
+        plt.show()
+
+    np.savez(f"data/spherical_geodesic_paths_beta0={positions[source, 0]:.3f}_H0={positions[source, 1]:.3f}.npz",
+        positions=positions, distances=distances, source=source, triangles=triangles, grid=None, deluanay=delaunay)
+
 def _graded_1d_points(anchors, lo, hi, fine_delta, coarse_delta, band_half_width):
     """
     1D point set covering [lo, hi]: fine_delta resolution within band_half_width
@@ -301,6 +336,7 @@ def main_bethe_antiferro_transition(x0, show_plot=False, K_bounds=(-3.0, -0.55),
 if __name__ == "__main__":
     # main_antiferro_sivak(np.array([2.51, 1.5]))
     # main_bethe_antiferro(np.array([-0.9, 0.6]))
-    main_bethe_antiferro_transition(np.array([-1.0, 1.95]), fine_delta=0.002, coarse_delta=0.01, band_half_width=0.5)
-
+    # main_bethe_antiferro_transition(np.array([-1.0, 1.95]), fine_delta=0.002, coarse_delta=0.01, band_half_width=0.5)
+    main_spherical(np.array([0.7, 1]), show_plot=False, 
+                   beta_bounds=(0.3, 1.3), H_bounds=(-4.0, 4.0), n=1000)
 

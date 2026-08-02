@@ -1,231 +1,1385 @@
+\documentclass[11pt,a4paper]{article}
 
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[margin=1in]{geometry}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{xcolor}
 
-\section{Equilibrium Thermodynamics of the Planar Antiferromagnetic Spherical Model}
+\newcommand{\Jc}{\mathcal{J}}
+\newcommand{\Hc}{\mathcal{H}}
+\newcommand{\Jh}{\hat J}
+\newcommand{\kB}{k_{\mathrm B}}
+\newcommand{\bk}{\vec k}
+\newcommand{\bQ}{\vec Q}
+\newcommand{\bq}{\vec q}
+\newcommand{\brr}{\vec r}
+\newcommand{\bdel}{\vec\delta}
+\newcommand{\dk}{\frac{d^3k}{(2\pi)^3}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\Wc}{\mathcal{W}}
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\newcommand{\FLAG}[1]{\textcolor{blue}{\textbf{[#1]}}}
 
-In this notes we derive the results of the manuscript for the $3D$  planar spherical model, which was proposed and analyzed in \cite{knops1973antiferromagnetic}
+\title{Notes: the planar antiferromagnetic mean spherical model\\
+as a thermodynamic-geometry example}
+\author{}
+\date{Working notes --- \S0--\S2, second draft}
 
+\begin{document}
+\maketitle
 
-\subsection{The Model and Hamiltonian}
-We consider a simple cubic bipartite lattice with $N$ sites, divided into two interpenetrating sublattices, $A$ and $B$, each containing $N/2$ sites. To natively capture the expected transition of an antiferromagnet without the pathological properties of a scalar spherical constraint, we utilize the planar spherical model. The spins are two-dimensional vectors confined to a plane, $\vec{s}_i = (s_i^x, s_i^z)$. 
+\noindent
+These notes develop the $d=3$ planar antiferromagnetic \emph{mean} spherical model (MSM)
+as a replacement for the mean-field antiferromagnetic Ising example in the manuscript.
+Reference [K] is Knops, Phys.\ Rev.\ B \textbf{8}, 4209 (1973); equation numbers of the
+form (K2.39) refer to that paper. Reference [BR] is the current draft (Basri--Raz).
 
-The system interacts via a nearest-neighbor antiferromagnetic coupling $K$ (where $K > 0$, corresponding to $J < 0$ in standard notation). It is subjected to a uniform magnetic field $h$ along the longitudinal ($z$) axis, and a staggered magnetic field $h'$ along the transverse ($x$) axis, which acts as the conjugate ordering field. 
+Everything is written out. Where a factor of $2$ or a $\tfrac12$ appears it is derived,
+not asserted, because the two papers use different conventions and the first draft of
+these notes got several of them wrong.
 
-The reduced Hamiltonian (absorbing the inverse temperature $\beta$) is:
+Two decisions are fixed: the mean spherical ensemble, and $H'=0$ in the Hamiltonian with
+control manifold $(\beta,\beta\Hc)$.
+
+%===============================================================
+\section{Conventions}
+%===============================================================
+
+\subsection{Lattice}
+Simple cubic, $N=L^3$ sites, unit lattice constant, periodic boundary conditions.
+It is bipartite: $\brr_j\in A$ if $\sum_\mu (r_j)_\mu$ is even, $\in B$ if odd.
+Each sublattice has $N/2$ sites. Nearest neighbours of an $A$ site all lie in $B$.
+
+\subsection{Rescaled couplings: why we do not use $J$ and $H$ directly}
+\label{sec:rescale}
+Knops writes the planar energy (K4.1) with explicit factors of $2$ on both the coupling
+and the field. Those factors are not decoration: the planar constraint (K4.2) is
+$\avg{|\bm\sigma_j|^2}=1$ summed over \emph{two} components, so $\avg{(\sigma_j^z)^2}=\tfrac12$
+rather than $1$, and doubling $J$ and $H$ is exactly what compensates. That is the entire
+content of his claim that the planar model has the same phase boundary and the same
+longitudinal averages as the scalar model.
+
+Carrying those $2$'s around is a reliable source of error --- in particular the control
+parameter conjugate to the magnetisation is $2\beta H$, not $\beta H$, and getting this
+wrong misstates every field-direction component of the metric by a factor of $4$. We
+therefore absorb them once and for all:
 \begin{equation}
--\beta \mathcal{H} = -\beta K \sum_{\langle i,j \rangle} \vec{s}_i \cdot \vec{s}_j + \beta h \sum_{i} s_i^z 
+  \boxed{\ \Jc \equiv 2J, \qquad \Hc \equiv 2H\ }
+\end{equation}
+and work exclusively with $\Jc,\Hc$. A dictionary back to [K] is given in \S\ref{sec:dict}.
+
+The energy is then, with a \emph{bond} sum (each unordered nearest-neighbour pair once),
+\begin{equation}
+  E \;=\; \sum_{\langle ij\rangle} \Jc_{ij}\,\bm\sigma_i\cdot\bm\sigma_j
+      \;-\; \Hc\sum_j \sigma_j^z ,
+  \qquad
+  \Jc_{ij}=\Jc>0 \ \text{ for $i\in A$, $j\in B$ n.n.}
+  \label{eq:energy}
+\end{equation}
+Following [K] the sign convention is the opposite of the usual one: \emph{positive} $\Jc$
+is antiferromagnetic. This must be flagged in the manuscript, which uses $K=-J$ with $J<0$.
+
+\subsection{Fourier transform}
+Symmetric convention, \textbf{full} first Brillouin zone:
+\begin{equation}
+  \bm\sigma_j = \frac{1}{\sqrt N}\sum_{\bk} e^{i\bk\cdot\brr_j}\,\bm S_{\bk},
+  \qquad
+  \bm S_{\bk} = \frac{1}{\sqrt N}\sum_j e^{-i\bk\cdot\brr_j}\,\bm\sigma_j ,
+  \label{eq:ft}
+\end{equation}
+with $\bk=(2\pi/L)(l_x,l_y,l_z)$, $l_\mu=0,\dots,L-1$, so there are exactly $N$ wavevectors.
+The basic identities are
+\begin{equation}
+  \sum_j e^{i(\bk-\bk')\cdot\brr_j} = N\,\delta_{\bk\bk'},
+  \qquad
+  \bm S_{-\bk} = \bm S_{\bk}^{*},
+  \qquad
+  \sum_j |\bm\sigma_j|^2 = \sum_{\bk} |\bm S_{\bk}|^2 ,
+  \label{eq:parseval}
+\end{equation}
+the second from reality of $\bm\sigma_j$, the third being Parseval. Throughout
+$|\bm S_{\bk}|^2 \equiv |S^x_{\bk}|^2+|S^z_{\bk}|^2$.
+
+We use the full zone, not the half zone of [K]. Knops restricts to half the zone
+(remark below K2.12) because his two-sublattice formulation double counts; with $H'=0$
+that formulation collapses (\S\ref{sec:collapse}) and the restriction is unnecessary.
+It is also where his factors of $2$ become hardest to follow.
+
+\subsection{The structure function}
+Define
+\begin{equation}
+  \Jc(\bk) \;\equiv\; \tfrac12\sum_{\bdel} e^{-i\bk\cdot\bdel}\,\Jc_{\bdel}
+  \;=\; \Jc\left(\cos k_x+\cos k_y+\cos k_z\right),
+  \qquad \Jc(0)=3\Jc ,
+  \label{eq:structure}
+\end{equation}
+the second equality because the six nearest-neighbour vectors $\bdel=\pm\hat e_\mu$
+contribute $\tfrac12\Jc\sum_\mu(e^{-ik_\mu}+e^{ik_\mu})$.
+
+\paragraph{Why the $\tfrac12$.} It is fixed by requiring that the bond sum diagonalise with
+unit coefficient. Writing the bond sum as half the unrestricted sum over ordered pairs,
+\begin{equation}
+  \sum_{\langle ij\rangle}\Jc_{ij}\,\bm\sigma_i\cdot\bm\sigma_j
+  = \tfrac12\sum_j\sum_{\bdel}\Jc_{\bdel}\,\bm\sigma_j\cdot\bm\sigma_{j+\bdel},
+\end{equation}
+and inserting \eqref{eq:ft},
+\begin{align}
+  \sum_j \bm\sigma_j\cdot\bm\sigma_{j+\bdel}
+  &= \frac{1}{N}\sum_j\sum_{\bk,\bk'} e^{i\bk\cdot\brr_j}\,e^{i\bk'\cdot(\brr_j+\bdel)}\,
+     \bm S_{\bk}\cdot\bm S_{\bk'} \nonumber\\
+  &= \frac{1}{N}\sum_{\bk,\bk'} e^{i\bk'\cdot\bdel}\,\bm S_{\bk}\cdot\bm S_{\bk'}\;
+     N\delta_{\bk',-\bk}
+   \;=\; \sum_{\bk} e^{-i\bk\cdot\bdel}\,|\bm S_{\bk}|^2 ,
+\end{align}
+using \eqref{eq:parseval} twice. Hence
+\begin{equation}
+  \boxed{\ \sum_{\langle ij\rangle}\Jc_{ij}\,\bm\sigma_i\cdot\bm\sigma_j
+   = \sum_{\bk}\Jc(\bk)\,|\bm S_{\bk}|^2\ }
+  \label{eq:diag}
+\end{equation}
+with no residual factor. This is the same $\tfrac12$ that appears in (K2.10), and reading
+Knops' $\sum_{\vec i,\vec j}$ as an unrestricted double sum instead of a bond sum would
+give $2\Jc(\bk)$ here and $\kB T_0 = 4/W_3$ instead of $2/W_3$ --- which is how one confirms
+the bond reading is the intended one.
+
+The field term is likewise
+\begin{equation}
+  \sum_j \sigma_j^z = \sqrt N\, S_0^z .
+  \label{eq:fieldterm}
 \end{equation}
 
-Instead of rigid individual spin constraints, the planar spherical model imposes two global constraints over the sublattices:
+\subsection{Bipartite identity and the ordering wavevector}
+Since $\cos(\pi-k_\mu)=-\cos k_\mu$,
 \begin{equation}
-\sum_{i \in A} (s_i^x)^2 + (s_i^z)^2 = \frac{N}{2}, \quad \sum_{j \in B} (s_j^x)^2 + (s_j^z)^2 = \frac{N}{2}
+  \Jc(\bQ-\bk) = -\Jc(\bk), \qquad \bQ\equiv(\pi,\pi,\pi),
+  \label{eq:bipartite}
 \end{equation}
-In the planar model, the spins are two-dimensional vectors with both a longitudinal component ($s_i^z$) and a transverse component ($s_i^x$). This extra dimension gives the spins a physical ``escape route'': 
-\begin{itemize}
-    \item The uniform magnetic field $h$ pulls the spins along the $z$-axis.
-    \item To satisfy their antiferromagnetic urge to point in opposite directions, the spins tilt away from the $z$-axis and into the $x$-axis.
-    \item Sublattice $A$ tilts into the $+x$ direction, and Sublattice $B$ tilts into the $-x$ direction.
-\end{itemize}
+which is (K2.11). In particular $\Jc(\bQ)=-\Jc(0)$, and since $\Jc>0$ the minimum of
+$\Jc(\bk)$ is at $\bk=\bQ$: the ordering wavevector is $\bQ$, i.e.\ two-sublattice
+antiferromagnetic order. Note $2\bQ$ is a reciprocal lattice vector, so $\bQ\equiv-\bQ$
+and $\bm S_{\bQ}$ is \emph{real}.
 
-This phenomenon is known as a \textbf{spin-flop transition}, and it solves the known problem of the scalar 3D antiferromagnetic spherical model \cite{knops1973antiferromagnetic}.
-
-\subsection{Derivation of the Partition Function and Massieu Potential}
-
-To calculate the canonical partition function ${Z}$, we integrate over all continuous planar spin vectors $\vec{s}_i$ subject to the global sublattice constraints. We enforce these strict macroscopic constraints by relaxing the system into the grand canonical (mean spherical) ensemble. This is achieved by introducing two conjugate Lagrange multipliers—the spherical fields $z_A$ and $z_B$—via the integral representation of the Dirac delta function:
+Near the zone corner, writing $\bk=\bQ-\bq$,
 \begin{equation}
-{Z} \propto \int_{-i\infty}^{i\infty} dz_A \int_{-i\infty}^{i\infty} dz_B \int \prod_{i=1}^N d\vec{s}_i \exp\left[ -\beta \mathcal{H}(\vec s_i) - z_A \left( \sum_{i \in A} \vec{s}_i^2 - \frac{N}{2} \right) - z_B \left( \sum_{j \in B} \vec{s}_j^2 - \frac{N}{2} \right) \right]
+  \Jc(\bQ-\bq) = -\Jc(\bq) = -\Jc\sum_\mu\cos q_\mu
+   = -\Jc(0) + \tfrac{\Jc}{2}q^2 + O(q^4).
+  \label{eq:smallq}
 \end{equation}
 
-To decouple the spatial interactions in the Hamiltonian, we transform the real-space spin variables into Fourier space:
+\subsection{The symbol $\beta$, and the control parameters}
+Three-way collision ($\beta$ = inverse temperature, order-parameter exponent, and inside
+$b=2-\alpha$). Here $\beta\equiv1/\kB T$ always; the order-parameter exponent is written
+$\beta_{\rm op}$.
+
+The Boltzmann weight is $\exp(-\beta E)$ with \eqref{eq:energy}, i.e.
 \begin{equation}
-\vec{s}(\vec{k}) = \sqrt{\frac{2}{N}} \sum_{j} \vec{s}_j e^{-i \vec{k} \cdot \vec{r}_j}
+  \exp\Big(-\beta E_{\rm int} + h\sum_j\sigma_j^z\Big),
+  \qquad
+  E_{\rm int}\equiv\sum_{\langle ij\rangle}\Jc_{ij}\bm\sigma_i\cdot\bm\sigma_j,
+  \qquad
+  h \equiv \beta\Hc .
 \end{equation}
-where the sum runs over the respective sublattice sites, and $\vec{k}$ spans the first Brillouin zone of the sublattices. 
-
-In Fourier space, the bipartite nearest-neighbor interaction mixes the $A$ and $B$ modes. This allows the exponent of the partition function to be restructured into a sum of independent $2 \times 2$ quadratic forms for each wavevector $\vec{k}$:
+This is manifestly linear in
 \begin{equation}
--\frac{1}{2} \sum_{\vec{k}} \begin{pmatrix} \vec{s}_A(-\vec{k}) & \vec{s}_B(-\vec{k}) \end{pmatrix} \begin{pmatrix} 2z_A & 2\beta K(\vec{k}) \\ 2\beta K(\vec{k}) & 2z_B \end{pmatrix} \begin{pmatrix} \vec{s}_A(\vec{k}) \\ \vec{s}_B(\vec{k}) \end{pmatrix} + \text{field terms}
+  \boxed{\ \lambda=(\lambda^1,\lambda^2)=(\beta,\,h),\qquad h=\beta\Hc=2\beta H\ }
+  \label{eq:controls}
 \end{equation}
-where $K(\vec{k}) = \frac{1}{2} K \sum_{\delta} e^{i \vec{k} \cdot \vec{\delta}}$ is the Fourier transform of the nearest-neighbor exchange interactions (we used the factor $1/2$ to match with \cite{knops1973antiferromagnetic} notation).
-
-Because the integration over the continuous spin fields is now strictly Gaussian, it can be evaluated exactly by computing the determinant of the coupling matrix. For each non-zero mode, the Gaussian integration yields a logarithmic term proportional to $\ln[z_A z_B - \beta^2 K^2(\vec{k})]$. The zero-mode ($\vec{k} = \vec{0}$), which couples to the macroscopic uniform and staggered fields, is evaluated separately and yields the terms proportional to $h^2$ .
-
-In the thermodynamic limit ($N \to \infty$), the sum over discrete wavevectors transitions into a continuous integral over half the Brillouin zone. The complex contour integrals over the spherical fields $z_A$ and $z_B$ can then be evaluated using the saddle-point method. The equilibrium Massieu potential per spin, $\psi = \lim_{N \to \infty} \frac{1}{N} \ln {Z}$, is exclusively determined by the maximum of the integrand, yielding the exact expression:
+as required by [BR, Eq.~(1)], with conjugate variables
 \begin{equation}
-\psi = \frac{1}{2}(z_A + z_B) - \frac{1}{2} \int \frac{d^3k}{(2\pi)^3} \ln \left[ z_A z_B - \beta^2 K^2(\vec{k}) \right] + \frac{\beta^2 h^2}{z_A + z_B + 2\beta K(\vec{0})} 
-\end{equation}
-
-The equilibrium values of $z_A$ and $z_B$ are thus entirely fixed by the saddle-point conditions $\partial \psi / \partial z_A = 0$ and $\partial \psi / \partial z_B = 0$. Because the Massieu potential is symmetric in $z_A$ and $z_B$, the two equations are identical.
-
-When writing the saddle point equations, it is useful to use the macroscopic uniform and staggered magnetizations, $m$ and $m'$, which are defined thermodynamically as the first derivatives of the Massieu potential with respect to their conjugate fields:
-\begin{equation}
-m = \frac{\partial \psi}{\partial (\beta h)} = \frac{2\beta h}{z_A + z_B + 2\beta K(\vec{0})}
-\end{equation}
-
-When differentiating the field-dependent terms of the Massieu potential with respect to $z_A$ or $z_B$, the resulting expressions are algebraically equivalent to $-\frac{1}{4}m^2$. 
-
-Substituting these macroscopic averages directly into the saddle-point conditions and multiplying by $2$ to clear the leading fractions yields the macroscopic equations of state for the system:
-\begin{equation}
-1 = \int \frac{d^3k}{(2\pi)^3} \frac{z_B}{z_A z_B - \beta^2 K^2(\vec{k})} + \frac{1}{2}m^2
+  X_1=-E_{\rm int},\qquad X_2=M_{\rm tot}=\sum_j\sigma^z_j ,
+  \qquad
+  \frac{\partial\psi}{\partial\lambda^\mu}=\avg{X_\mu},
+  \qquad \psi\equiv\ln Z .
 \end{equation}
 
-\subsection{Phase Boundary and the Order Parameter}
-The phase transition occurs when the spherical fields hit the boundary of their allowed domain to keep the integrals convergent. This boundary is defined by:
+\subsection{Dictionary to [K]}
+\label{sec:dict}
+\begin{center}
+\begin{tabular}{lll}
+\hline
+these notes & [K] & relation \\
+\hline
+$\Jc$ & $J$ & $\Jc=2J$ \\
+$\Jc(\bk)$ & $\Jh(\bk)$ & $\Jc(\bk)=2\Jh(\bk)$, \ $\Jc(0)=2\Jh(0)=6J$ \\
+$\Hc$ & $H$ & $\Hc=2H$ \\
+$M=\avg{\sigma^z}$ & $M$ & identical \\
+$x^2$ & $x^2$ & identical (K2.35, K4.8) \\
+$\Wc(z)$ & $W_3$ & $\Wc(z)=\tfrac{1}{2\beta}W_3\!\big(z/2\beta\big)$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Numerical constants (nearest-neighbour sc)}
+The Watson integral is
 \begin{equation}
-z_A z_B = \beta^2 K^2(\vec{0})
+  W_{\rm sc}\equiv\int_{\rm BZ}\!\dk\;
+   \frac{1}{1-\tfrac13(\cos k_x+\cos k_y+\cos k_z)} = 1.5163860592\ldots
+\end{equation}
+As derived in \S\ref{sec:T0},
+\begin{equation}
+  \kB T_0=\frac{3\Jc}{W_{\rm sc}}=\frac{6J}{W_{\rm sc}}=3.9568\,J,
+  \qquad
+  \beta_0\Jc(0)=W_{\rm sc}=1.5164,
+  \qquad
+  \Hc_c(T{=}0)=4\Jc(0)=24J .
+\end{equation}
+The first reproduces $\kB T_0/J=3.957$ quoted below (K2.29); the last is
+$H_c(0)=12J=4\Jh(0)$ in Knops' variables, twice the Ising value as he notes in \S III.
+
+%===============================================================
+\section{The model}
+%===============================================================
+
+\subsection{Spins and constraints}
+Each site carries a two-component (planar) real spin $\bm\sigma_j=(\sigma_j^x,\sigma_j^z)$,
+subject to spherical constraints imposed separately on each sublattice (K4.2):
+\begin{equation}
+  \sum_{j\in A}|\bm\sigma_j|^2=\tfrac12 N,
+  \qquad
+  \sum_{j\in B}|\bm\sigma_j|^2=\tfrac12 N .
+  \label{eq:constraints}
+\end{equation}
+Two constraints rather than one, because a staggered field breaks translational invariance
+in general (discussion below K2.5). In the mean spherical version these hold on average,
+enforced by two spherical fields $z_A,z_B$ (K2.6).
+
+\subsection{Why planar rather than scalar}
+The scalar antiferromagnetic SM does have long-range order --- the correlation functions
+approach a constant $\propto x^2$ (K2.35) --- but at $H\neq0$ that order is invisible in
+every one-point function: $\lim_{H'\to0}M'=0$ (below K2.43). The order parameter has no
+thermodynamic conjugate. For thermodynamic geometry that is fatal, since no control
+parameter couples to it at all.
+
+The planar model repairs this. With spins in a plane and a transverse staggered field
+$H'_\perp$, [K,\S IV] shows (K4.7--4.8)
+\begin{equation}
+  \lim_{H'_\perp\to0}(S^\perp_A)^2=\frac{x^2}{\lambda},
+  \qquad
+  \lim_{H'_\perp\to0}(S^\perp_B)^2=x^2\lambda ,
+\end{equation}
+so $x^2$ \emph{is} the transverse spontaneous staggered magnetisation. The model then
+mimics the isotropic $n$-vector antiferromagnet, spin-flop physics included, while keeping
+exact solubility and --- by the rescaling of \S\ref{sec:rescale} --- the identical phase
+boundary and longitudinal averages of the scalar case. We inherit all of [K,\S II] and
+gain an order parameter.
+
+\subsection{Mean versus strict spherical: what actually differs}
+\label{sec:ensembles}
+The two ensembles are equivalent for thermodynamics. The Massieu potential per site is the
+same, hence so is every derivative of it: susceptibilities, specific heat, and the full
+static Hessian $\partial^2\psi/\partial\lambda^\mu\partial\lambda^\nu$ are
+ensemble-independent. Essentially all of \S2 is therefore insensitive to the choice.
+
+The real distinction is not statics versus dynamics but \emph{thermodynamic derivatives
+versus fluctuation formulas evaluated at fixed $z$}. In the MSM, $\sum_j|\bm\sigma_j|^2$
+genuinely fluctuates, with
+\begin{equation}
+  \mathrm{Var}\Big(\sum_j|\bm\sigma_j|^2\Big)\ \sim\ N\!\int\! d^dq\; G(\bq)^2 ,
+  \qquad G(\bq)\sim\frac{1}{q^2}\ \text{in the ordered phase},
+\end{equation}
+i.e.\ $\int d^dq/q^4$, convergent only for $d>4$. In $d=3$ the fluctuations of the
+constrained quantity are therefore \emph{superextensive}. (Note this is not a statement
+that the $z$-saddle is broad: $\Phi_{zz}\sim I_2\to\infty$ makes it \emph{narrower},
+$\delta z\sim(NI_2)^{-1/2}$. The point is that conditioning on $Q$ changes fluctuation
+formulas for extensive \emph{quadratic} observables.) Consequently
+\begin{equation}
+  \avg{\delta X_\mu\,\delta X_\nu}_{z}\ \neq\
+  \frac{\partial^2\psi}{\partial\lambda^\mu\partial\lambda^\nu} .
+  \label{eq:notequal}
+\end{equation}
+(No factor $\beta$: in the natural Massieu coordinates \eqref{eq:controls},
+$\partial_\mu\partial_\nu\psi=\mathrm{Cov}(X_\mu,X_\nu)$ identically.)
+This single integral is simultaneously Knops' observation that $\chi'_{\rm MSM}=\infty$
+throughout the ordered region while $\chi'$ is finite (K2.36--2.38), and the cancellation
+made explicit in \S\ref{sec:cancel} below. Knops was aware of it: his footnote 9 hangs off
+the phrase ``when sufficient care is taken.''
+
+\paragraph{Working rule.} Obtain static quantities by differentiating $\psi$; never by a
+fixed-$z$ fluctuation formula. \S\ref{sec:ordered} shows this is nearly free here.
+
+\FLAG{Consequence for \S3.} There is no such escape route for $T_{\mu\nu}$, which
+\emph{is} a fluctuation object. A Langevin dynamics that lets $\sum_j|\bm\sigma_j|^2$ float
+will equilibrate to the fixed-$z$ spectrum, i.e.\ the wrong one, and will inherit the
+divergence of \eqref{eq:notequal} directly. The spherical field must be dynamical and
+slaved. This is the one place where the ensemble choice imposes a real obligation.
+
+\subsection{Why $H'=0$, and what it costs}
+Setting $H'=0$ in the Hamiltonian buys: $z_A=z_B$ by symmetry (below K2.6), hence the
+collapse of \S\ref{sec:collapse}; a two-dimensional control manifold matching [BR, Fig.~1];
+and a closed-form critical line.
+
+The cost is specific. Removing $H'_\perp$ removes the field conjugate to the order
+parameter. Moreover $\bm\sigma\to(-\sigma^x,\sigma^z)$ is a symmetry of \eqref{eq:energy},
+so
+\begin{equation}
+  \avg{\delta M_{\rm tot}\,\delta S_\perp}=\avg{\delta E_{\rm int}\,\delta S_\perp}=0 ,
+  \label{eq:decoupling}
+\end{equation}
+and the order-parameter susceptibility \emph{never enters $g_{\mu\nu}$ at linear order}.
+The metric is built entirely from energy-like and uniform-magnetisation-like fluctuations.
+This is the reason the static Hessian turns out to be finite at the transition
+(\S\ref{sec:crit}); it is a physical statement about the example --- one drives the system
+through the transition with fields that couple only to non-critical one-point functions ---
+not an artefact.
+
+\FLAG{Corrected.} An earlier version of these notes claimed that the degeneracy of the
+two components in the fixed-$z$ kernel implies a spontaneously broken $O(2)$ and a
+Goldstone mode. That is wrong. The term $-\Hc\sum_j\sigma^z_j$ breaks $O(2)$ down to the
+reflection $\sigma^x\to-\sigma^x$; the transverse staggered order breaks that residual
+$Z_2$, so at $\Hc\neq0$ there is \emph{no} Goldstone mode. Only at $\Hc=0$ is $O(2)$ restored.
+
+The mechanism that lifts the degeneracy is the \emph{second} spherical constraint, and it
+is worth spelling out because it is the spin-flop selection. Write
+$\sigma^z_j=M+\epsilon_j m_s$ with $\epsilon_j=\pm1$ on the two sublattices. Then
+$|\bm\sigma_j|^2$ contains a term $2M\epsilon_j m_s$, so
+\begin{equation}
+  Q_-\equiv\sum_{j\in A}|\bm\sigma_j|^2-\sum_{j\in B}|\bm\sigma_j|^2 \;\ni\; 2NMm_s ,
+\end{equation}
+and a longitudinal staggered component violates $Q_-=0$ at linear order whenever $M\neq0$.
+A transverse component contributes $\epsilon_j^2 x^2=x^2$ and does not. The constraint
+therefore forbids longitudinal staggered order in a uniform field and selects the
+transverse channel --- exactly the spin-flop physics of [K,\S IV]. Longitudinal and
+transverse staggered fluctuations are \emph{not} degenerate.
+
+\subsection{Collapse to a one-sublattice problem}
+\label{sec:collapse}
+Knops' quadratic form (K2.9) contains a sublattice-mixing term
+$-\tfrac12(z_A-z_B)S_{\bk}S^*_{\bQ-\bk}$. With $H'=0$ we have $z_A=z_B\equiv z$ and
+\emph{this term vanishes identically}. What remains is a translationally invariant mean
+spherical model with a single spherical field, a single scalar propagator, and ordering at
+$\bQ$. Combining \eqref{eq:diag} and \eqref{eq:fieldterm}, the exponent of the Boltzmann
+weight including the spherical term $-z\sum_j|\bm\sigma_j|^2$ is
+\begin{equation}
+  \boxed{\ -\sum_{\bk} a_{\bk}\,|\bm S_{\bk}|^2 \;+\; h\sqrt N\,S^z_0 ,
+  \qquad a_{\bk}\equiv z+\beta\Jc(\bk)\ }
+  \label{eq:quadform}
+\end{equation}
+By \eqref{eq:bipartite} the soft mode is at $\bk=\bQ$, where $a_{\bQ}=z-\beta\Jc(0)$.
+
+\FLAG{Scope of this collapse.} It holds for the \emph{equilibrium mean-spherical saddle},
+and hence for all of \S2: there $z_A=z_B$ and $Q_-=0$ are satisfied automatically, and no
+$2\times2$ sublattice structure is needed. It does \emph{not} hold for strictly constrained
+dynamics. Enforcing $Q_+=N$ and $Q_-=0$ configuration by configuration requires two
+time-dependent multipliers, and the $Q_-$ constraint couples $\bk$ to $\bQ-\bk$. That
+coupling is precisely what distinguishes longitudinal from transverse staggered
+fluctuations in a uniform field (\S1.4), so it cannot be dropped in \S3--\S4.
+
+%===============================================================
+\section{The Massieu potential}
+%===============================================================
+
+\subsection{Gaussian integration at fixed $z$}
+It is cleanest to count degrees of freedom in real space. Write \eqref{eq:quadform} as
+\begin{equation}
+  -\sum_{ij}A_{ij}\big(\sigma^x_i\sigma^x_j+\sigma^z_i\sigma^z_j\big)+h\sum_j\sigma^z_j ,
+  \qquad
+  A_{ij}=z\,\delta_{ij}+\tfrac{\beta}{2}\Jc_{ij},
+\end{equation}
+so that $A$ is a real symmetric $N\times N$ matrix with eigenvalues $a_{\bk}$ (the
+$\tfrac12$ because the unrestricted double sum is twice the bond sum). Both components see
+the same $A$; only $\sigma^z$ carries a source, with $b_j=h$ for every $j$.
+
+Using $\int d^Nu\,e^{-u^\top A u+b^\top u}=\pi^{N/2}(\det A)^{-1/2}e^{\,b^\top A^{-1}b/4}$
+once per component,
+\begin{equation}
+  Z_z=\underbrace{\frac{\pi^{N/2}}{(\det A)^{1/2}}}_{x\text{-component}}
+      \cdot
+      \underbrace{\frac{\pi^{N/2}}{(\det A)^{1/2}}\,e^{\,b^\top A^{-1}b/4}}_{z\text{-component}}
+     =\frac{\pi^{N}}{\det A}\,e^{\,b^\top A^{-1}b/4}.
+\end{equation}
+For the source term, the uniform vector $u_j=1$ has Fourier components $\sqrt N\delta_{\bk,0}$, so
+\begin{equation}
+  b^\top A^{-1}b = h^2\sum_{ij}(A^{-1})_{ij}=h^2\sum_{\bk}\frac{|\hat u_{\bk}|^2}{a_{\bk}}
+   =\frac{h^2 N}{a_0}.
+\end{equation}
+With $\ln\det A=\sum_{\bk}\ln a_{\bk}$,
+\begin{equation}
+  \boxed{\ \ln Z_z=-\sum_{\bk}\ln a_{\bk}+\frac{h^2N}{4a_0}+N\ln\pi\ }
+  \label{eq:lnZ}
 \end{equation}
 
-In the disordered phase, the uniform field forces $z_A = z_B = z$, and the staggered magnetization $m'$ vanishes. In the ordered phase, the spherical fields ``stick'' to the constraint $z_A z_B = \beta^2 K^2(\vec{0})$, allowing a macroscopic fraction of the spins to occupy the lowest energy mode, which physically manifests as a non-zero $m'$ even in the limit $h' \to 0$. The exact critical surface $T_c(h, h')$ separating these phases is found by setting the spontaneous order parameter to zero while strictly enforcing the boundary condition.
+\FLAG{Correction to the first draft.} The first draft had $a_{\bk}=z+\beta\Jh(\bk)$ and
+omitted the $\tfrac14$ in the source term. Both are fixed above.
 
-\subsection{The Analytic Phase Boundary}
-
-A major analytical advantage of the spherical model is that the critical surface separating the disordered and ordered phases can be determined exactly in a closed algebraic form. We restrict our analysis to the physical parameter space where the staggered field is zero ($h' = 0$), implying the symmetry $z_A = z_B \equiv z$ and a vanishing staggered magnetization $m' = 0$ in the disordered phase. 
-
-The onset of the phase transition occurs exactly when the spherical field hits the boundary of its allowed domain, $z = \beta K(\vec{0})$. At this boundary, the complex momentum integral in the saddle-point equation simplifies significantly. We can factor out the temperature dependence to define the zero-field critical temperature $T_c^0$:
+\paragraph{Immediate check.} The source couples as $h\sum_j\sigma^z_j$, so
 \begin{equation}
-1 = \int \frac{d^3k}{(2\pi)^3} \frac{\beta_c^0 K(\vec{0})}{(\beta_c^0 K(\vec{0}))^2 - (\beta_c^0 K(\vec{k}))^2} \implies \frac{T}{T_c^0} = \int \frac{d^3k}{(2\pi)^3} \frac{K(\vec{0})}{K^2(\vec{0}) - K^2(\vec{k})}
+  N M \equiv \avg{\textstyle\sum_j\sigma^z_j}=\frac{\partial \ln Z_z}{\partial h}
+  =\frac{hN}{2a_0}
+  \qquad\Longrightarrow\qquad
+  M=\frac{h}{2a_0},
+  \label{eq:M}
+\end{equation}
+which is also what one gets directly from the single displaced mode
+$-a_0|S^z_0|^2+h\sqrt N S^z_0$, whose mean is $\avg{S^z_0}=h\sqrt N/2a_0$.
+
+\subsection{Restoring the constraint}
+$Z_z$ is the partition function with the spherical term inserted by hand. The constrained
+one follows by a Legendre/saddle-point step: the physical Massieu potential is
+\begin{equation}
+  \frac{\psi}{N}=\operatorname*{extr}_{z}\left[\,z+\frac{1}{N}\ln Z_z\right],
+\end{equation}
+since stationarity gives
+$1-\tfrac1N\avg{\sum_j|\bm\sigma_j|^2}=0$, which is precisely \eqref{eq:constraints} in the
+mean. Adding a macroscopic occupation $x$ of the soft mode --- put $|S^x_{\bQ}|^2=Nx^2$,
+contributing $-a_{\bQ}Nx^2$ to \eqref{eq:quadform} --- gives the final form
+\begin{equation}
+  \boxed{\;
+  \frac{\psi}{N}=\operatorname*{extr}_{z,\,x}\ \Phi,
+  \qquad
+  \Phi = z-\int\!\dk\,\ln\!\big[z+\beta\Jc(\bk)\big]
+        +\frac{h^2}{4\big[z+\beta\Jc(0)\big]}
+        -\big[z-\beta\Jc(0)\big]x^2 \;}
+  \label{eq:Phi}
+\end{equation}
+up to an additive constant independent of $(\beta,h)$. Convergence of the Gaussian
+integral requires $a_{\bk}>0$ for all $\bk$, i.e.
+\begin{equation}
+  z\ \geq\ \beta\Jc(0) ,
+  \label{eq:zrange}
+\end{equation}
+the analogue of (K2.23).
+
+\subsection{Stationarity: sticking and the constraint}
+Differentiating \eqref{eq:Phi} in $x$:
+\begin{equation}
+  -2x\big[z-\beta\Jc(0)\big]=0
+  \quad\Longrightarrow\quad
+  \underbrace{x=0}_{\text{disordered}}
+  \quad\text{or}\quad
+  \underbrace{z=\beta\Jc(0)}_{\text{ordered}} .
+  \label{eq:sticking}
+\end{equation}
+This is the standard spherical-model mechanism: $z$ \emph{sticks} at the lower end of its
+range \eqref{eq:zrange} throughout the ordered region (below K2.23).
+
+Differentiating in $z$, and using \eqref{eq:M} in the form $M^2=h^2/4a_0^2$:
+\begin{equation}
+  \boxed{\ \Wc(z)+M^2+x^2=1\ },
+  \qquad
+  \Wc(z)\equiv\int\!\dk\,\frac{1}{z+\beta\Jc(\bk)} .
+  \label{eq:constraint}
+\end{equation}
+This is the $H'=0$ ($\lambda=1$) specialisation of (K2.27)--(K2.28), which then become
+identical to one another. Using \eqref{eq:bipartite} and invariance of the zone average
+under $\bk\to\bQ-\bk$,
+\begin{equation}
+  \Wc(z)=\int\!\dk\,\frac{1}{z-\beta\Jc(\bk)}=\frac{1}{2\beta}\,W_3\!\left(\frac{z}{2\beta}\right),
+\end{equation}
+with $W_3$ the integral (K2.19).
+
+\paragraph{Disordered region.} $x=0$, and \eqref{eq:constraint} fixes $z>\beta\Jc(0)$
+implicitly. Define
+\begin{equation}
+  r\equiv z-\beta\Jc(0)>0 ,
+\end{equation}
+so by \eqref{eq:smallq} $a_{\bQ-\bq}=r+\tfrac{\beta\Jc}{2}q^2$, giving $\xi^2=\beta\Jc/2r$
+and $\nu=1$.
+
+\paragraph{Ordered region.} $r=0$ identically, and \eqref{eq:constraint} fixes the
+condensate. \FLAG{Note} that $r=0$ holds throughout the ordered phase, not merely on the
+boundary: the whole ordered region is gapless. This is the origin of the divergence of
+$\chi'_{\rm MSM}$ in \S\ref{sec:ensembles} and the main technical risk for \S3.
+
+\subsection{The zero-field critical temperature}
+\label{sec:T0}
+Set $H=0$, $x=0$, $z=\beta_0\Jc(0)$ in \eqref{eq:constraint}, so $\Wc=1$:
+\begin{equation}
+  \frac{1}{\beta_0}\int\!\dk\,\frac{1}{\Jc(0)-\Jc(\bk)}=1 .
+\end{equation}
+With $\Jc(0)-\Jc(\bk)=3\Jc\big[1-\tfrac13\sum_\mu\cos k_\mu\big]$ this is
+$W_{\rm sc}/(3\Jc\beta_0)=1$, hence
+\begin{equation}
+  \boxed{\ \kB T_0=\frac{3\Jc}{W_{\rm sc}}=\frac{6J}{W_{\rm sc}}=3.9568\,J\ },
+  \qquad
+  \beta_0\Jc(0)=W_{\rm sc}.
+\end{equation}
+Converting with $\Jc=2J$: $W_3(\Jh(0))=2/\kB T_0$, i.e.\ (K2.29), and $\kB T_0/J=3.957$. \checkmark
+
+\subsection{The critical line}
+On the boundary both $x=0$ and $z=\beta\Jc(0)$ hold, so $a_0=2\beta\Jc(0)$ and by
+\eqref{eq:M}
+\begin{equation}
+  M_c=\frac{h}{4\beta\Jc(0)}=\frac{\Hc_c}{4\Jc(0)} .
+\end{equation}
+Also $\Wc(\beta\Jc(0))=\tfrac{1}{2\beta}W_3(\Jh(0))=\beta_0/\beta=t$ with $t\equiv T/T_0$.
+Then \eqref{eq:constraint} reads $t+M_c^2=1$, giving
+\begin{equation}
+  \boxed{\ \Hc_c(T)=4\Jc(0)\left(1-\frac{T}{T_0}\right)^{1/2}\ }
+  \label{eq:boundary}
+\end{equation}
+i.e.\ $H_c=4\Jh(0)\sqrt{1-t}$, which is (K2.39) at $\lambda=1$. In the control variables,
+using $t=\beta_0/\beta$ and $\beta_0\Jc(0)=W_{\rm sc}$, and writing $u\equiv\beta\Jc(0)$,
+\begin{equation}
+  h_c(\beta)=4u\left(1-\frac{W_{\rm sc}}{u}\right)^{1/2}.
+  \label{eq:boundary_bh}
 \end{equation}
 
-Furthermore, at this boundary, the macroscopic uniform magnetization reduces to a strictly linear, temperature-independent function of the applied uniform field:
+\paragraph{Topology.} The ordered region is $|h|<h_c(\beta)$ for $\beta>\beta_0$: a
+semi-infinite tongue, symmetric in $h\to-h$, attached to the $\beta$ axis at the single
+point $u=W_{\rm sc}$ and opening asymptotically linearly, $h_c\simeq4u$. This is
+topologically identical to [BR, Fig.~1]: a path from inside to outside must cross the
+critical line, since going around it requires $\beta\to\infty$. The motivating claim of
+the manuscript survives the replacement, now resting on an exactly solved $d=3$ model.
+
+\subsection{First derivatives}
+Because $\psi$ is a stationary value, first derivatives may be taken at fixed $z,x$
+(envelope theorem):
 \begin{equation}
-m_c = \frac{2\beta h}{2\beta K(\vec{0}) + 2\beta K(\vec{0})} = \frac{h}{2K(\vec{0})}
-\end{equation}
-
-Substituting these exact boundary values back into the simplified macroscopic equation of state, $1 = \text{Integral} + \frac{1}{2}m^2$, yields the algebraic relation:
-\begin{equation}
-1 = \frac{T}{T_c^0} + \frac{1}{2} \left( \frac{h}{2K(\vec{0})} \right)^2 = \frac{T}{T_c^0} + \frac{h^2}{8K^2(\vec{0})}
-\end{equation}
-
-Inverting this relation provides the exact analytic equation for the phase boundary $T_c(h)$ in the uniform parameter space:
-\begin{equation}
-T_c(h) = T_c^0 \left[ 1 - \frac{h^2}{8K^2(\vec{0})} \right]
-\end{equation}
-
-This defines a perfectly parabolic critical line in the $(T, h)$ plane, as plotted in \ref{fig:3DSpherical_PhaseDiagram} . Any finite-time driving protocol that connects a state in the high-temperature disordered phase to a state in the low-temperature transverse spin-flop phase must geometrically cross this exact parabolic boundary.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\linewidth]{PRL_revisions/PhaseDiagram.png}
-    \caption{The phase diagram of the 3D spherical model}
-    \label{fig:3DSpherical_PhaseDiagram}
-\end{figure}
-
-
-\section{Relaxation Dynamics and the Temporal Response}
-
-To construct the thermodynamic dissipation metric $g_{\mu\nu}$, we must determine the temporal response matrix of the system, which dictates how fast the macroscopic observables relax to equilibrium following a perturbation in the control parameters. Because the spherical model lacks intrinsic dynamics, we couple the spins to a hypothetical thermal bath inducing purely dissipative, non-conserved stochastic dynamics (Model A).
-
-\subsection{Langevin Dynamics in Fourier Space}
-The time evolution of the continuous planar spins is governed by the overdamped Langevin equation. To enforce the global sublattice constraints dynamically within the linear response regime, we evolve the system according to an effective Hamiltonian $\mathcal{H}_{\text{eff}}$, which incorporates the equilibrium spherical fields $z_A$ and $z_B$ as thermodynamic restoring forces:
-\begin{equation}
-\beta \mathcal{H}_{\text{eff}} = -\beta K \sum_{\langle i,j \rangle} \vec{s}_i \cdot \vec{s}_j + z_A \sum_{i \in A} \vec{s}_i^2 + z_B \sum_{j \in B} \vec{s}_j^2 + \text{field terms}
-\end{equation}
-
-The phenomenological equation of motion for a microscopic spin is $\partial_t \vec{s}_i = -\Gamma \nabla_{\vec{s}_i} (\beta \mathcal{H}_{\text{eff}}) + \vec{\eta}_i(t)$, where $\Gamma$ is the microscopic kinetic coefficient and $\vec{\eta}_i(t)$ is a standard Gaussian white noise satisfying $\langle \eta_i^\alpha(t) \eta_j^\beta(t') \rangle = 2\Gamma \delta_{ij} \delta^{\alpha\beta} \delta(t-t')$.
-
-Transitioning to Fourier space diagonalizes the spatial interactions, reducing the coupled many-body problem into independent two-dimensional stochastic differential equations for each wavevector $\vec{k}$. For the fluctuation modes ($\vec{k} \neq \vec{0}$), the Langevin equations in matrix form are:
-\begin{equation}
-\frac{\partial}{\partial t} \begin{pmatrix} \vec{s}_A(\vec{k}, t) \\ \vec{s}_B(\vec{k}, t) \end{pmatrix} = -\Gamma \begin{pmatrix} 2z_A & 2\beta K(\vec{k}) \\ 2\beta K(\vec{k}) & 2z_B \end{pmatrix} \begin{pmatrix} \vec{s}_A(\vec{k}, t) \\ \vec{s}_B(\vec{k}, t) \end{pmatrix} + \vec{\eta}(\vec{k}, t)
-\end{equation}
-where the coupling matrix is identically the Hessian of the static effective Hamiltonian.
-
-\subsection{Relaxation Timescales}
-The dynamic relaxation of the system is governed by the eigenvalues of this coupling matrix. By diagonalizing the matrix, we find the two characteristic relaxation rates (inverse timescales) for each momentum mode:
-\begin{equation}
-\lambda_{\pm}(\vec{k}) = \Gamma \left( (z_A + z_B) \pm \sqrt{(z_A - z_B)^2 + 4\beta^2 K^2(\vec{k})} \right)
-\end{equation}
-
-The macroscopic relaxation times of the system, which enter the dissipation metric, are strictly governed by the uniform ($\vec{k}=\vec{0}$) zero-modes. Due to the bipartite nature of the lattice, the relevant observable dynamics separate into a uniform relaxation mode governing the total magnetization $m$, and a staggered relaxation mode governing the order parameter $m'$:
-Because our protocol operates under the condition $h'=0$, the symmetry $z_A = z_B \equiv z$ holds. Under this symmetry, the exact eigenvalues drastically simplify, yielding the macroscopic relaxation times:
-\begin{equation}
-\tau_m = \frac{1}{\lambda_{+}(\vec{0})} = \frac{1}{2\Gamma (z + \beta K(\vec{0}))}
+  \frac{1}{N}\frac{\partial\psi}{\partial h}
+   =\frac{\partial\Phi}{\partial h}\bigg|_z=\frac{h}{2a_0}=M ,
 \end{equation}
 \begin{equation}
-\tau_{m'} = \frac{1}{\lambda_{-}(\vec{0})} = \frac{1}{2\Gamma (z - \beta K(\vec{0}))}
+  \frac{1}{N}\frac{\partial\psi}{\partial\beta}
+   =\frac{\partial\Phi}{\partial\beta}\bigg|_z
+   =-\int\!\dk\,\frac{\Jc(\bk)}{a_{\bk}}-\frac{h^2\Jc(0)}{4a_0^2}+\Jc(0)x^2
+   =-\left[\int\!\dk\,\frac{\Jc(\bk)}{a_{\bk}}+\Jc(0)M^2-\Jc(0)x^2\right]
+   =-\frac{\avg{E_{\rm int}}}{N} \ \checkmark
 \end{equation}
+the last equality by direct computation of $\avg{E_{\rm int}}$ from \eqref{eq:diag}, whose
+Gaussian average is $\avg{|\bm S_{\bk}|^2}=1/a_{\bk}$ plus the uniform condensate $NM^2$ at
+$\bk=0$ and the staggered condensate $Nx^2$ at $\bk=\bQ$. The term $-\Jc(0)x^2$ is the
+energy of the macroscopic antiferromagnetic mode, since $\Jc(\bQ)=-\Jc(0)$; an earlier
+version of these notes omitted it. It does not affect \eqref{eq:psiord}, where the $x^2$
+coefficient vanishes identically, nor anything in \S3--\S4, which use fluctuations rather
+than the mean energy.
 
-\section{The Thermodynamic Dissipation Metric}
-
-To construct the thermodynamic metric tensor $g_{\mu\nu}$, we require both the dynamical relaxation timescales and the static covariance matrix (the Hessian) of the equilibrium system. By restricting our analysis to protocols where the staggered field is strictly zero ($h' = 0$), the symmetry of the bipartite lattice dictates that the sublattice spherical fields must be equal: $z_A = z_B \equiv z$. We therefore define our reduced space of control parameters as $\lambda = (\lambda_1, \lambda_2) = (\beta, \beta h)$.
-
-\subsection{The Static Covariance Matrix}
-The static covariance matrix $\chi_{\mu\nu}$ represents the sensitivities of the macroscopic conjugate variables to changes in the control parameters. With the symmetry $z_A = z_B = z$, the Massieu potential $\psi(z, \lambda)$ depends on the control parameters both explicitly and implicitly through the single equilibrium spherical field. We must compute the total second derivative:
+\subsection{The ordered phase in closed form}
+\label{sec:ordered}
+Here \eqref{eq:sticking} gives $z=\beta\Jc(0)$, so the $x^2$ term in \eqref{eq:Phi} has
+\emph{zero coefficient} and the order parameter drops out of $\psi$ entirely. With
+$a_{\bk}=\beta[\Jc(0)+\Jc(\bk)]$ and $a_0=2\beta\Jc(0)$,
 \begin{equation}
-\chi_{\mu\nu} = \frac{d^2 \psi}{d\lambda_\mu d\lambda_\nu} = \frac{d}{d\lambda_\nu} \left( \frac{\partial \psi}{\partial \lambda_\mu} + \frac{\partial \psi}{\partial z} \frac{\partial z}{\partial \lambda_\mu} \right)
+  \boxed{\
+  \frac{\psi}{N}\bigg|_{\rm ord}
+   =\beta\Jc(0)-\ln\beta+\frac{h^2}{8\beta\Jc(0)}+\mathrm{const}\ }
+  \label{eq:psiord}
 \end{equation}
-
-By definition of the saddle-point condition, $\partial \psi / \partial z = 0$. Thus, the macroscopic observables $X_\mu = d\psi/d\lambda_\mu$ are given purely by the explicit partial derivatives. However, when computing the second total derivative, the implicit dependence of $z$ on the control parameters $\lambda$ emerges:
+the constant being $-\int\!\dk\,\ln[\Jc(0)+\Jc(\bk)]+\ln\pi$, independent of $(\beta,h)$.
+Elementary and analytic in $(\beta,h)$ throughout the ordered region. Every static quantity
+follows by inspection:
 \begin{equation}
-\chi_{\mu\nu} = \frac{\partial^2 \psi}{\partial \lambda_\mu \partial \lambda_\nu} + \frac{\partial^2 \psi}{\partial \lambda_\mu \partial z} \frac{\partial z}{\partial \lambda_\nu}
+  M=\frac{h}{4\beta\Jc(0)},\qquad
+  \frac{1}{N}\frac{\partial^2\psi}{\partial h^2}=\frac{1}{4\beta\Jc(0)},\qquad
+  \frac{1}{N}\frac{\partial^2\psi}{\partial\beta\partial h}=-\frac{h}{4\beta^2\Jc(0)},\qquad
+  \frac{1}{N}\frac{\partial^2\psi}{\partial\beta^2}=\frac{1}{\beta^2}+\frac{h^2}{4\beta^3\Jc(0)} .
+  \label{eq:ordhess}
 \end{equation}
+All finite. This is the promised demonstration that the working rule of
+\S\ref{sec:ensembles} costs almost nothing: on the ordered side one never needs the
+implicit machinery at all.
 
-To evaluate the response of the spherical field $\partial z / \partial \lambda_\nu$, we differentiate the saddle-point equation $f = \partial \psi / \partial z = 0$ with respect to $\lambda_\nu$:
+\subsection{Second derivatives and the constraint response}
+On the disordered side $z$ moves with $\lambda$ and the envelope theorem no longer applies.
+Differentiating $\partial\Phi/\partial z=0$ gives
+$\partial z/\partial\lambda^\nu=-(\partial^2\Phi/\partial z\partial\lambda^\nu)/(\partial^2\Phi/\partial z^2)$,
+hence
 \begin{equation}
-\frac{d f}{d \lambda_\nu} = \frac{\partial^2 \psi}{\partial z \partial \lambda_\nu} + \frac{\partial^2 \psi}{\partial z^2} \frac{\partial z}{\partial \lambda_\nu} = 0
+  \boxed{\
+  \frac{1}{N}\frac{\partial^2\psi}{\partial\lambda^\mu\partial\lambda^\nu}
+  =\frac{\partial^2\Phi}{\partial\lambda^\mu\partial\lambda^\nu}\bigg|_z
+   -\frac{\dfrac{\partial^2\Phi}{\partial\lambda^\mu\partial z}\;
+          \dfrac{\partial^2\Phi}{\partial\lambda^\nu\partial z}}
+         {\dfrac{\partial^2\Phi}{\partial z^2}}\ }
+  \label{eq:hessian}
 \end{equation}
+which is (K2.38) in general form. The ingredients, from \eqref{eq:Phi}, with
+$I_n\equiv\int\!\dk\,a_{\bk}^{-n}$ and $P\equiv\Jc(0)$:
+\begin{align}
+  \frac{\partial^2\Phi}{\partial z^2}&=I_2+\frac{h^2}{2a_0^3},
+  &\frac{\partial^2\Phi}{\partial\beta\partial z}&=\int\!\dk\,\frac{\Jc(\bk)}{a_{\bk}^2}+\frac{h^2P}{2a_0^3},
+  &\frac{\partial^2\Phi}{\partial\beta^2}\bigg|_z&=\int\!\dk\,\frac{\Jc(\bk)^2}{a_{\bk}^2}+\frac{h^2P^2}{2a_0^3},\nonumber\\
+  \frac{\partial^2\Phi}{\partial h\partial z}&=-\frac{h}{2a_0^2},
+  &\frac{\partial^2\Phi}{\partial h\partial\beta}&=-\frac{hP}{2a_0^2},
+  &\frac{\partial^2\Phi}{\partial h^2}\bigg|_z&=\frac{1}{2a_0}.
+\end{align}
 
-Because we only have a single spherical constraint, this trivially rearranges to give the exact response of the spherical field:
+\subsection{The cancellation, explicitly}
+\label{sec:cancel}
+As $r\to0$ the divergences all come from $\bk$ near $\bQ$. By \eqref{eq:smallq},
 \begin{equation}
-\frac{\partial z}{\partial \lambda_\nu} = - \left( \frac{\partial^2 \psi}{\partial z^2} \right)^{-1} \frac{\partial^2 \psi}{\partial z \partial \lambda_\nu}
+  I_2=\int\!\dk\,\frac{1}{(r+\tfrac{\beta\Jc}{2}q^2)^2}+\text{reg}
+   \;\sim\; \frac{D}{\sqrt r}\to\infty ,
+  \qquad
+  I_1\to\text{finite},
 \end{equation}
-
-Substituting this back into our expression for the static covariance matrix yields a completely generalized and exact algebraic form for the purely static susceptibilities:
+(the second because $\int d^3q/q^2$ converges in $d=3$). The trick is to eliminate
+$\Jc(\bk)$ in favour of $a_{\bk}$: since $a_{\bk}=r+\beta[\Jc(0)+\Jc(\bk)]$,
 \begin{equation}
-\chi_{\mu\nu} = \frac{\partial^2 \psi}{\partial \lambda_\mu \partial \lambda_\nu} - \left( \frac{\partial^2 \psi}{\partial z^2} \right)^{-1} \left( \frac{\partial^2 \psi}{\partial z \partial \lambda_\mu} \right) \left( \frac{\partial^2 \psi}{\partial z \partial \lambda_\nu} \right)
+  \Jc(\bk)=-P+\frac{a_{\bk}-r}{\beta}
+  \quad\Longrightarrow\quad
+  \int\!\dk\,\frac{\Jc}{a^2}=-PI_2+\frac{A}{\beta},
+  \qquad
+  \int\!\dk\,\frac{\Jc^2}{a^2}=P^2I_2-\frac{2PA}{\beta}+\frac{C}{\beta^2},
 \end{equation}
-
-\subsection{The Metric Tensor}
-The full $2 \times 2$ dissipation metric $g_{\mu\nu}$ in the $(\beta, \beta h)$ parameter space is determined by integrating the temporal correlation functions of the conjugate variables. Utilizing the linear-response properties of our Model A Langevin dynamics, the purely static susceptibilities are weighted by the macroscopic relaxation timescale of the uniform mode. The metric components scale as:
+with $A\equiv I_1-rI_2$ and $C\equiv I_0-2rI_1+r^2I_2$, $I_0=1$. Writing
+$R\equiv h^2/2a_0^3$ (regular, since $a_0=r+2\beta P$ stays finite), the three ingredients
+become
 \begin{equation}
-g_{\mu\nu} = \beta \tau_m \chi_{\mu\nu}
+  \frac{\partial^2\Phi}{\partial z^2}=I_2+R,
+  \qquad
+  \frac{\partial^2\Phi}{\partial\beta\partial z}=-P\big(I_2+R\big)+B,
+  \qquad
+  \frac{\partial^2\Phi}{\partial\beta^2}\bigg|_z=P^2\big(I_2+R\big)-\frac{2PA}{\beta}+\frac{C}{\beta^2},
 \end{equation}
-where $\tau_m = [2\Gamma(z + \beta K(\vec{0}))]^{-1}$ is the characteristic relaxation time of the uniform zero-mode under the $z_A = z_B$ symmetry. The divergence of this metric tensor near the critical line $z = \beta K(\vec{0})$ dictates the geometric thermodynamic length across the phase transition.
+where $B\equiv A/\beta+2PR$ is regular. Substituting into \eqref{eq:hessian}, writing
+$D_z\equiv I_2+R$, the $P^2D_z$ terms cancel identically:
+\begin{align}
+  \frac{1}{N}\frac{\partial^2\psi}{\partial\beta^2}
+  &=P^2D_z-\frac{2PA}{\beta}+\frac{C}{\beta^2}-\frac{(-PD_z+B)^2}{D_z}\nonumber\\
+  &=P^2D_z-\frac{2PA}{\beta}+\frac{C}{\beta^2}-P^2D_z+2PB-\frac{B^2}{D_z}
+   \;=\;\frac{C}{\beta^2}+4P^2R-\frac{B^2}{D_z} .
+  \label{eq:cancelled}
+\end{align}
+\emph{The leading divergence cancels exactly}, because near $\bQ$ the coupling
+$\Jc(\bk)\to-P$ is constant, so the singular part of $\partial^2\Phi/\partial\beta\partial z$
+is a fixed multiple of that of $\partial^2\Phi/\partial z^2$. Taking $r\to0$ in
+\eqref{eq:cancelled}: $C\to I_0=1$, $B^2/D_z\to0$, and $4P^2R=h^2/4\beta^3P$, so
+\begin{equation}
+  \frac{1}{N}\frac{\partial^2\psi}{\partial\beta^2}\ \longrightarrow\
+  \frac{1}{\beta^2}+\frac{h^2}{4\beta^3\Jc(0)} ,
+\end{equation}
+which is exactly \eqref{eq:ordhess}. The same steps give
+$\partial^2\psi/\partial h^2\to1/4\beta\Jc(0)$ and
+$\partial^2\psi/\partial\beta\partial h\to-h/4\beta^2\Jc(0)$, again matching
+\eqref{eq:ordhess}. \checkmark
 
-\subsection{Critical Scaling and Finite Thermodynamic Length}
+\paragraph{Two things this buys.}
+\emph{(i)} The Hessian is finite \emph{and continuous} across the critical line --- computed
+independently from the two sides. \emph{(ii)} The leading singular correction is
+$-B^2/D_z\sim-B^2\sqrt r/D$. Since $r\sim\xi^{-2}\sim\epsilon^{2\nu}=\epsilon^2$, this is
+$\sim\epsilon^{1}=\epsilon^{-\alpha}$ with $\alpha=-1$: the expected specific-heat
+singularity, obtained here from the explicit cancellation rather than assumed.
 
-As a sanity check, we next evaluate the asymptotic scaling of the spherical metric $g_{\mu\nu} = \beta \tau_m \chi_{\mu\nu}$ near the phase boundary to demonstrate how 3D spatial fluctuations regularize this geometry.
+\subsection{Rank, and the contrast with the mean-field example}
+From \eqref{eq:ordhess},
+\begin{equation}
+  \det\!\left[\frac{1}{N}\frac{\partial^2\psi}{\partial\lambda\partial\lambda}\right]
+  =\left(\frac{1}{\beta^2}+\frac{h^2}{4\beta^3P}\right)\frac{1}{4\beta P}
+   -\frac{h^2}{16\beta^4P^2}
+  =\frac{1}{4\beta^3\Jc(0)}\;>\;0 .
+\end{equation}
+Full rank. This is a real structural difference from [BR,\S e], where the disordered-phase
+metric is rank one with $\det g=0$ and the optimum collapses onto lines of constant $m$.
+There are no null directions here, so the four classes of minimal paths must be re-derived
+in \S7, and the ``detour to $\beta=0$'' mechanism probably does not survive.
 
-To find the critical scaling, we define the parameter $\epsilon = z - \beta K(\vec{0})$, which measures the deviation of the spherical field from the critical boundary. As the system approaches the phase transition from the disordered phase, $\epsilon \to 0$. The singular behavior of the system is governed by the asymptotic expansion of the generalized Watson integral in three dimensions \cite{}. 
+\subsection{Critical exponents and what they imply}
+\label{sec:crit}
+The $d=3$ spherical model has, exactly,
+\begin{equation}
+  \alpha=-1,\quad \beta_{\rm op}=\tfrac12,\quad \gamma=2,\quad \delta=5,\quad
+  \nu=1,\quad \eta=0 ,
+\end{equation}
+($\nu=1/(d-2)$, and $\nu=1$ is confirmed independently by $\xi^2=\beta\Jc/2r$ above), and
+with Model~A dynamics $z_{\rm dyn}=2$ exactly. In the notation of [BR, Eq.~(5)],
+\begin{equation}
+  b=d\nu=2-\alpha=3,\qquad
+  \Delta=\beta_{\rm op}\delta=\tfrac52,\qquad
+  p=\frac{b}{\Delta}=1+\frac1\delta=\frac65,\qquad
+  \frac{z_{\rm dyn}}{d}=\frac23 .
+\end{equation}
+Both convergence conditions of [BR] hold, exactly rather than numerically:
+\begin{equation}
+  b\Big(1-\frac{z_{\rm dyn}}{d}\Big)=1>0,
+  \qquad
+  p\Big(1-\frac{z_{\rm dyn}}{d}\Big)=\frac25>0 .
+\end{equation}
+\FLAG{Corrected --- $p$ does not describe this control manifold.} An earlier version claimed
+$\kappa=pz_{\rm dyn}/d=4/5<1$ ``in the field direction'', offered as a sharper illustration
+than the current draft has. That is wrong. The Widom variable $h/t^\Delta$ is built from
+the field \emph{conjugate to the order parameter}, which here is the transverse staggered
+field $\Hc'_\perp$ --- and $\Hc'_\perp=0$ throughout this control manifold. With
+$\Hc'_\perp=0$ we sit on the symmetry axis: at a generic point of the critical line,
+variations of $\beta$ and of the \emph{uniform} field $h$ merely have different projections
+onto the same thermal scaling field normal to the line, and the tangential variation is
+non-singular at leading order. Only $b$ and the condition $b(1-z_{\rm dyn}/d)=1>0$ are
+relevant here; $p=6/5$ remains correct universality-class data but describes an approach
+this slice cannot realise.
 
-The behavior of the continuous momentum integral is entirely dominated by the lowest energy modes, which occur at very small wavevectors ($|\vec{k}| \to 0$). Near the origin, the Fourier transform of the nearest-neighbor interaction for a simple cubic lattice can be Taylor expanded quadratically:
-$$K(\vec{k}) \approx K(\vec{0}) - a k^2$$
-where $a$ is a positive constant related to the lattice geometry. Substituting this into the denominator of the integral yields:
-$$\epsilon + \beta K(\vec{0}) - \beta \left(K(\vec{0}) - a k^2\right) = \epsilon + \beta a k^2$$
+This is not merely a lost selling point --- it is the scaling-language explanation of the
+finite metric found in \S4: the control parameters never couple to the ordering field.
 
-Because we are in 3D momentum space, the continuous integral transitions into spherical coordinates, where the volume element is proportional to $k^2 dk$. Grouping all the constant prefactors into a single constant $C$, the integral near the critical point becomes:
-$$W(\epsilon) = C \int_0^{k_{max}} \frac{k^2}{\epsilon + \beta a k^2} dk$$
+\paragraph{The key structural point.} Sections \ref{sec:ordered} and \ref{sec:cancel}
+establish by explicit computation that
+\begin{equation}
+  \boxed{\ \text{the static Hessian does \emph{not} diverge at the transition,}\ }
+\end{equation}
+consistent with $\alpha=-1<0$ and with [K]'s statement (below K2.60) that $\chi$, $\chi'$
+and $C_v$ remain finite and continuous across the boundary for $H\neq0$. Together with the
+decoupling \eqref{eq:decoupling}, the entire divergence of $g_{\mu\nu}$ must come from
+$T_{\mu\nu}$. This makes the decomposition question decisive:
+\begin{align}
+  (\text{full Hessian})\times\tau
+   &\sim O(1)\cdot\epsilon^{-z_{\rm dyn}\nu}=\epsilon^{-2}
+   &&\Rightarrow\ \sqrt g\sim\epsilon^{-1}
+   &&\Rightarrow\ \mathcal L\ \text{log-divergent},\\
+  (\text{singular})\times\tau+(\text{regular})\times\tau_{\rm micro}
+   &\sim \epsilon^{-\alpha}\epsilon^{-z_{\rm dyn}\nu}+O(1)=\epsilon^{-1}
+   &&\Rightarrow\ \sqrt g\sim\epsilon^{-1/2}
+   &&\Rightarrow\ \mathcal L\ \text{finite}.
+\end{align}
+The second is correct --- the analytic background relaxes microscopically and cannot be
+multiplied by the critical $\tau$ --- and agrees with [BR, Eq.~(11)], which gives
+$g_{tt}\dot t^2\propto s^{b(1-z_{\rm dyn}/d)-2}=s^{-1}$ and
+$\dot{\mathcal L}\propto s^{-1/2}$. Here the split is not a modelling assumption: the
+decomposition in \eqref{eq:cancelled} exhibits the regular piece ($C/\beta^2+4P^2R$) and
+the singular piece ($-B^2/D_z$) separately. \S4 must attach the correct relaxation time to
+each.
 
-To evaluate this integral, we use an algebraic trick by adding and subtracting $\epsilon$ in the numerator:
-$$k^2 = \frac{1}{\beta a} \left( \epsilon + \beta a k^2 - \epsilon \right)$$
-This allows us to cleanly split the fraction into two separate, easily solvable integrals,
-$$W(\epsilon) = \frac{C}{\beta a} \int_0^{k_{max}} 1 \, dk - \frac{C\epsilon}{\beta a} \int_0^{k_{max}} \frac{1}{\epsilon + \beta a k^2} dk$$
+Note $g\sim\epsilon^{-1}$ is the same power as the mean-field $g\propto\Delta^{-1}$ of
+[BR,\S e], so the replacement preserves the qualitative picture while upgrading its status.
 
-The first integral evaluates to a finite constant. This constant represents the value of the integral exactly at the critical point, $W(0)$. The second integral is a standard arctangent integral:
-$$- \frac{C\epsilon}{\beta a} \left[ \frac{1}{\sqrt{\epsilon \beta a}} \arctan\left(k \sqrt{\frac{\beta a}{\epsilon}}\right) \right]_0^{k_{max}}$$
-As $\epsilon \to 0$, the argument of the arctangent at the upper bound approaches infinity, evaluating to $\pi/2$. Simplifying the prefactor gives $\epsilon / \sqrt{\epsilon} = \sqrt{\epsilon}$. Thus, the singular part of the integral scales exactly as $-\sqrt{\epsilon}$. We arrive at the asymptotic expansion:
-$$W(\epsilon) \approx W(0) - c \sqrt{\epsilon}$$
+\paragraph{Proposed new row for Table~I of [BR].}
+\begin{center}
+\begin{tabular}{lccc}
+\hline
+ & $b$ & $p$ & $z_{\rm dyn}/d$ \\
+\hline
+3D spherical (Model A) & $3$ & $6/5$ & $2/3$ \\
+\hline
+\end{tabular}
+\end{center}
+All three entries exact.
 
-Substituting this expansion back into the macroscopic equation of state yields:
-$$1 \approx \frac{1}{2} W(0) - \frac{c}{2} \sqrt{\epsilon} + m^2$$
-Exactly at the critical boundary, $\epsilon = 0$ and the magnetization is $m_c$. Expanding the magnetization as $m \approx m_c + \delta m$, the equation of state near the boundary simplifies to:
-$$\frac{c}{2} \sqrt{\epsilon} = m^2 - m_c^2 \approx 2m_c \delta m$$
 
-Because the uniform magnetization $m = \beta h / (z + \beta K(\vec{0}))$ is an analytic function of the control parameters $\lambda = (\beta, \beta h)$ everywhere except possibly at the boundary, the deviation $\delta m$ scales linearly with the distance to the critical temperature, $\Delta \beta = \beta_c - \beta$. Therefore, we find the critical scaling of the spherical field deviation:
-$$\sqrt{\epsilon} \propto \Delta \beta \implies \epsilon \propto (\Delta \beta)^2$$
 
-This quadratic scaling, $\epsilon \propto (\Delta \beta)^2$, reveals a smoothing effect caused by 3D spatial fluctuations. Because $z = \beta K(\vec{0}) + \epsilon$, the first derivative of the spherical field with respect to the control parameters, $\partial z / \partial \lambda_\mu$, is entirely continuous across the phase transition. Consequently,
-\begin{itemize}
-    \item The static covariance matrix $\chi_{\mu\nu}$, which depends strictly on the first derivatives of $z$ and $m$, is finite and continuous at the phase boundary.
-    \item The macroscopic relaxation time of the uniform mode, $\tau_m = [2\Gamma(z + \beta K(\vec{0}))]^{-1}$, converges to a strictly finite, non-zero constant $\tau_m^c = [4\Gamma \beta K(\vec{0})]^{-1}$ at the transition.
-\end{itemize}
+\medskip
+\noindent
+\FLAG{Status after referee comments.} The results below are \emph{not} an exact
+derivation of the constrained metric, and should be read as a controlled large-$N$
+calculation with two known gaps: (i) only the total constraint $Q_+=N$ is imposed, whereas
+strict dynamics requires $Q_-=0$ as well (\S1.5 of the \S0--\S2 notes), and (ii) the
+constraint is imposed through a static conditioning formula rather than by solving the
+projected dynamics. The energy-weight identity \eqref{eq:identity} is exact and is the
+physically important content. See \S\ref{sec:whatisproved}.
 
-Therefore,  the thermodynamic dissipation metric $g_{\mu\nu}$ for the uniform control space $(\beta, \beta h)$ contains no divergences in this model. The metric tensor is completely regular across the second-order phase transition. It immediately follows that the thermodynamic length, defined by the line integral $L = \int \sqrt{g_{\mu\nu} d\lambda^\mu d\lambda^\nu}$, is strictly finite. By utilizing the 3D spherical model, we demonstrate that incorporating finite correlation lengths perfectly regularizes the geometry of the uniform control space, guaranteeing the existence of finite-dissipation protocols that cross the critical line.
+\medskip
+\noindent
+\textbf{Summary of what \S3--\S4 suggest.} The soft modes decouple from both control
+parameters, exactly, as a consequence of the spherical constraint. Consequently the
+dissipation metric is \emph{finite and continuous across the phase transition} --- the
+diverging relaxation time is multiplied by a susceptibility that vanishes at precisely the
+compensating rate. In the ordered phase the metric is not merely finite but \emph{flat}:
+the ordered region is a Euclidean half-disk of radius $2$ in the coordinates
+$(2\sqrt{T/T_0},\,2M)$, with the critical line as its boundary arc.
 
-\subsection{Applicability of the Linear Response Regime}
+The flatness, however, is specific to one choice of dissipation functional (\S4.1), and
+the crossing statement is an argument rather than a theorem (\S\ref{sec:crossing}).
 
-The thermodynamic metric tensor defined in this framework explicitly relies on linear response theory, which requires a strict separation of timescales: the driving protocol must be slow enough that the system's relaxation rate can continually keep up with the rate of change of the control parameters. Near a second-order phase transition, this assumption typically breaks down due to critical slowing down, where the characteristic relaxation time diverges as $\tau \propto (\lambda_\mu)^{-\kappa}$ for a reduced control parameter $\lambda_\mu \to 0$. 
+%===============================================================
+\section{Model A dynamics}
+%===============================================================
 
-To maintain the system within the linear response regime, the protocol must be dynamically slowed down as it approaches the critical point, taking the form $\dot{\lambda}_\mu \propto (\lambda_\mu)^a$ with $a > \kappa$. However, to ensure that the protocol can cross the phase transition in a strictly finite amount of time, the total driving time integral must converge, which enforces the mathematical requirement that $a < 1$. Consequently, finite-time driving protocols that remain entirely within the linear response regime exist if and only if the divergence parameter satisfies $\kappa < 1$.
+\subsection{Why non-conserved}
+The protocol varies $h=\beta\Hc$, and $\partial\psi/\partial h=\avg{M_{\rm tot}}$: driving
+the field \emph{must} change the uniform magnetisation. A dynamics conserving
+$M_{\rm tot}$ is therefore incompatible with the control problem, and Model~B is excluded
+on physical grounds rather than by convention. This also matches the Glauber (single-spin,
+non-conserved) choice made in [BR, End Matter].
 
-In the case of the 3D planar antiferromagnetic spherical model restricted to the uniform parameter space $(\beta, \beta h)$, this condition is trivially and safely satisfied. Critical slowing down exclusively affects the critical ordering mode. Because the ordering field for the antiferromagnetic transition is the staggered magnetic field, the uniform macroscopic magnetization $m$ acts as a non-critical mode. 
+The order parameter here is the staggered transverse magnetisation, which is \emph{not}
+conserved by the uniform field either, so Model~A is the appropriate choice for it as well.
+With $\eta=0$ the dynamic exponent is then $z_{\rm dyn}=2-\eta=2$ exactly, confirmed
+directly below.
 
-As demonstrated in the asymptotic expansion, the uniform relaxation timescale $\tau_m$ does not diverge at the phase boundary, but instead converges to a finite constant. Because there is no divergence in the relevant relaxation time, the scaling exponent is exactly $\kappa = 0$. Since $0 < 1$, it is mathematically guaranteed that finite-time, finite-dissipation protocols exist. The thermal fluctuations remain well-bounded and centered around equilibrium, ensuring that the linear response approximation remains robust and physically valid across the entire continuous phase transition.
+\subsection{Langevin equations at fixed spherical field}
+Write the dimensionless effective Hamiltonian $\beta\Hc_{\rm eff}=\sum_{\bk}a_{\bk}|\bm S_{\bk}|^2-h\sqrt N S^z_0$.
+Model~A reads
+\begin{equation}
+  \partial_t \bm S_{\bk}
+   = -\Gamma\,\frac{\partial(\beta\Hc_{\rm eff})}{\partial \bm S_{\bk}^{*}}+\bm\eta_{\bk},
+  \qquad
+  \avg{\eta^{a}_{\bk}(t)\,\eta^{b*}_{\bk'}(t')}=2\Gamma\,\delta^{ab}\delta_{\bk\bk'}\delta(t-t'),
+\end{equation}
+with $\Gamma$ the microscopic rate. Explicitly,
+\begin{equation}
+  \boxed{\ \partial_t\bm S_{\bk}=-2\Gamma a_{\bk}\bm S_{\bk}
+   +\Gamma h\sqrt N\,\delta_{\bk,0}\,\hat e_z+\bm\eta_{\bk}\ }
+  \label{eq:langevin}
+\end{equation}
+so each mode is an independent Ornstein--Uhlenbeck process with
+\begin{equation}
+  \text{relaxation rate}\quad \Gamma_{\bk}=2\Gamma a_{\bk},
+  \qquad
+  \text{stationary variance}\quad \avg{|\delta S^a_{\bk}|^2}=\frac{1}{2a_{\bk}} ,
+  \label{eq:ourates}
+\end{equation}
+the variance being the equilibrium one, as required by detailed balance
+($2\Gamma/(2\cdot 2\Gamma a_{\bk})=1/2a_{\bk}$). \checkmark
+
+\paragraph{Note on factors of two.} \eqref{eq:langevin} carries $2\Gamma a_{\bk}$, not
+$\Gamma a_{\bk}$. Since $\Gamma$ is an arbitrary microscopic rate this is pure convention,
+but it must be used consistently: bilinear observables then relax at $2\Gamma_{\bk}=4\Gamma a_{\bk}$,
+and every entry of the metric in \S4 inherits a $1/\Gamma$ with a definite numerical
+coefficient.
+
+\subsection{The dynamic critical exponent}
+Near the zone corner, using $a_{\bQ-\bq}=r+\tfrac{\beta\Jc}{2}q^2$ from \S1.5,
+\begin{equation}
+  \Gamma_{\bQ-\bq}=2\Gamma\left(r+\tfrac{\beta\Jc}{2}q^2\right),
+  \qquad
+  \tau_{\bQ}=\frac{1}{2\Gamma r} .
+\end{equation}
+With $r\propto\xi^{-2}$ (\S2.3) this gives $\tau\propto\xi^{2}$, i.e.
+\begin{equation}
+  \boxed{\ z_{\rm dyn}=2\ }
+\end{equation}
+and since $\nu=1$, $\tau\sim\epsilon^{-z_{\rm dyn}\nu}=\epsilon^{-2}$. The relaxation time
+genuinely diverges at the transition; the content of \S4 is that this does not, by itself,
+make the metric diverge.
+
+\subsection{The constraint must be imposed instantaneously}
+\label{sec:instantaneous}
+Equation \eqref{eq:langevin} at fixed $z$ equilibrates to the fixed-$z$ Gaussian measure,
+which by \S2.3 is \emph{not} the physical one: it has superextensive fluctuations of
+$Q\equiv\sum_{\bk}|\bm S_{\bk}|^2$ and gives the wrong (divergent) response functions. The
+dynamics must therefore enforce the constraint on the configuration itself,
+\begin{equation}
+  Q(t)=\sum_{\bk}|\bm S_{\bk}(t)|^2=N \quad\text{for all }t ,
+  \label{eq:hardconstraint}
+\end{equation}
+by promoting $z$ to a fluctuating Lagrange multiplier $\mu(t)$ in \eqref{eq:langevin}.
+
+\FLAG{Revision to \S1.3.} This qualifies the earlier statement that the mean spherical
+ensemble is ``good enough''. It is, for statics --- the ensembles are thermodynamically
+equivalent and \S2 is unaffected. But the metric is built from fluctuations, and the
+dynamics that generates the correct fluctuations is the hard-constraint one. Imposing
+\eqref{eq:hardconstraint} only on average would leave the fixed-$z$ spectrum in place and
+produce a metric that diverges over the whole ordered region.
+
+Differentiating \eqref{eq:hardconstraint} and using \eqref{eq:langevin} gives $\mu(t)$
+explicitly,
+\begin{equation}
+  \mu(t)=z+\delta\mu(t),
+  \qquad
+  \delta\mu = \frac{1}{2\Gamma N}\Big[\textstyle\sum_{\bk}\xi_{\bk}\Big]
+              -\frac{1}{N}\sum_{\bk}a_{\bk}\,\delta|\bm S_{\bk}|^2 ,
+  \label{eq:mu}
+\end{equation}
+where $\xi_{\bk}$ collects the noise contributions to $\dot Q$.
+
+\FLAG{Three caveats.} (i) \eqref{eq:mu} omits the source-dependent term
+$\propto h\,\delta S^z_0/\sqrt N$ arising from the drive at $\bk=0$.
+(ii) $\delta\mu$ is \emph{not} $O(1/N)$: both the extensive quadratic fluctuation and the
+noise sum are $O(\sqrt N)$, so $\delta\mu=O(N^{-1/2})$ as a fluctuating quantity. A
+multiplier of that size still acts at order one on extensive observables, so smallness
+alone does not justify neglecting it. (iii) Differentiating $Q(t)$ for white noise requires
+committing to It\^o or Stratonovich; the quadratic-variation term is missing above. What
+does survive is that the systematic part of $\delta\mu$ is proportional to
+$\delta E_{\rm int}$ itself, and acts at the non-critical rate $O(\Gamma)$.
+
+\subsection{The key identity: the soft modes carry no energy weight}
+\label{sec:identity}
+This is the central structural fact of these notes, and the dynamical counterpart of the
+static cancellation of \S2.9.
+
+From $a_{\bk}=z+\beta\Jc(\bk)$ we have $\Jc(\bk)=(a_{\bk}-z)/\beta$ identically, so
+\begin{equation}
+  E_{\rm int}=\sum_{\bk}\Jc(\bk)|\bm S_{\bk}|^2
+   =\frac{1}{\beta}\sum_{\bk}a_{\bk}|\bm S_{\bk}|^2-\frac{z}{\beta}\underbrace{\sum_{\bk}|\bm S_{\bk}|^2}_{=\,N}
+   =\frac{\Ac}{\beta}-\frac{zN}{\beta},
+  \qquad
+  \Ac\equiv\sum_{\bk}a_{\bk}|\bm S_{\bk}|^2 .
+\end{equation}
+The second term is a constant \emph{on the constraint surface}. Hence, exactly,
+\begin{equation}
+  \boxed{\ \delta E_{\rm int}=\frac{1}{\beta}\,\delta\Ac
+   =\frac{1}{\beta}\sum_{\bk}a_{\bk}\,\delta|\bm S_{\bk}|^2\ }
+  \label{eq:identity}
+\end{equation}
+
+The weight attached to mode $\bk$ is $a_{\bk}$, which \emph{vanishes at the soft mode}.
+Precisely: the zero-momentum critical mode $\bk=\bQ$ has exactly zero energy weight, and
+nearby critical modes enter only through the gradient weight $a_{\bQ-\bq}\simeq r+cq^2$.
+They are strongly suppressed, not absent.
+Physically: a long-wavelength fluctuation of the staggered order parameter costs no energy,
+so it cannot appear in energy fluctuations. The spherical constraint enforces this exactly,
+because near $\bQ$ the coupling $\Jc(\bk)\to-P$ is constant and a constant weight is
+precisely what the constraint removes.
+
+\paragraph{What this does to the divergence.} Naively, from $E_{\rm int}=\sum\Jc|\bm S|^2$,
+\begin{equation}
+  \int_0^\infty\!\!\avg{\delta E(t)\delta E(0)}dt
+  \ \sim\ \sum_{\bk}\frac{\Jc(\bk)^2}{a_{\bk}^2}\cdot\frac{1}{a_{\bk}}
+  \ \sim\ \int\!\frac{d^3q}{q^6}\qquad\text{(divergent)},
+\end{equation}
+which is the obstruction flagged at the end of the \S0--\S2 notes. Using
+\eqref{eq:identity} instead,
+\begin{equation}
+  \int_0^\infty\!\!\avg{\delta E(t)\delta E(0)}dt
+  \ \sim\ \sum_{\bk}\frac{a_{\bk}^2}{a_{\bk}^2}\cdot\frac{1}{a_{\bk}}
+  \ \sim\ \int\!\frac{d^3q}{q^2}\qquad\text{(convergent in $d=3$)} .
+\end{equation}
+Four powers of $q$ are gained. The obstruction is removed, not by a delicate cancellation
+of large terms, but by the observable simply not containing the dangerous modes.
+
+\subsection{Why the residual constraint corrections are negligible}
+\label{sec:residual}
+Having rewritten the observable, one may compute with the \emph{fixed-$z$} Gaussian
+dynamics \eqref{eq:langevin}, provided the residual effect of the constraint is small. The
+tool used below is the Gaussian conditioning formula
+\begin{equation}
+  \text{[large-$N$, not an identity]}\qquad\qquad\qquad\qquad\qquad\qquad\qquad\nonumber
+\end{equation}
+\FLAG{Not exact.} $Q=\sum_{\bk}|\bm S_{\bk}|^2$ is \emph{quadratic} in the Gaussian
+variables, so $A$, $B$, $Q$ are not jointly Gaussian and \eqref{eq:conditional} is a
+large-$N$ regression, not an exact conditioning identity. Its justification here is
+a posteriori: it reproduces the exact static Schur complement of \S2.8 (see \S4.3), which
+was derived independently by implicit differentiation of the stationary $\psi$. That is
+good evidence it is correct to leading order in $N$, but it is not a proof, and inserting a
+\emph{static} projector into a time-integrated correlation function is a further
+uncontrolled step.
+\begin{equation}
+  \mathrm{Cov}(A,B\,|\,Q)=\mathrm{Cov}(A,B)-\frac{\mathrm{Cov}(A,Q)\,\mathrm{Cov}(B,Q)}{\mathrm{Var}(Q)} .
+  \label{eq:conditional}
+\end{equation}
+With $I_p\equiv\int\!\dk\,a_{\bk}^{-p}$ (so $I_1=\Wc$, $I_0=1$), and counting $nN$ real
+degrees of freedom each contributing $\mathrm{Var}(u^2)=1/2a^2$,
+\begin{equation}
+  \frac{\mathrm{Var}(\Ac)}{N}=\frac{n}{2},
+  \qquad
+  \frac{\mathrm{Cov}(\Ac,Q)}{N}=\frac{n}{2}I_1,
+  \qquad
+  \frac{\mathrm{Var}(Q)}{N}=\frac{n}{2}I_2 ,
+\end{equation}
+so that
+\begin{equation}
+  \frac{\mathrm{Cov}(\Ac,\Ac|Q)}{N}=\frac{n}{2}\left[1-\frac{I_1^2}{I_2}\right].
+  \label{eq:projectedvar}
+\end{equation}
+In the ordered phase $r=0$ and $I_2=\int\!\dk\,a_{\bk}^{-2}\sim\int d^3q/q^4$ diverges, so
+the correction vanishes identically. Approaching from the disordered side
+$I_2\simeq D/\sqrt r\to\infty$ and the correction is $O(\sqrt r)$.
+
+The same holds for the time-integrated quantities, with $I_2\to I_2$ and $I_3$ replacing the
+static moments: the correction scales as $I_2^2/I_3\sim r^{-1}/r^{-3/2}=\sqrt r\to0$.
+
+\CHECK{This last estimate treats the constrained dynamics through the static projector
+\eqref{eq:conditional}. The exact constrained process has the drift feedback of
+\eqref{eq:mu}, whose systematic part is $\propto\delta E$ itself and acts at the
+\emph{non-critical} rate $O(\Gamma)$; it therefore renormalises the fast sector but cannot
+generate a critical divergence. Worth confirming by diagonalising the constrained linear
+dynamics explicitly before this is committed to the manuscript.}
+
+\subsection{Correlation functions}
+\FLAG{Gap.} What is separated below is the \emph{uniform} mean $\avg{S^z_0}=\sqrt N M$,
+which is not the antiferromagnetic condensate. The latter is
+$S^x_{\bQ}=\sqrt N\,x+\delta S^x_{\bQ}$, and in the ordered phase $a_{\bQ}=0$, so the
+fixed-$z$ Ornstein--Uhlenbeck process \eqref{eq:ourates} has no restoring force there and
+no stationary distribution: \eqref{eq:onepart}--\eqref{eq:twopart} cannot be applied to a
+sum that includes $\bQ$ without separating it first. By \eqref{eq:identity} the $\bQ$-mode
+carries zero energy weight and so should contribute nothing directly to $\delta E$, and it
+does not couple to $M$ at linear order --- but its role in enforcing the two constraints,
+and its effect on the dynamics of the remaining modes, has to be derived rather than
+assumed. This is the main missing piece.
+
+Separate the uniform mean. With $\avg{S^z_0}=m_0=\sqrt N M$, write
+$\bm S_0=(S^x_0,\;m_0+v)$ with $v\equiv\delta S^z_0$. Then from \eqref{eq:identity}
+\begin{equation}
+  \delta\Ac = \underbrace{2a_0m_0\,v}_{\text{one-particle}}
+   \;+\;\underbrace{\Sigma}_{\text{two-particle}},
+  \qquad
+  \Sigma\equiv\sum_{\bk}a_{\bk}\,\delta|\bm S_{\bk}|^2\Big|_{\text{fluct.}} ,
+\end{equation}
+and $\delta X_2=\delta M_{\rm tot}=\sqrt N\,v$. The two sectors are uncorrelated (odd
+versus even in the Gaussian variables), which is what makes the metric assemble so simply.
+Their correlators follow from \eqref{eq:ourates}:
+\begin{align}
+  \avg{v(t)v(0)}&=\frac{1}{2a_0}\,e^{-2\Gamma a_0 t},
+  &&\int_0^\infty\!\!=\frac{1}{4\Gamma a_0^2},
+  \label{eq:onepart}\\[2pt]
+  \avg{\Sigma(t)\Sigma(0)}&=\frac{n}{2}\sum_{\bk}e^{-4\Gamma a_{\bk}t},
+  &&\int_0^\infty\!\!=\frac{n}{8\Gamma}\sum_{\bk}\frac{1}{a_{\bk}}=\frac{nN}{8\Gamma}\,\Wc(z),
+  \label{eq:twopart}
+\end{align}
+the bilinears relaxing at twice the single-mode rate, and their weight $a_{\bk}^2$
+cancelling the variance $1/2a_{\bk}^2$ mode by mode --- the identity \eqref{eq:identity}
+at work. Note the appearance of $\Wc(z)$, which the constraint \eqref{eq:constraint} of
+\S2.3 fixes in closed form:
+\begin{equation}
+  \Wc(z)=1-M^2-x^2 .
+  \label{eq:Wclosed}
+\end{equation}
+
+%===============================================================
+\section{The dissipation metric}
+%===============================================================
+
+\subsection{Which functional is being minimised}
+\label{sec:objective}
+This is not a matter of convention and must be settled before any geometric statement is
+made, because the two natural objectives differ by a non-constant conformal factor.
+
+\paragraph{(a) Excess entropy production.} In natural Massieu coordinates
+$\partial_\mu\psi=\avg{X_\mu}$, $\partial_\mu\partial_\nu\psi=\avg{\delta X_\mu\delta X_\nu}$
+(the Fisher information of the exponential family), and the excess entropy production of a
+slow protocol is $\Delta S_{\rm ex}=\int g^{S}_{\mu\nu}\dot\lambda^\mu\dot\lambda^\nu dt$ with
+\begin{equation}
+  \boxed{\ g^{S}_{\mu\nu}=\int_0^\infty \avg{\delta X_\mu(t)\,\delta X_\nu(0)}\,dt\ }
+  \label{eq:metricdef}
+\end{equation}
+and no prefactor.
+
+\paragraph{(b) Dissipated availability, as in [BR, Eq.~(1)].} There
+$\zeta_{ij}=\beta\int\avg{\delta X_i\delta X_j}$ with $\lambda$ energy-like. Transforming
+to our coordinates is a tensor operation, e.g.\ at fixed $\beta$,
+\begin{equation}
+  \zeta_{hh}=\zeta_{HH}\Big(\frac{\partial \Hc}{\partial h}\Big)^{2}
+   =\beta\!\int\!\avg{\delta M\delta M}\cdot\frac{1}{\beta^{2}}
+   =\frac{1}{\beta}\int\!\avg{\delta M\delta M},
+\end{equation}
+so
+\begin{equation}
+  g^{A}_{\mu\nu}=\frac{1}{\beta}\,g^{S}_{\mu\nu},
+\end{equation}
+consistent with $A\simeq T\,\Delta S_{\rm ex}$.
+
+\FLAG{Correction.} An earlier version of these notes asserted that dropping the $\beta$ was
+merely a change of coordinates. It is not: a conformal factor cannot be removed by
+reparametrisation, and the two objectives give genuinely different geometries. Everything
+below uses (a). Section \ref{sec:flat} records what (b) gives.
+
+All quantities below are per site.
+
+\subsection{General result}
+Assembling \eqref{eq:onepart}--\eqref{eq:twopart} with $\delta X_1=-\delta\Ac/\beta$ and
+$\delta X_2=\sqrt N v$:
+\begin{align}
+  g_{hh}&=\frac{1}{4\Gamma a_0^{2}},
+  \label{eq:ghh}\\
+  g_{\beta h}&=-\frac{M}{2\Gamma\beta a_0},
+  \label{eq:gbh}\\
+  g_{\beta\beta}&=\frac{1}{\Gamma\beta^{2}}\left[M^{2}+\frac{\Wc(z)}{4}\right]
+   \;=\;\frac{1}{4\Gamma\beta^{2}}\Big[\,4M^{2}+1-M^{2}-x^{2}\Big],
+  \label{eq:gbb}
+\end{align}
+using \eqref{eq:Wclosed} in the last step. Every entry is manifestly finite wherever
+$a_0>0$, which holds throughout the phase diagram.
+
+\subsection{Static check}
+Setting $t=0$ in the correlators must reproduce the Hessian of \S2. The equal-time
+covariances are
+\begin{equation}
+  \frac{\avg{\delta X_1^2}}{N}=\frac{1}{\beta^2}\Big[2a_0M^2+\tfrac n2\Big],
+  \qquad
+  \frac{\avg{\delta X_1\delta X_2}}{N}=-\frac{M}{\beta},
+  \qquad
+  \frac{\avg{\delta X_2^2}}{N}=\frac{1}{2a_0}.
+\end{equation}
+In the ordered phase $a_0=2\beta P$ and $M=h/4\beta P$, so with $n=2$
+\begin{equation}
+  \frac{\avg{\delta X_1^2}}{N}=\frac{1}{\beta^2}\Big[\tfrac{h^2}{4\beta P}+1\Big]
+   =\frac{1}{\beta^2}+\frac{h^2}{4\beta^3\Jc(0)},
+  \qquad
+  -\frac{M}{\beta}=-\frac{h}{4\beta^2\Jc(0)},
+  \qquad
+  \frac{1}{2a_0}=\frac{1}{4\beta\Jc(0)},
+\end{equation}
+which are exactly the three entries of Eq.~(2.20) of the \S0--\S2 notes. \checkmark
+
+On the disordered side the projector \eqref{eq:conditional} must be included, and it
+reproduces \S2.8 identically: e.g.
+\begin{equation}
+  \frac{1}{N}\frac{\partial^2\psi}{\partial h^2}
+  =\frac{1}{2a_0}-\frac{M^2/a_0^2}{I_2+2M^2/a_0} ,
+\end{equation}
+which is Eq.~(2.21) of those notes once $h=2a_0M$ is substituted. \checkmark\ This is a
+strong check that the fluctuation route and the implicit-differentiation route agree.
+
+\subsection{The ordered phase}
+Here $z=\beta P$, $a_0=2\beta P$, and $\Wc(z)=\beta_0/\beta=t$ exactly (evaluate
+$\Wc$ at the sticking value and use $\bk\to\bQ-\bk$; this is the same integral that defines
+$T_0$). Therefore
+\begin{equation}
+  g_{\beta\beta}=\frac{4M^{2}+t}{4\Gamma\beta^{2}},
+  \qquad
+  g_{\beta h}=-\frac{M}{4\Gamma\beta^{2}P},
+  \qquad
+  g_{hh}=\frac{1}{16\Gamma\beta^{2}P^{2}} ,
+  \label{eq:ordmetric}
+\end{equation}
+\begin{equation}
+  \det g=\frac{t}{64\,\Gamma^{2}\beta^{4}P^{2}}\;>\;0 .
+\end{equation}
+Positive definite and full rank everywhere except $T\to0$. Contrast [BR,\S e], where the
+disordered-phase metric is rank one with $\det g=0$; there are no null directions here.
+
+\subsection{The ordered phase is flat}
+\label{sec:flat}
+Completing the square in \eqref{eq:ordmetric},
+\begin{equation}
+  ds^{2}=\frac{1}{4\Gamma\beta^{2}}
+   \left[\,t\,d\beta^{2}+\Big(2M\,d\beta-\frac{dh}{2P}\Big)^{2}\right].
+\end{equation}
+Since $M=h/4\beta P$ in the ordered phase,
+$dM=\beta^{-1}\big(\tfrac{dh}{4P}-M\,d\beta\big)$, so the bracketed second term is exactly
+$4\beta^{2}dM^{2}$ and
+\begin{equation}
+  ds^{2}=\frac{t\,d\beta^{2}}{4\Gamma\beta^{2}}+\frac{dM^{2}}{\Gamma} .
+\end{equation}
+Trading $\beta$ for $t=\beta_0/\beta$ gives $t\,d\beta^2/\beta^2=dt^2/t$, hence
+\begin{equation}
+  ds^{2}=\frac{1}{4\Gamma}\left[\frac{dt^{2}}{t}+4\,dM^{2}\right]
+   =\frac{1}{4\Gamma}\Big[dw^{2}+dv^{2}\Big],
+  \qquad
+  \boxed{\ w\equiv2\sqrt{t}=2\sqrt{T/T_0},\qquad v\equiv 2M\ }
+  \label{eq:flat}
+\end{equation}
+
+The ordered phase is \textbf{Euclidean}. Moreover the constraint
+$t+M^{2}+x^{2}=1$ with $x^{2}>0$ reads
+\begin{equation}
+  w^{2}+v^{2}<4 ,
+\end{equation}
+so the ordered region is the half-disk of radius $2$ ($w>0$), the critical line
+\eqref{eq:boundary} is its boundary \emph{arc}, and the order parameter is
+$x^{2}=1-\tfrac14(w^{2}+v^{2})$: it measures the Euclidean distance from the boundary.
+Geodesics are straight lines and thermodynamic length is Euclidean distance divided by
+$\sqrt{4\Gamma}$.
+
+No numerical check of the Riemann tensor is needed: the explicit coordinate change to
+$(w,v)$ already proves the candidate metric is flat. What is \emph{not} established is that
+\eqref{eq:ordmetric} is the correct strictly constrained metric --- see
+\S\ref{sec:whatisproved}.
+
+\paragraph{Interpretation of $x^2$.} From $x^{2}=1-\rho^{2}/4$ with
+$\rho=\sqrt{w^{2}+v^{2}}$, one has $x^{2}=(2-\rho)(2+\rho)/4$, so $x^2$ is proportional to
+the Euclidean distance $2-\rho$ from the boundary arc only asymptotically as $\rho\to2$, not
+identically. (Earlier phrasing here was loose.)
+
+\paragraph{With the availability metric (b) instead.} $g^{A}=g^{S}/\beta$ and
+$1/\beta=T_0 t/\,\cdot\propto w^{2}$, so
+\begin{equation}
+  ds^{2}_{A}\ \propto\ w^{2}\big(dw^{2}+dv^{2}\big),
+\end{equation}
+conformally Euclidean with factor $e^{2\phi}$, $\phi=\ln w$. Since
+$K=-e^{-2\phi}\Delta\phi$ and $\Delta\ln w=-1/w^{2}$, this has
+\begin{equation}
+  K=+\frac{1}{w^{4}}\;>\;0 ,
+\end{equation}
+positive and non-constant --- \emph{not} flat. The metric degenerates at $w=0$ ($T=0$),
+which is physically reasonable for an availability-type objective ($A\simeq T\Delta S_{\rm ex}\to0$),
+but it means the elegant Euclidean picture belongs to objective (a) alone. Whichever the
+manuscript adopts, it should say so explicitly.
+
+\subsection{The disordered phase}
+Here $x=0$, so $\Wc=1-M^{2}$ and
+\begin{equation}
+  g_{\beta\beta}=\frac{1+3M^{2}}{4\Gamma\beta^{2}},
+  \qquad
+  g_{\beta h}=-\frac{M}{2\Gamma\beta a_0},
+  \qquad
+  g_{hh}=\frac{1}{4\Gamma a_0^{2}},
+  \qquad
+  \det g=\frac{1-M^{2}}{16\,\Gamma^{2}\beta^{2}a_0^{2}} ,
+\end{equation}
+with $a_0=r+2\beta P$ and $r(\beta,h)$ from the constraint. The same completion of the
+square gives
+\begin{equation}
+  ds^{2}=\frac{1}{4\Gamma}\left[\frac{\Wc}{\beta^{2}}d\beta^{2}
+   +\Big(\frac{2M}{\beta}d\beta-\frac{dh}{a_0}\Big)^{2}\right],
+\end{equation}
+but now $\tfrac{dh}{a_0}-\tfrac{2M}{\beta}d\beta=2\,dM-2M\,d\ln(\beta/a_0)$ and the second
+term is no longer a perfect differential, because $a_0/\beta$ is not constant. The
+disordered phase is therefore \emph{not} flat in general; it becomes flat only on approach
+to the critical line, where $r\to0$ and $a_0/\beta\to2P$.
+
+\subsection{Continuity across the transition}
+\label{sec:continuity}
+On the critical line, $r=0$ and $x=0$ simultaneously, so $a_0=2\beta P$ and $\Wc=t=1-M_c^{2}$
+from both sides. Substituting into \eqref{eq:ghh}--\eqref{eq:gbb}, the ordered-side
+expressions \eqref{eq:ordmetric} and the disordered-side expressions coincide:
+\begin{equation}
+  g_{\beta\beta}\to\frac{1+3M_c^{2}}{4\Gamma\beta^{2}}=\frac{t+4M_c^{2}}{4\Gamma\beta^{2}},
+  \qquad
+  g_{\beta h}\to-\frac{M_c}{4\Gamma\beta^{2}P},
+  \qquad
+  g_{hh}\to\frac{1}{16\Gamma\beta^{2}P^{2}} .
+\end{equation}
+\begin{equation}
+  \boxed{\ \text{The metric is finite and continuous across the phase transition.}\ }
+\end{equation}
+The leading singular behaviour is the $O(\sqrt r)=O(\epsilon)$ correction of
+\S\ref{sec:residual}, i.e.\ $\epsilon^{-\alpha}$ with $\alpha=-1$: a vanishing cusp, not a
+divergence.
+
+\subsection{Why the divergent relaxation time does not produce a divergent metric}
+The relaxation time genuinely diverges, $\tau\sim\epsilon^{-2}$. The reason the metric does
+not is the identity \eqref{eq:identity}: the modes whose relaxation diverges enter
+$\delta E_{\rm int}$ with weight $a_{\bq}\to0$, and enter $\delta M_{\rm tot}$ not at all
+(the field acts only at $\bk=0$, and $a_0$ is non-critical). The critical modes are simply
+invisible to both control parameters.
+
+This is the same statement as the symmetry decoupling flagged in \S1.5 of the \S0--\S2
+notes, now made quantitative: with $H'=0$ one drives the system through the transition
+using fields that couple only to non-critical observables. In scaling language, the
+susceptibility that multiplies $\tau$ is the \emph{singular} one, which vanishes as
+$\epsilon^{-\alpha}=\epsilon^{1}$; the product $\epsilon^{1}\cdot\epsilon^{-2}=\epsilon^{-1}$
+is what [BR, Eq.~(11)] predicts, but that singular piece sits on top of a regular
+$O(1)$ background and --- crucially --- the constraint suppresses its coefficient to zero
+rather than leaving it finite.
+
+\CHECK{The tension with [BR, Eq.~(11)] is the single most important thing to resolve.
+[BR] predicts $g_{tt}\dot t^{2}\propto s^{b(1-z_{\rm dyn}/d)-2}=s^{-1}$, i.e.\ a divergent
+metric with integrable $\sqrt g$; the exact calculation here gives a finite metric.
+Either the model evades the scaling argument (because the control fields do not couple to
+the order parameter, so the ``singular part'' of the metric has vanishing amplitude), or
+one of the two is wrong. This must be settled, and if the former, it is worth saying
+explicitly in the manuscript --- the scaling criterion would then be sufficient but not
+necessary for finite length.}
+
+%===============================================================
+\section{What is and is not established}
+%===============================================================
+\label{sec:whatisproved}
+
+\paragraph{Solid.} The strict-constraint identity \eqref{eq:identity}, and with it the
+mechanism: the critical modes have strongly suppressed overlap with both driven
+observables, the $\bQ$-mode exactly so. This is the physically valuable content and it
+survives every caveat below.
+
+\paragraph{Plausible but not derived.} That the metric is finite and continuous across the
+transition. The power counting supports it; the derivation does not yet establish it.
+
+\paragraph{Not established.}
+\begin{enumerate}
+  \item That \eqref{eq:ghh}--\eqref{eq:gbb} are the exact dissipation metric. They are the
+        large-$N$ \emph{unconstrained reference} metric. \S4.3 itself notes that on the
+        disordered side the fixed-$z$ equal-time covariance does \emph{not} reproduce the
+        Hessian without the projector; the time-integrated version cannot then be exact.
+        The physical metric should carry a frequency-dependent low-rank correction --- rank
+        two, once $Q_-$ is included. Relatedly, the $O(\sqrt r)$ cusp claimed in \S4.7 lives
+        in that omitted correction, not in the displayed expressions, which depend on $r$
+        analytically through $a_0$ and $M$ and so give only $O(r)$.
+  \item That the ordered metric is exactly flat for the physical dynamics. The coordinate
+        change proves \eqref{eq:ordmetric} is flat; it does not prove \eqref{eq:ordmetric}.
+        And flatness holds only for objective (a) of \S\ref{sec:objective}.
+  \item That the minimal disordered-to-disordered path crosses the ordered phase.
+\end{enumerate}
+
+\paragraph{The calculation that would settle it.} Start from a strict, \emph{two}-constraint
+projected Model~A process; separate the antiferromagnetic condensate $S^x_{\bQ}$ explicitly;
+linearise about it; and compute the zero-frequency response including both fluctuating
+spherical multipliers. That determines whether the finite-metric and flat-half-disk picture
+is exact, asymptotic, or an artefact of the unconstrained reference.
+
+%===============================================================
+\section{Consequences for the manuscript}
+%===============================================================
+\label{sec:consequences}
+
+The result of \S\ref{sec:continuity} is clean, exact, and pretty. It is also the wrong
+result for the paper as currently framed.
+
+\paragraph{What breaks.} The manuscript's central claim is that the metric diverges at a
+second-order transition while the thermodynamic length across it can remain finite. In this
+model, at $H'=0$, the metric does not diverge at all. The example therefore cannot
+illustrate the phenomenon; it illustrates a different (and weaker) one.
+
+\paragraph{What survives --- and is in fact stronger.} The cross-and-return phenomenon of
+[BR,\S e] \emph{does} occur here, with the roles of the two phases exchanged, and it can be
+proved rather than computed. See \S\ref{sec:crossing}.
+
+\paragraph{The diagnosis.} The loss traces to a single cause: with $H'=0$ neither control
+parameter couples to the order parameter. This was flagged as a ``cost'' in \S1.4 of the
+\S0--\S2 notes. It costs the divergence, but not the optimal-path result.
+
+\subsection{The optimal path between two disordered points crosses the ordered phase}
+\label{sec:crossing}
+
+Set $4\Gamma=1$ for brevity. The half-disk is convex, so two points \emph{in} the ordered
+phase are joined by a chord lying entirely inside it: no cross-and-return from that side.
+The interesting case is the opposite one.
+
+\paragraph{Geometry of the disordered phase.} With $x=0$ the constraint gives
+$\Wc=1-M^{2}$ exactly. Using $(\ln\beta,M)$ as coordinates, with $\theta=z/\beta$ fixed by
+$F(\theta)=\beta(1-M^{2})$, $F(\theta)\equiv\int\!\dk\,(\theta+\Jc(\bk))^{-1}$ and
+$G\equiv-F'=\beta^{2}I_{2}$,
+\begin{equation}
+  ds^{2}=(1-M^{2})\,(d\ln\beta)^{2}
+        +\Big(2\,dM+\frac{2M\,d\theta}{\theta+P}\Big)^{2},
+  \qquad
+  d\theta=-\frac{(1-M^{2})\,d\beta-2\beta M\,dM}{G} .
+  \label{eq:disordered_line}
+\end{equation}
+At the critical line $G\to\infty$, the $d\theta$ term switches off, and
+\eqref{eq:disordered_line} matches the ordered-phase form with $t\to1-M^{2}$ --- the
+continuity of \S\ref{sec:continuity} again.
+
+\paragraph{The claim (an argument, not a theorem).} Let $A=(\beta_1,h_1)$ and
+$B=(\beta_1,-h_1)$ with $M_1>0$, both in the disordered phase just outside the arc, and
+$\beta_1>\beta_0$ so that the ordered tongue separates them. The minimal path appears to
+cross the ordered phase. Two caveats are recorded at the end.
+
+\emph{Through.} In the ordered phase $ds^{2}=dw^{2}+dv^{2}$ with $v=2M$. The chord at
+constant $w=w_1$ from $v_1$ to $-v_1$ lies inside the disk, since
+$w_1^{2}+v^{2}\le w_1^{2}+v_1^{2}=4$ for $|v|\le|v_1|$. Its length is exactly
+\begin{equation}
+  L_{\rm through}=2v_1=4M_1
+\end{equation}
+in the limit $A,B\to$ arc.
+
+\emph{Around.} Remaining in the disordered phase requires $t>1-M^{2}$ pointwise, i.e.
+$\beta<\beta_0/(1-M^{2})$. At $M=0$ this forces $\beta<\beta_0$: any disordered path from
+$M_1$ to $-M_1$ must pass over the tip of the tongue. There is no route at large $\beta$
+either, since $h_c\simeq4\beta P$ grows and $h=0$ stays interior. From
+\eqref{eq:disordered_line}, $ds\ge2|dM|$, so
+\begin{equation}
+  L_{\rm around}\ \ge\ \int 2|dM|\ =\ 4M_1 ,
+\end{equation}
+with equality only if $d\ln\beta\equiv0$ along the entire path --- which the required
+excursion to $\beta<\beta_0$ forbids. Hence
+\begin{equation}
+  L_{\rm around}>L_{\rm through}
+\end{equation}
+for endpoints sufficiently close to the critical line.
+
+\CHECK{Two gaps. (i) The bound $ds\ge2|dM|$ is safe when $d\ln\beta=0$, where the $d\theta$
+correction multiplies $2dM$ by $1+4\beta M^{2}/[G(\theta+P)]>1$; but along a general path
+with $d\beta\neq0$ the $d\theta$ term can carry the opposite sign to $dM$, so the bound is
+not airtight and the equality conditions must be obtained from the full quadratic form.
+(ii) \eqref{eq:disordered_line} descends from \eqref{eq:gbb}, which is the large-$N$
+unconstrained-reference metric, not the established constrained one. The quantitative
+excess $2\sqrt{1-M_1^{2}}\ln(\beta_1/\beta_0)$ quoted in an earlier version is not
+established by the displayed inequalities and has been withdrawn.}
+
+\paragraph{Robustness to the objective.} The conclusion does not depend on the choice in
+\S\ref{sec:objective}. With the availability metric $g^{A}=g^{S}/\beta$, the cost of the
+high-temperature detour is $\int\!\sqrt{\Wc/\beta}\,|d\ln\beta|=\int\!\sqrt{\Wc}\,\beta^{-3/2}d\beta$,
+which \emph{diverges} as $\beta\to0$: infinite temperature becomes infinitely far, and going
+around is even more expensive. This is the opposite of the mean-field antiferromagnet of
+[BR,\S e], where $\beta=0$ is the cheapest point of the manifold.
+
+\paragraph{Inverted mechanism.} In [BR,\S e] the crossing is expensive (the metric diverges
+on the line) but the far side is cheap, and the content of the result is that the detour is
+worth paying for. Here crossing the critical line carries no additional \emph{singular}
+toll --- the cost is finite and generally nonzero, not free --- and the ordered
+interior is flat and bounded, while the disordered phase is logarithmically expensive in
+$\ln\beta$ as $T\to\infty$. This is the exact opposite of the mean-field antiferromagnet,
+where $\beta=0$ was the \emph{cheapest} place in the manifold and the optimum ran to
+infinite temperature. Same phenomenon, opposite mechanism; the contrast is worth a sentence
+in the paper.
+
+\paragraph{Revised options.}
+\begin{enumerate}
+  \item \textbf{Keep $H'=0$.} The model delivers the optimal-path result in its sharpest
+        form: a theorem rather than a fast-marching computation, in an exactly solved $d=3$
+        system. It does not deliver a divergent metric. The scaling analysis of [BR,\S c]
+        and Table~I stand on their own and do not require the worked example to exhibit a
+        divergence.
+  \item \textbf{Restore $H'_\perp$.} Recovers the divergence, at the cost of a
+        three-dimensional control space or a slice in which the ordered region is a closed
+        curve (Knops Fig.~1) that \emph{can} be circumvented --- which weakens the
+        ``crossing is unavoidable'' motivation but sharpens ``around versus through''.
+  \item \textbf{Both.} Use the $(\beta,\beta\Hc)$ slice for the optimal-path theorem and a
+        $\Hc'_\perp$ slice for the divergence.
+\end{enumerate}
+
+Option~3 is probably the strongest paper, and options~1 and 3 both now look better than my
+earlier recommendation of option~2. The \textsf{VERIFY} items above still need settling
+first, since all of this rests on the finite-metric and flatness results.
+
+\TODO{\S5--\S8 pending the choice above.}
+
+\end{document}
