@@ -57,6 +57,16 @@ class FMMGeodesicPaths:
         edges.sort()
         return edges[2]**2 > edges[0]**2 + edges[1]**2
 
+    def _safe_norm(self, sqrnorm, p, vec):
+        """Same negative-squared-norm handling as geonorm(), factored out so
+        update_triangle can reuse a single metric evaluation instead of
+        calling geonorm/geoip (each of which evaluates the metric again)."""
+        if sqrnorm < 0:
+            if np.isclose(sqrnorm, 0, atol=1e-12, rtol=0):
+                return 1e-25
+            raise RuntimeWarning(f"Negative squared norm {sqrnorm} at point {p} for vector {vec}.\nMetric:\n{self.metric(p)}")
+        return np.sqrt(sqrnorm)
+
     def update_triangle(self, T, positions, triangles, A, B, C, F=1.0):
         Ta, Tb, Tc = T[A], T[B], T[C]
 
@@ -66,16 +76,21 @@ class FMMGeodesicPaths:
             A, B = B, A
 
         u = Tb- Ta
-        
+
         if np.isinf(u):
             return np.inf
 
         vec_ab = positions[B] - positions[A]
         vec_ac = positions[C] - positions[A]
 
-        a = self.geonorm(positions[A], vec_ab)
-        b = self.geonorm(positions[A], vec_ac)
-        cos_theta = self.geoip(positions[A], vec_ab, vec_ac) / (a * b)
+        # geonorm(A,vec_ab), geonorm(A,vec_ac) and geoip(A,vec_ab,vec_ac) each
+        # independently evaluated self.metric(positions[A]) before -- three
+        # calls to the same (potentially expensive) metric at the same point.
+        # One evaluation, reused, is equivalent and much cheaper.
+        gA = self.metric(positions[A])
+        a = self._safe_norm(vec_ab @ gA @ vec_ab, positions[A], vec_ab)
+        b = self._safe_norm(vec_ac @ gA @ vec_ac, positions[A], vec_ac)
+        cos_theta = (vec_ab @ gA @ vec_ac) / (a * b)
         if np.abs(cos_theta) > 1 and np.isclose(cos_theta**2, 1, rtol=0):
             cos_theta = np.sign(cos_theta)
         sin_theta = np.sqrt(1 - cos_theta**2)
@@ -102,48 +117,79 @@ class FMMGeodesicPaths:
 
     def fast_marching_method(self, positions, triangles, source):
         num_points = positions.shape[0]
+        triangles = np.asarray(triangles)
+
+        # point -> list of incident triangle row-indices, built once. Previously
+        # every popped point rescanned the *entire* triangle list
+        # ([tri for tri in triangles if p in tri]), making the whole method
+        # O(num_points * num_triangles); this makes each lookup O(degree).
+        point_tris = [[] for _ in range(num_points)]
+        for ti, tri in enumerate(triangles):
+            for v in tri:
+                point_tris[v].append(ti)
+
+        FAR, CLOSE, ALIVE = 0, 1, 2
+        status = np.full(num_points, FAR, dtype=np.int8)
         T = np.full(num_points, np.inf)
-        status = ['far'] * num_points
 
         T[source] = 0.0
-        status[source] = 'alive'
+        status[source] = ALIVE
+        n_alive, n_close = 1, 0
 
         heap = []
-        for tri in triangles:
-            if source in tri:
-                for p in tri:
-                    if p != source and status[p] == 'far':
-                        status[p] = 'close'
-                        T[p] = self.dist(positions[p], positions[source])
-                        heapq.heappush(heap, (T[p], p))
+        for ti in point_tris[source]:
+            for p in triangles[ti]:
+                if p != source and status[p] == FAR:
+                    status[p] = CLOSE
+                    n_close += 1
+                    T[p] = self.dist(positions[p], positions[source])
+                    heapq.heappush(heap, (T[p], p))
+
+        # Updating the rich progress bar every iteration serializes on its
+        # live-refresh thread's lock and dominates runtime at any real N
+        # (profiled: >2/3 of total time in thread-lock acquisition on a
+        # 625-point grid); refresh only ~200 times over the whole run instead.
+        progress_every = max(1, num_points // 200)
 
         with Progress(*Progress.get_default_columns(), rprog.TimeElapsedColumn(), rprog.MofNCompleteColumn()) as progress:
-            task0 = progress.add_task("[cyan]heap", total=len(status))
-            task1 = progress.add_task("[white]alive", total=len(status))
-            task2 = progress.add_task("[yellow]close", total=len(status))
+            task0 = progress.add_task("[cyan]heap", total=num_points)
+            task1 = progress.add_task("[white]alive", total=num_points)
+            task2 = progress.add_task("[yellow]close", total=num_points)
+            n_popped = 0
             while heap:
                 _, p = heapq.heappop(heap)
-                status[p] = 'alive'
-                progress.update(task0, completed=len(heap))
-                progress.update(task1, completed=status.count('alive'))
-                progress.update(task2, completed=status.count('close'))
-                neighbor_tris = [tri for tri in triangles if p in tri]
+                if status[p] == ALIVE:
+                    continue  # stale duplicate heap entry; T[p] already final
+                status[p] = ALIVE
+                n_alive += 1
+                n_close -= 1
 
-                for tri in neighbor_tris:
+                n_popped += 1
+                if n_popped % progress_every == 0:
+                    progress.update(task0, completed=len(heap))
+                    progress.update(task1, completed=n_alive)
+                    progress.update(task2, completed=n_close)
+
+                for ti in point_tris[p]:
+                    tri = triangles[ti]
                     for q in tri:
-                        if status[q] != 'alive':
-                            r = [v for v in tri if v not in [p, q]][0]
-                            if status[r] == 'alive':
-                                if np.sum(np.isinf([T[p], T[r]])) == 2:  
+                        if status[q] != ALIVE:
+                            r = [v for v in tri if v != p and v != q][0]
+                            if status[r] == ALIVE:
+                                if np.isinf(T[p]) and np.isinf(T[r]):
                                     continue
                                 T_old = T[q]
                                 T[q] = self.update_triangle(T, positions, triangles, p, r, q)
 
-                                if status[q] == 'far':
+                                if status[q] == FAR:
                                     heapq.heappush(heap, (T[q], q))
-                                    status[q] = 'close'
+                                    status[q] = CLOSE
+                                    n_close += 1
                                 elif T[q] < T_old:
                                     heapq.heappush(heap, (T[q], q))
+            progress.update(task0, completed=0)
+            progress.update(task1, completed=n_alive)
+            progress.update(task2, completed=n_close)
 
         return T
 
