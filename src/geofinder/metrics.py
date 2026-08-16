@@ -1510,215 +1510,208 @@ class BetheIsing(RMetric):
             return False
         return abs(h) < hc
 
-def _sc_gamma(kx, ky, kz):
-    """
-    Normalized nearest-neighbor structure function of the simple cubic
-    lattice, gamma(k) = K(k)/K(0) = (cos kx + cos ky + cos kz)/3
-    (Derivations/SphericalModel/Spherical_Model_Notes.tex, eq. after (48)).
-    """
-    return (np.cos(kx) + np.cos(ky) + np.cos(kz)) / 3.0
-
 class SphericalModel(RMetric):
     """
-    Thermodynamic dissipation metric for the 3D planar antiferromagnetic
-    spherical model on a simple cubic lattice (Derivations/SphericalModel/
-    Spherical_Model_Notes.tex). Coordinates x=(beta, H) with H=beta*h,
-    matching the control space lambda=(beta, beta*h) of the notes' §"The
-    Thermodynamic Dissipation Metric".
+    Dissipation metric for the 3D planar antiferromagnetic mean spherical
+    model on a simple cubic lattice, per Derivations/SphericalModel/
+    Spherical_Model_Notes.tex together with Section_7/Section8/Section9/
+    Section10.tex. Coordinates x=(beta, h) with h=beta*Hc=2*beta*H the
+    rescaled control field of those notes (Hc=2H absorbs Knops' factor of
+    2, notes §1.2).
 
-    Restricted to h'=0 (no staggered field), so by A/B symmetry z_A=z_B=z,
-    a single spherical field. Only the DISORDERED phase (z > beta*K0, i.e.
-    T > Tc(h)) is implemented: below Tc(h) the field "sticks" to the
-    boundary and the missing constraint weight condenses into a macroscopic
-    staggered order parameter m', but the notes only describe that
-    qualitatively (§"Phase Boundary and the Order Parameter") without
-    giving a closed-form susceptibility there, so is_ordered_phase() should
-    be used to keep grids/paths out of that region.
+    Section10.tex derives the time-integrated covariance Tm_munu in closed
+    form in BOTH phases (ordered: eq. Tord, no root solve; disordered:
+    eq. Tdis, one 1D root solve plus two lattice sums), verified there
+    against the independent generator/matrix solvers of Section_7.tex
+    (disordered) and Section8.tex (ordered) to all printed digits, and
+    checked here (see git history) against the h~0 special cases of
+    Section_7 §4.7/§4.9 and Section8 to machine precision. This
+    supersedes the earlier (pre-rewrite) both-phase closed form this class
+    used to implement, which was built on now-corrected formulas.
+
+    metric() returns g = Tm/beta, "reading (i)" of the notes' §4.11
+    (Sivak-Crooks with an energy-like field; the "heat generation"/excess-
+    entropy-production convention, cross-checked there via
+    availability ~ T*dS_ex). §4.11 explicitly leaves the overall scalar
+    convention unresolved (three readings differ by up to beta^2, and only
+    two of them turn out to give constant curvature in the ordered phase --
+    Tm itself and beta*Tm, not Tm/beta, Section10.tex §10.9), so this
+    choice may need revisiting; see Tm() to get the unscaled tensor.
+
+    The raw tensor genuinely diverges approaching the critical line F=0
+    from either side (Section10.tex §10.11): this is a real feature (the
+    thermodynamic *length* across it stays finite, eq. 1.1 of Section8),
+    not a bug, but it means grid points landing very close to F=0 produce
+    very large (clipped, not NaN) metric values. Section10.tex §10.11's
+    signed-sqrt-coordinate regularization is not implemented here.
     """
-    dim = 2  # coordinates x = (beta, beta*h)
-    _zeta_table = None  # class-level cache: universal lattice sums, shared across instances
+    dim = 2  # coordinates x = (beta, h)
+    _K_table = None  # class-level cache: universal lattice sums K1,K2,K3(s), shared across instances
 
-    def __init__(self, K0=1.0, Gamma=1.0):
-        self.K0 = K0      # K(0), the k=0 Fourier component of the exchange coupling
-        self.Gamma = Gamma  # microscopic Model-A kinetic coefficient
+    def __init__(self, Jc=1.0, Gamma=1.0):
+        self.Jc = Jc         # nearest-neighbor coupling (rescaled convention, notes §1.2)
+        self.Gamma = Gamma   # microscopic Model-A kinetic coefficient
+
+    @property
+    def P(self):
+        """Jc(0) = 3*Jc, the k=0 Fourier component of the exchange coupling."""
+        return 3 * self.Jc
 
     @staticmethod
     def _bz_gauss_grid(n=140):
         """
         Product Gauss-Legendre grid/weights over the simple-cubic BZ octant
-        [0,pi]^3, weights pre-divided by pi^3 so that sum(W*f(gamma)) is
-        directly the BZ average of f. Gauss-Legendre nodes cluster near the
-        interval endpoints, and gamma's k=0 singular point sits exactly at
-        one such endpoint -- so this fixed-order rule resolves the
-        near-critical peak (see _build_zeta_table) far better than its
-        order would suggest, and is orders of magnitude faster than
-        adaptive quadrature (scipy.integrate.tplquad) since the whole grid
-        is evaluated vectorized in one shot, reused for every zeta.
+        [0,pi]^3, weights pre-divided by pi^3 so that sum(W*f(psi)) is
+        directly the BZ average of f, psi(k)=cos kx+cos ky+cos kz in
+        [-3,3]. Gauss-Legendre nodes cluster near the interval endpoints,
+        and the soft mode k=Q sits exactly at one such endpoint (psi=-3)
+        -- so this fixed-order rule resolves the near-critical peak (see
+        _build_K_table) far better than its order would suggest, and the
+        whole grid is evaluated vectorized in one shot, reused for every s.
         """
         x, w = np.polynomial.legendre.leggauss(n)
         k = 0.5 * np.pi * (x + 1)
         wk = 0.5 * np.pi * w
         kx, ky, kz = np.meshgrid(k, k, k, indexing='ij')
-        gamma = _sc_gamma(kx, ky, kz)
+        psi = np.cos(kx) + np.cos(ky) + np.cos(kz)
         W = np.einsum('i,j,l->ijl', wk, wk, wk) / np.pi**3
-        return gamma, W
+        return psi, W
 
     @classmethod
-    def _build_zeta_table(cls, n_grid=140, n_zeta=110, zeta_max=100.0, eps=1e-6):
+    def _build_K_table(cls, n_grid=140, n_s=200, s_max=100.0, eps=1e-8):
         """
-        Tabulate, over the reduced field zeta = z/(beta*K0), the five
-        Brillouin-zone averages that the saddle-point equation and the
-        psi-derivatives reduce to exactly (see get_zeta/metric):
-            J1 = < zeta/(zeta^2-g^2) >          (saddle-point eq., eq. 68)
-            J2 = < (zeta^2+g^2)/(zeta^2-g^2)^2 > (psi_zz)
-            J3 = < g^2/(zeta^2-g^2)^2 >          (psi_z,beta)
-            J4 = < g^2/(zeta^2-g^2) >            (psi_beta)
-            J5 = < g^4/(zeta^2-g^2)^2 >          (psi_beta,beta)
-        with g=gamma(k). z, beta, K0, H only enter through overall
-        prefactors (see metric()), so tabulating in zeta once avoids
-        repeating the lattice sum at every grid point.
-
-        J2, J3, J5 diverge as (zeta-1)^-1/2 at the phase boundary
-        (Spherical_Model_Notes.tex §"Critical Scaling"); J1, J4 stay
-        finite there. The table therefore only covers zeta in
-        (1+eps, zeta_max]; lookups clip to that range (see _J), which is
-        safe as long as callers stay out of the ordered phase.
+        Tabulate, over the reduced field s = r/(beta*Jc) >= 0 (r = z-beta*P
+        the deviation of the spherical field from its critical value), the
+        three Brillouin-zone averages that the saddle-point equation and
+        Tm_munu reduce to exactly (a_k = beta*Jc*(s+3+psi(k))):
+            K1 = <1/(s+3+psi)>,  K2 = <1/(s+3+psi)^2>,  K3 = <1/(s+3+psi)^3>,
+        so that I_n(r,beta) = K_n(s)/(beta*Jc)^n. s, beta, Jc only enter
+        through this one combination, so tabulating in s once avoids
+        repeating the lattice sum at every grid point. K2, K3 diverge as
+        s^-1/2 at the critical point s=0 (Spherical_Model_Notes.tex
+        §"Critical Scaling"); K1 stays finite there (it IS the Watson
+        integral at s=0: K1(0) = watson_integral()/3).
         """
-        gamma, W = cls._bz_gauss_grid(n_grid)
-        zetas = 1.0 + np.logspace(np.log10(eps), np.log10(zeta_max - 1), n_zeta)
+        psi, W = cls._bz_gauss_grid(n_grid)
+        ss = np.concatenate([[0.0], np.logspace(np.log10(eps), np.log10(s_max), n_s - 1)])
 
-        Js = {k: np.empty(n_zeta) for k in ("J1", "J2", "J3", "J4", "J5")}
-        for i, zeta in enumerate(zetas):
-            D = zeta**2 - gamma**2
-            Js["J1"][i] = np.sum(W * zeta / D)
-            Js["J2"][i] = np.sum(W * (zeta**2 + gamma**2) / D**2)
-            Js["J3"][i] = np.sum(W * gamma**2 / D**2)
-            Js["J4"][i] = np.sum(W * gamma**2 / D)
-            Js["J5"][i] = np.sum(W * gamma**4 / D**2)
+        K1 = np.empty(n_s); K2 = np.empty(n_s); K3 = np.empty(n_s)
+        for i, s in enumerate(ss):
+            D = s + 3 + psi
+            K1[i] = np.sum(W / D)
+            K2[i] = np.sum(W / D**2)
+            K3[i] = np.sum(W / D**3)
 
-        table = {"zeta_min": zetas[0], "zeta_max": zetas[-1]}
-        for k, y in Js.items():
-            table[k] = sp.interpolate.PchipInterpolator(zetas, y, extrapolate=True)
+        table = {"s_min": ss[0], "s_max": ss[-1]}
+        for name, y in (("K1", K1), ("K2", K2), ("K3", K3)):
+            table[name] = sp.interpolate.PchipInterpolator(ss, y, extrapolate=True)
         return table
 
     @classmethod
-    def _J(cls, name, zeta):
-        if cls._zeta_table is None:
-            cls._zeta_table = cls._build_zeta_table()
-        t = cls._zeta_table
-        zeta = np.clip(zeta, t["zeta_min"], t["zeta_max"])
-        return t[name](zeta)
+    def _K(cls, name, s):
+        if cls._K_table is None:
+            cls._K_table = cls._build_K_table()
+        t = cls._K_table
+        s = np.clip(s, t["s_min"], t["s_max"])
+        return t[name](s)
 
     def watson_integral(self):
         """
-        J1(zeta=1) = < 1/(1-gamma(k)^2) > over the simple-cubic BZ: the
-        classic (finite) Watson integral, computed directly on a fresh
-        Gauss-Legendre grid (J1 has no singularity at zeta=1 to avoid).
+        <1/(1-psi(k)/3)> over the simple-cubic BZ: the classic (finite)
+        Watson integral, computed directly on a fresh Gauss-Legendre grid.
         """
-        gamma, W = self._bz_gauss_grid()
-        return np.sum(W / (1.0 - gamma**2))
+        psi, W = self._bz_gauss_grid()
+        return np.sum(W / (1.0 - psi / 3.0))
 
     @property
-    def Tc0(self):
-        """Zero-field critical temperature (eq. 85): Tc0 = K0 / watson_integral()."""
-        if not hasattr(self, "_Tc0"):
-            self._Tc0 = self.K0 / self.watson_integral()
-        return self._Tc0
+    def beta0(self):
+        """Zero-field critical inverse temperature: beta0 = watson_integral()/P."""
+        if not hasattr(self, "_beta0"):
+            self._beta0 = self.watson_integral() / self.P
+        return self._beta0
 
-    def phase_transition_line(self, T):
+    def phase(self, beta, h):
         """
-        Analytic critical field h_c(T) (eq. 100): Tc(h) = Tc0*(1-h^2/(8*K0^2)),
-        inverted for h given T. NaN for T > Tc0 (no ordering at any field).
+        F = t + eta^2 - 1 (Section10.tex §10.2/§10.10 step 1), with
+        t = T/T0 = beta0/beta and eta = h/(4*beta*P). F<0 is the ordered
+        (Neel) phase, F>0 disordered; F=0 the critical line. Closed form,
+        no root solve -- this is how phase membership is determined before
+        picking which branch of Tm() to evaluate.
         """
-        if T > self.Tc0:
-            return np.nan
-        return np.sqrt(8 * self.K0**2 * (1 - T / self.Tc0))
+        t = self.beta0 / beta
+        eta = h / (4 * beta * self.P)
+        return t + eta**2 - 1, t, eta
 
     def is_ordered_phase(self, x):
-        """
-        True iff x=(beta, H=beta*h) lies in the ordered (Neel) phase,
-        i.e. T=1/beta < Tc(h) with h=H/beta.
-        """
-        beta, H = x
-        T, h = 1 / beta, H / beta
-        hc = self.phase_transition_line(T)
-        if np.isnan(hc):
-            return False
-        return abs(h) < hc
+        beta, h = x
+        F, _, _ = self.phase(beta, h)
+        return F < 0
 
-    def get_zeta(self, beta, h):
+    def _solve_s(self, beta, h):
         """
-        Solve the saddle-point equation (eq. 68, symmetric z_A=z_B=z case)
-        1 = J1(zeta)/(beta*K0) + h^2/(2*K0^2*(zeta+1)^2)
-        for the reduced spherical field zeta=z/(beta*K0) > 1 (disordered
-        phase only -- raises if the point is well within the ordered
-        region, where no such root exists).
+        Solve K1(s)/(beta*Jc) + M(s)^2 = 1 for s=r/(beta*Jc) >= 0
+        (disordered branch saddle-point equation, notes eq. "constraint"
+        specialized to x=0), with M(s) = h/(2*a0(s)), a0(s) = beta*Jc*(s+6).
 
-        Points that are genuinely disordered (per is_ordered_phase's
-        closed-form boundary, eq. 100) but whose true root sits closer to
-        1 than the zeta-table resolves (_build_zeta_table's eps) are
-        clamped to zeta_min with a warning instead of raised: this only
-        happens within a sliver of the boundary curve thinner than eps,
-        where the metric is (numerically confirmed, see class docstring)
-        continuous anyway, so clamping is a negligible approximation --
-        unlike a genuine ordered-phase point, which is qualitatively wrong
-        for this class to evaluate at all.
+        f(0) equals F of phase() identically (K1(0)/(beta*Jc) = t, and
+        M(0) = h/(4*beta*P) = eta), so f(0)>0 is guaranteed whenever this
+        is called on a point phase() already found disordered -- no
+        boundary-clamping fallback is needed here, unlike the s=0 endpoint
+        itself which the table includes exactly.
         """
-        K0 = self.K0
-        t = self._zeta_table if self._zeta_table is not None else self._build_zeta_table()
-        SphericalModel._zeta_table = t
+        Jc = self.Jc
+        table = self._K_table if self._K_table is not None else self._build_K_table()
+        SphericalModel._K_table = table
 
-        def f(zeta):
-            return self._J("J1", zeta) / (beta * K0) + h**2 / (2 * K0**2 * (zeta + 1)**2) - 1
+        def f(s):
+            a0 = beta * Jc * (s + 6)
+            M = h / (2 * a0)
+            return self._K("K1", s) / (beta * Jc) + M**2 - 1
 
-        f_min = f(t["zeta_min"])
-        if f_min <= 0:
-            if f_min > -1e-3:
-                warnings.warn(f"x=(beta={beta}, h={h}) is within the zeta-table's resolution "
-                               f"of the phase boundary; clamping zeta to {t['zeta_min']}.")
-                return t["zeta_min"]
-            raise ValueError(f"x=(beta={beta}, h={h}) is not in the disordered phase "
-                              "(no free saddle point for zeta > 1); check is_ordered_phase first.")
-        if f(t["zeta_max"]) >= 0:
-            raise ValueError(f"x=(beta={beta}, h={h}) needs zeta beyond the tabulated range "
-                              f"({t['zeta_max']:.3g}); increase zeta_max in _build_zeta_table.")
-        return sp.optimize.brentq(f, t["zeta_min"], t["zeta_max"], xtol=1e-12, rtol=1e-12)
+        if f(table["s_max"]) >= 0:
+            raise ValueError(f"x=(beta={beta}, h={h}) needs s beyond the tabulated range "
+                              f"({table['s_max']:.3g}); increase s_max in _build_K_table.")
+        return sp.optimize.brentq(f, table["s_min"], table["s_max"], xtol=1e-13, rtol=1e-13)
+
+    def Tm(self, x):
+        """
+        Time-integrated covariance Tm_munu(beta,h) (Derivations §4 result,
+        eq. Tdis / eq. Tord). This is the quantity the notes derive and
+        verify directly; metric() applies the (still-open) scalar
+        convention on top of it.
+        """
+        beta, h = x
+        Jc, P, Gamma = self.Jc, self.P, self.Gamma
+        F, t, eta = self.phase(beta, h)
+
+        if F < 0:
+            # Ordered phase: closed form, no root solve (Section10.tex eq:Tord).
+            M = eta
+            x2 = max(-F, 1e-12)
+            a0 = 2 * beta * P
+            Tbb = (t + (4 - t) * M**2) / beta**2
+            Tbh = -M * (2 - t) / (a0 * beta)
+            Thh = (1 - t) / a0**2
+            return np.array([[Tbb, Tbh], [Tbh, Thh]]) / (4 * Gamma * x2)
+
+        # Disordered phase: one root solve, then eq. Tdis (Section10.tex).
+        s = self._solve_s(beta, h)
+        a0 = beta * Jc * (s + 6)
+        M = h / (2 * a0)
+        I2 = self._K("K2", s) / (beta * Jc)**2
+        I3 = self._K("K3", s) / (beta * Jc)**3
+        D = a0 * I2 + 2 * M**2
+
+        Tbb = (a0**2 * ((1 + M**2)**2 * I3 - (1 - M**2) * I2**2)
+               - 8 * a0 * M**2 * I2 + 4 * M**2 * (1 - M**2)) / (4 * Gamma * beta**2 * D**2)
+        Tbh = -M * (a0 * I2**2 - 2 * I2 + a0 * (1 + M**2) * I3) / (4 * Gamma * beta * D**2)
+        Thh = (I2**2 + M**2 * I3) / (4 * Gamma * D**2)
+        return np.array([[Tbb, Tbh], [Tbh, Thh]])
 
     def metric(self, x):
-        """
-        Dissipation metric g_munu = beta*tau_m*chi_munu in (beta, H=beta*h)
-        coordinates (eqs. 172-179), with chi_munu the constrained static
-        covariance (second derivative of psi w.r.t. (beta,H), correcting
-        for the implicit dependence of the spherical field z on (beta,H)
-        via the saddle-point condition) and tau_m=[2*Gamma*(z+beta*K0)]^-1
-        the uniform-mode relaxation time (eq. 140).
-        """
-        beta, H = x
-        h = H / beta
-        K0, Gamma = self.K0, self.Gamma
-
-        zeta = self.get_zeta(beta, h)
-        z = beta * K0 * zeta
-
-        I2 = self._J("J2", zeta) / (beta**2 * K0**2)
-        I3 = self._J("J3", zeta) / (beta**4 * K0**2)
-        I4 = self._J("J4", zeta) / beta**2
-        I5 = self._J("J5", zeta) / beta**4
-
-        zpbK0 = z + beta * K0
-        psi_zz = I2 + H**2 / zpbK0**3
-        psi_zbeta = -2 * beta * z * I3 + K0 * H**2 / zpbK0**3
-        psi_zH = -H / zpbK0**2
-        psi_betabeta = I4 + 2 * beta**2 * I5 + K0**2 * H**2 / zpbK0**3
-        psi_betaH = -K0 * H / zpbK0**2
-        psi_HH = 1 / zpbK0
-
-        chi_bb = psi_betabeta - psi_zbeta**2 / psi_zz
-        chi_bH = psi_betaH - psi_zbeta * psi_zH / psi_zz
-        chi_HH = psi_HH - psi_zH**2 / psi_zz
-
-        tau_m = 1 / (2 * Gamma * zpbK0)
-        return beta * tau_m * np.array([[chi_bb, chi_bH], [chi_bH, chi_HH]])
+        """Heat-generation dissipation metric g = Tm/beta (see class docstring)."""
+        beta, _ = x
+        return self.Tm(x) / beta
 
 class interpolatedMetric(RMetric):
     def __init__(self, metric_meas, ptline_meas=None, ptline_func=None): #, interpolation_method='cubic'):

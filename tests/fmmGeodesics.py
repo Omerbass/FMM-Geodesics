@@ -228,24 +228,28 @@ def main_bethe_antiferro(x0, show_plot=False):
     np.savez(f"data/bethe_antiferro_geodesic_paths_K0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz",
         positions=positions, distances=distances, source=source, triangles=triangles, grid=grid, deluanay=delaunay)
 
-def main_spherical(x0, show_plot=False, beta_bounds=(0.3, 1.3), H_bounds=(-4.0, 4.0), n=1000):
+def main_spherical(x0, show_plot=False, beta_bounds=(0.3, 1.3), h_bounds=(-4.0, 4.0), n=1000):
     """
     Geodesics for the 3D planar antiferromagnetic spherical model
-    (Derivations/SphericalModel/Spherical_Model_Notes.tex), coordinates
-    x=(beta, H=beta*h). metrics.SphericalModel only implements the
-    disordered phase (T > Tc(h); see its docstring), so beta_bounds is kept
-    below 1/Tc0 (~1.516) -- i.e. T stays above Tc0 for every h, since h only
-    ever lowers Tc(h) below Tc0. That keeps the whole rectangular grid
-    disordered without needing to cut a Neel-ordered island out of the
-    middle of it: Delaunay triangulates the convex hull of whatever points
-    it's given regardless of any such hole, so its triangles (and the
-    edge-midpoints FMM evaluates the metric at) would bridge straight
-    across an excised island instead of going around it.
+    (Derivations/SphericalModel/Spherical_Model_Notes.tex plus
+    Section_7/Section8/Section9/Section10.tex), coordinates x=(beta, h)
+    with h=beta*Hc the notes' rescaled control field. Unlike the earlier
+    version of this function, metrics.SphericalModel now covers BOTH the
+    disordered and ordered (Neel) phases in closed form (Section10.tex),
+    so the grid no longer needs to avoid or cut around the ordered region
+    -- beta_bounds straddling beta0 (~0.505) deliberately lets geodesics
+    cross the transition.
+
+    The metric genuinely diverges approaching the critical line F=0 (see
+    metrics.SphericalModel's docstring); this is a real feature -- the
+    thermodynamic length across it stays finite -- not a bug, but grid/
+    triangle-edge points landing very close to F=0 will see very large
+    (not NaN) metric values, which FMM handles as a high-cost region
+    rather than a barrier.
     """
     sphMetric = metrics.SphericalModel()
-    assert 1 / beta_bounds[0] > sphMetric.Tc0, "beta_bounds must stay entirely in the disordered phase"
 
-    positions = np.reshape(np.meshgrid(np.linspace(*beta_bounds, n), np.linspace(*H_bounds, n)), (2, -1)).T
+    positions = np.reshape(np.meshgrid(np.linspace(*beta_bounds, n), np.linspace(*h_bounds, n)), (2, -1)).T
     delaunay = Delaunay(positions)
     triangles = delaunay.simplices
     source = np.argmin(np.linalg.norm(positions - x0, axis=1))
@@ -260,7 +264,7 @@ def main_spherical(x0, show_plot=False, beta_bounds=(0.3, 1.3), H_bounds=(-4.0, 
         plt.colorbar()
         plt.show()
 
-    np.savez(f"data/spherical_geodesic_paths_beta0={positions[source, 0]:.3f}_H0={positions[source, 1]:.3f}.npz",
+    np.savez(f"data/spherical_geodesic_paths_beta0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz",
         positions=positions, distances=distances, source=source, triangles=triangles, grid=None, deluanay=delaunay)
 
 def _graded_1d_points(anchors, lo, hi, fine_delta, coarse_delta, band_half_width):
@@ -336,7 +340,7 @@ def main_bethe_antiferro_transition(x0, show_plot=False, K_bounds=(-3.0, -0.55),
 if __name__ == "__main__":
     # main_antiferro_sivak(np.array([2.51, 1.5]))
     # main_bethe_antiferro(np.array([-0.9, 0.6]))
-    main_bethe_antiferro_transition(np.array([-1.0, 2.3]), fine_delta=0.002, coarse_delta=0.01, band_half_width=0.5)
-    # main_spherical(np.array([0.7, 1]), show_plot=False, 
-                #    beta_bounds=(0.3, 1.3), H_bounds=(-4.0, 4.0), n=1000)
+    # main_bethe_antiferro_transition(np.array([-1.0, 2.3]), fine_delta=0.002, coarse_delta=0.01, band_half_width=0.5)
+    main_spherical(np.array([0.7, 1]), show_plot=False, 
+                   beta_bounds=(0.1, 4.0), H_bounds=(-4.0, 4.0), n=1000)
 
