@@ -1,0 +1,256 @@
+\section{Tests}
+
+\noindent
+\S6 rests on two equations --- the static reduction \eqref{eq:dA7} and the generator
+\eqref{eq:gen7} --- and one error in the latter already inverted the conclusion once. This
+section tests both. All four tests pass.
+
+\medskip
+\noindent
+\textbf{Summary.}
+\begin{enumerate}
+  \item[(a)] \textbf{Static.} The constrained covariance of $(G,\{Y_{\bk}\})$ reproduces
+        \emph{all three} components of the exact Schur-complement Hessian of \S3.7, at
+        $h\neq0$, analytically. The bridge is one identity, $\beta B=(1+M^{2})-rV$.
+  \item[(b)] \textbf{Redundancy.} The generator annihilates the null direction
+        $\vec n=(2M,\vec1)$ \emph{exactly}, for an arbitrary spectrum $\{a_{\bk}\}$ --- a
+        stronger statement than the $\mathsf B=\mathsf I$ check of \S6.3.
+  \item[(c)] \textbf{Detailed balance.} $\Cc\,\Nop$ is symmetric to machine precision. This
+        is the test the generator actually needed; run on the erroneous first draft of \S6
+        it fails by $\sim75\%$.
+  \item[(d)] \textbf{Resolvent.} The closed form
+        $\lambda=-a_0(1+M^{2})/(a_0I_2+2M^{2})$ is confirmed to machine precision for
+        arbitrary spectra, and the $r^{-1/2}$ divergence at a \emph{generic} critical point
+        ($M_c^{2}\neq0$) is confirmed numerically.
+\end{enumerate}
+
+%===============================================================
+\section{Validation}
+%===============================================================
+
+\subsection{Why a new test, and why the old one was blind}
+\S6.3 checked the generator by setting $\mathsf B=\mathsf I$ and verifying
+$-\Lc\,\delta Q_+=0$. That check passes for \emph{both} the correct generator and the
+erroneous one, because the disputed term is proportional to $\delta F_{\mathsf I}=\delta Q_+\equiv0$.
+A test blind to the quantity being tested is no test. What is needed is a probe that
+(i) uses observables with $\delta F_B\neq0$, and (ii) is sensitive to the $h$-dependent
+terms. Detailed balance is both.
+
+\subsection{Setup}
+Disordered branch, $h\neq0$. Recall
+\begin{align}
+  \delta Q_+&=2MG+\sum_{\bk}Y_{\bk}=0 ,
+  \label{eq:Q7}\\
+  \delta\Ac&=2a_0MG+\sum_{\bk}a_{\bk}Y_{\bk},\qquad \delta X_1=-\tfrac1\beta\delta\Ac,\quad\delta X_2=G,
+  \label{eq:dA7}
+\end{align}
+and, from \S6.3,
+\begin{equation}
+  -\Lc\,\delta F_B=4\Gamma\,\delta(\bs^\top\mathsf A\mathsf B\bs)-4\Gamma\Sigma_b\,\delta\Ac
+   +2\Gamma h(\Sigma_b-b_0)G,
+  \qquad
+  -\Lc\,G=2\Gamma a_0(1-M^{2})G-2\Gamma M\!\sum_{\bk}a_{\bk}Y_{\bk}.
+  \label{eq:gen7}
+\end{equation}
+Write a general observable as $\Psi=g\,G+\sum_{\bk}b_{\bk}Y_{\bk}$, i.e.\ a coefficient
+vector $\vec\psi=(g,\vec b)$. Substituting $\alpha=g-2b_0M$ into \eqref{eq:gen7} and
+collecting, $-\Lc$ acts on coefficient vectors as the matrix
+\begin{equation}
+  \boxed{\
+  \begin{aligned}
+  (\Nop\vec\psi)_G&=2\Gamma a_0\Big[(1-M^{2})g+2M^{3}b_0-2M\Sigma_b\Big],\\
+  (\Nop\vec\psi)_{\bk}&=4\Gamma a_{\bk}b_{\bk}-4\Gamma a_{\bk}\Sigma_b
+   -2\Gamma M a_{\bk}g+4\Gamma M^{2}a_{\bk}b_0 ,
+  \end{aligned}\ }
+  \qquad \Sigma_b=\overline{(b/a)}+b_0M^{2} .
+  \label{eq:Nop}
+\end{equation}
+
+\subsection{(a) The static check}
+Take the fixed-$z$ Gaussian measure and condition on $\delta Q_+=0$, which is what the
+integral representation of \S2.1 prescribes. The unconstrained moments are elementary
+($n=2$ throughout):
+\begin{equation}
+  \mathrm{Var}(G)=\frac{N}{2a_0},\qquad
+  \mathrm{Var}(Y_{\bk})=\frac{1}{a_{\bk}^{2}},\qquad
+  \mathrm{Cov}(G,Y_{\bk})=0 ,
+\end{equation}
+the last because $G$ is odd and $Y_{\bk}$ even in the Gaussian variables. Hence
+\begin{equation}
+  \mathrm{Cov}(G,\delta Q)=\frac{NM}{a_0},\qquad
+  \mathrm{Var}(\delta Q)=\frac{2NM^{2}}{a_0}+NI_2=N\,V,
+  \qquad V\equiv I_2+\frac{2M^{2}}{a_0},
+\end{equation}
+and, using the constraint $I_1=1-M^{2}$,
+\begin{equation}
+  \frac{\mathrm{Cov}(\delta\Ac,G)}{N}=M,\qquad
+  \frac{\mathrm{Cov}(\delta\Ac,\delta Q)}{N}=2M^{2}+I_1=1+M^{2},\qquad
+  \frac{\mathrm{Var}(\delta\Ac)}{N}=1+2a_0M^{2} .
+\end{equation}
+Conditioning, $\mathrm{Cov}(X,Y|Q)=\mathrm{Cov}(X,Y)-\mathrm{Cov}(X,\delta Q)\mathrm{Cov}(Y,\delta Q)/\mathrm{Var}(\delta Q)$:
+\begin{equation}
+  \boxed{
+  \begin{aligned}
+  \frac{\mathrm{Var}(X_2)}{N}&=\frac{1}{2a_0}-\frac{M^{2}}{a_0^{2}V},\\
+  \frac{\mathrm{Cov}(X_1,X_2)}{N}&=-\frac{M}{\beta}\Big[1-\frac{1+M^{2}}{a_0V}\Big],\\
+  \frac{\mathrm{Var}(X_1)}{N}&=\frac{1}{\beta^{2}}\Big[1+2a_0M^{2}-\frac{(1+M^{2})^{2}}{V}\Big].
+  \end{aligned}}
+  \label{eq:fluct7}
+\end{equation}
+
+\paragraph{These must equal the Schur complement of \S3.7.} There
+$\Phi_{zz}=I_2+R$ with $R=h^{2}/2a_0^{3}$; since $h=2a_0M$, $R=2M^{2}/a_0$ and
+\begin{equation}
+  \Phi_{zz}=V \qquad\checkmark
+\end{equation}
+already a nontrivial match. The bridge for the rest is one identity. With
+$A=I_1-rI_2$, $B=A/\beta+2PR$ and $a_0=r+2\beta P$ (so $2\beta P=a_0-r$),
+\begin{equation}
+  \beta B=(1-M^{2})-rI_2+\frac{2(a_0-r)M^{2}}{a_0}
+   =(1+M^{2})-r\Big(I_2+\frac{2M^{2}}{a_0}\Big),
+  \qquad\text{i.e.}\qquad
+  \boxed{\ \beta B=(1+M^{2})-rV\ }
+  \label{eq:bridge}
+\end{equation}
+
+\emph{Cross term.} \S3.7 gives $\Phi_{h\beta}-\Phi_{hz}\Phi_{\beta z}/\Phi_{zz}$ with
+$\Phi_{h\beta}=-MP/a_0$, $\Phi_{hz}=-M/a_0$, $\Phi_{\beta z}=-PV+B$:
+\begin{equation}
+  -\frac{MP}{a_0}+\frac{M}{a_0}\Big[-P+\frac{B}{V}\Big]
+  =-\frac{M}{\beta a_0}\big[2\beta P+r\big]+\frac{M(1+M^{2})}{\beta a_0V}
+  =-\frac{M}{\beta}+\frac{M(1+M^{2})}{\beta a_0V} \qquad\checkmark
+\end{equation}
+using \eqref{eq:bridge} and $a_0=r+2\beta P$ --- matching \eqref{eq:fluct7}.
+
+\emph{Energy term.} \S3.9 gives $C/\beta^{2}+4P^{2}R-B^{2}/V$ with
+$C=1-2rI_1+r^{2}I_2$. Using \eqref{eq:bridge},
+\begin{equation}
+  \frac{B^{2}}{V}=\frac{1}{\beta^{2}}\Big[\frac{(1+M^{2})^{2}}{V}-2r(1+M^{2})+r^{2}V\Big],
+\end{equation}
+and $4P^{2}R=2(a_0-r)^{2}M^{2}/\beta^{2}a_0$. Collecting everything except the
+$V^{-1}$ piece, and using $I_2-V=-2M^{2}/a_0$,
+\begin{equation}
+  1-2r(1-M^{2})+r^{2}I_2+\frac{2(a_0-r)^{2}M^{2}}{a_0}+2r(1+M^{2})-r^{2}V
+  =1+4rM^{2}-\frac{2r^{2}M^{2}}{a_0}+\frac{2(a_0-r)^{2}M^{2}}{a_0} .
+\end{equation}
+Expanding $2(a_0-r)^{2}M^{2}/a_0=2a_0M^{2}-4rM^{2}+2r^{2}M^{2}/a_0$, every $r$-dependent
+term cancels and the bracket collapses to $1+2a_0M^{2}$, giving exactly the third line of
+\eqref{eq:fluct7}. \checkmark
+
+\paragraph{Numerical confirmation.} On a $90^{3}$ zone grid at $\beta=0.5$, comparing the
+fluctuation route with the \S3 Schur complement: $r=10^{-1}$ gives
+$4.0819594361$ vs $4.0819594361$; $r=10^{-2}$ gives $3.9877234325$ vs $3.9877234325$.
+Agreement to machine precision.
+
+\FLAG{What this does and does not test.} It validates the \emph{static} reduction
+\eqref{eq:dA7} together with the constrained covariance, including all $h$-dependence. It
+says nothing about \eqref{eq:gen7}, which is a statement about dynamics. Hence (b)--(c).
+
+\subsection{(b) The generator annihilates the redundancy}
+Insert $\vec n=(2M,\vec 1)$ into \eqref{eq:Nop}. Then $b_0=1$ and
+$\Sigma_b=I_1+M^{2}=1$, so
+\begin{align}
+  (\Nop\vec n)_G&=2\Gamma a_0\big[2M(1-M^{2})+2M^{3}-2M\big]=0,\\
+  (\Nop\vec n)_{\bk}&=4\Gamma a_{\bk}-4\Gamma a_{\bk}-4\Gamma M^{2}a_{\bk}+4\Gamma M^{2}a_{\bk}=0 ,
+\end{align}
+identically, \emph{for any spectrum} $\{a_{\bk}\}$ --- and note the cancellation in the $G$
+row uses the constraint $I_1=1-M^2$ through $\Sigma_b$, while the $Y$ row uses it not at
+all. Verified numerically to $10^{-16}$ on random spectra with $N=60$--$800$. This is
+strictly stronger than the $\mathsf B=\mathsf I$ check, since it involves the $G$ sector.
+
+\subsection{(c) Detailed balance --- the test with teeth}
+$-\Lc$ is self-adjoint in the equilibrium inner product, so with $\Cc$ the constrained
+covariance matrix on $(G,\{Y_{\bk}\})$,
+\begin{equation}
+  \boxed{\ \Cc\,\Nop=\big(\Cc\,\Nop\big)^{\!\top}\ }
+\end{equation}
+must hold. This is a genuine constraint on \eqref{eq:gen7}: it mixes the $G$ and
+$Y$ sectors and is sensitive to every $h$-dependent coefficient.
+
+\paragraph{Result.} Building $\Nop$ from \eqref{eq:Nop} and $\Cc$ by Gaussian conditioning,
+on random spectra:
+\begin{center}
+\begin{tabular}{lcc}
+\hline
+ & relative asymmetry of $\Cc\Nop$ & $\|\Nop\vec n\|/\|\Nop\|$\\
+\hline
+corrected generator, $N=50$   & $5.9\times10^{-17}$ & $2.4\times10^{-16}$\\
+corrected generator, $N=200$  & $3.0\times10^{-17}$ & $2.5\times10^{-16}$\\
+corrected generator, $N=640$  & $1.3\times10^{-16}$ & --- \\
+\rowcolor{gray!12}
+\S6 first draft (erroneous), $N=50$  & $\mathbf{7.7\times10^{-1}}$ & $7.3\times10^{-2}$\\
+\rowcolor{gray!12}
+\S6 first draft (erroneous), $N=200$ & $\mathbf{7.4\times10^{-1}}$ & $3.3\times10^{-2}$\\
+\hline
+\end{tabular}
+\end{center}
+The corrected generator satisfies detailed balance exactly --- not merely to leading order
+in $N$. The version carrying the spurious $2\Gamma hM\,\delta F_B$ term violates it by
+$\sim75\%$ and additionally fails to annihilate the redundancy.
+
+\FLAG{Methodological note.} Had this test been run when \S6 was first written, the error
+would have been caught immediately. It costs a few lines of linear algebra and is available
+at every stage; it should be applied to the ordered-phase generator of \S5 as well
+(\S\ref{sec:remaining7}).
+
+\subsection{(d) The resolvent and the generic-point divergence}
+Solving the augmented system $\Nop\vec\phi-\lambda\vec n=\vec s_{\Ac}$ with gauge
+$\vec n^{\top}\vec\phi=0$, where $\vec s_{\Ac}=(2a_0M,\vec a)$, and comparing with \S6.5:
+\begin{center}
+\begin{tabular}{lccc}
+\hline
+$N$ & $\lambda$ (numeric) & $\lambda$ (analytic) & rel.\ difference\\
+\hline
+$200$ & $-1.17847821$ & $-1.17847821$ & $2\times10^{-16}$\\
+$800$ & $-1.10973027$ & $-1.10973027$ & $2\times10^{-16}$\\
+\hline
+\end{tabular}
+\end{center}
+confirming $\lambda=-a_0(1+M^{2})/(a_0I_2+2M^{2})$ for arbitrary spectra.
+
+\paragraph{Divergence at a generic critical point.} The family used in \S6 had $\beta$
+fixed below $\beta_0/t$, which drifts toward the tip as $r\to0$. Holding $\beta>\beta_0$
+instead keeps $M_c^{2}=1-\beta_0/\beta>0$, a genuinely generic point. On a $90^{3}$ grid
+with $\Jc=1$, $\Gamma=1$:
+\begin{center}
+\begin{tabular}{lcccc}
+\hline
+$\beta$ & $r$ & $M^{2}$ & $4\Gamma\beta^{2}\Tm^{\rm sing}=\lambda^{2}I_3$ & $(1+M^{2})^{2}I_3/I_2^{2}$\\
+\hline
+$0.70$ & $3\times10^{-2}$ & $0.347$ & $2.42$  & $3.15$\\
+       & $3\times10^{-3}$ & $0.299$ & $8.77$  & $9.48$\\
+       & $1\times10^{-3}$ & $0.290$ & $13.75$ & $14.39$\\[2pt]
+$1.00$ & $3\times10^{-3}$ & $0.507$ & $18.39$ & $21.48$\\
+       & $1\times10^{-3}$ & $0.502$ & $27.49$ & $30.31$\\
+\hline
+\end{tabular}
+\end{center}
+$M^{2}$ saturates at $M_c^{2}\simeq0.29$ and $0.50$ respectively --- generic points, not the
+tip --- and $\Tm$ diverges, with $\lambda^{2}I_3\to(1+M_c^{2})^{2}I_3/I_2^{2}$ as predicted.
+The local slope $d\ln\Tm/d\ln r$ is $-0.57,-0.54$ ($\beta=0.7$) and $-0.66,-0.58$
+($\beta=1.0$) in the resolvable range, consistent with $-1/2$; the last decade is
+contaminated because resolving the infrared needs
+$N_k\gg2\pi\sqrt{c/r}\simeq120$ at $r=10^{-3}$, against $N_k=90$ used here.
+
+\subsection{Status and what remains}
+\label{sec:remaining7}
+\S6 is now validated: the static reduction, the redundancy structure, the generator, and the
+closed form for $\lambda$ all check independently. The rank-one normal form
+$\Tm^{\rm sing}_{\mu\nu}\simeq\frac{1}{4\Gamma}\frac{I_3}{I_2^{2}}\partial_\mu F\partial_\nu F$
+stands on a tested foundation.
+
+\begin{enumerate}
+  \item \textbf{Apply the detailed-balance test to \S5.} The ordered-phase generator has
+        never been tested this way, and \S5 has its own $h$-dependence lurking in the
+        extensions. Cheap, and the precedent argues for doing it before building further.
+  \item \textbf{The ordered side at $h\neq0$.} With \S6 validated, this is the last piece
+        needed for the full metric. By \S5.8 the $1/x^{2}$ mechanism does not operate at
+        $M_c\neq0$; expect instead the $\lambda\propto dF/I_2$ route with the ordered-phase
+        $I_2$, and the rank-one normal form on both sides.
+  \item \textbf{The $Q_-$ residual} of \S6.7, still an order-of-magnitude argument.
+  \item \textbf{Amplitude ratio along the line}: whether $A_-/A_+=2$ holds away from the
+        tip, in the $ds_T^{2}=A_\pm(dF)^{2}/|F|$ normalisation.
+\end{enumerate}
+
+\TODO{(1) then (2).}
+

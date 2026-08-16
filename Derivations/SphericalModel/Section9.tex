@@ -1,0 +1,201 @@
+\section{The $Q_-$ residual, and the validity window}
+
+\noindent
+Every result in \S5--\S8 was derived with only the $Q_+$ constraint, the second constraint
+being argued away three times (\S5.7, \S6.7, \S8.2) by orthogonality plus an
+order-of-magnitude estimate. This section computes the correction.
+
+\medskip
+\noindent
+\textbf{Findings.}
+\begin{enumerate}
+  \item[(a)] The correction is exactly $\Gamma\frac{h}{N}Z\,R_B$ with
+        $Z=\sqrt N S^z_{\bQ}$; it is proportional to $h$ and \textbf{vanishes identically
+        at the $h=0$ tip}, so \S4--\S5 are unaffected.
+  \item[(b)] At $h\neq0$ it does feed Sector~I, through the uniform condensate, and the
+        channel it uses is the \emph{soft} mode $\bk=\bQ$ --- precisely where the resolvent
+        coefficient $b_{\bQ}\propto r^{-1/2}$ is largest.
+  \item[(c)] Power counting therefore gives a \emph{tighter} validity window than the rest
+        of the construction:
+        \begin{equation*}
+          \boxed{\ N r^{3}\gg1\ \ (\text{i.e. } L\gg\xi^{2})\quad\text{versus}\quad
+          Nr^{3/2}\gg1\ \ (L\gg\xi)\ \text{elsewhere.}}
+        \end{equation*}
+  \item[(d)] The \emph{results} of \S6 and \S8 are unchanged: in the iterated limit
+        ($N\to\infty$ first, then $r\to0$) the correction vanishes. What changes is the
+        finite-size window in which the calculation may be trusted --- and hence what any
+        future simulation must satisfy.
+\end{enumerate}
+
+%===============================================================
+\section{The $Q_-$ residual}
+%===============================================================
+
+\subsection{The exact extra term}
+The full tangent projector is
+\begin{equation}
+  \Pt=\Pp-\frac{(\Em\bs)(\Em\bs)^{\top}}{N},
+  \qquad \Pp=\mathsf I-\frac{\bs\bs^{\top}}{N},
+\end{equation}
+consistent because $\Em^{2}=\mathsf I$ gives $|\Em\bs|^{2}=Q_+=N$ and
+$\bs\cdot\Em\bs=Q_-=0$: the two normals are orthogonal and unit-normalised in the same way.
+Hence, for any observable $f$,
+\begin{equation}
+  \nabla\Uc\cdot\Pt\nabla f
+  =\underbrace{\nabla\Uc\cdot\Pp\nabla f}_{\text{\S6.3}}
+   \;-\;\frac{1}{N}\big(\Em\bs\cdot\nabla\Uc\big)\big(\Em\bs\cdot\nabla f\big).
+\end{equation}
+The first factor collapses. With $\nabla\Uc=2\mathsf A\bs-h\uz$ and the anticommutator
+identity $\{\mathsf A,\Em\}=2z\Em$ of \S6.3,
+\begin{equation}
+  \Em\bs\cdot 2\mathsf A\bs=\bs^{\top}\{\Em,\mathsf A\}\bs=2z\,Q_-=0,
+  \qquad
+  \Em\bs\cdot(-h\uz)=-h\,\uz^{\top}\Em\bs=-h\,Z ,
+\end{equation}
+where
+\begin{equation}
+  Z\equiv\uz^{\top}\Em\bs=\sum_j\epsilon_j\sigma^z_j=\sqrt N\,S^z_{\bQ}
+\end{equation}
+is the staggered longitudinal mode. So, \emph{exactly},
+\begin{equation}
+  \boxed{\ \Delta_{Q_-}\big(-\Lc F_B\big)=\Gamma\,\frac{h}{N}\,Z\,R_B ,
+  \qquad R_B\equiv2\,\bs^{\top}\Em\mathsf B\bs
+   =2\sum_{\bk}b_{\bk}\,\bm S^{*}_{\bk}\!\cdot\!\bm S_{\bk-\bQ}\ }
+  \label{eq:extra}
+\end{equation}
+\FLAG{Immediate consequence.} The correction is proportional to $h$. At the $h=0$ tip it
+vanishes identically --- not to leading order, exactly --- so the \S4 disordered and \S5
+ordered calculations at $h=0$ need no revision, and the $\S4.3$ reduction argument was
+right for the reason given there.
+
+\subsection{How it reaches Sector~I}
+Both $Z$ and $R_B$ are Sector~II objects (odd under sublattice exchange), so their product
+is even and \emph{can} feed Sector~I --- this is the point \S6.7 conceded. The route is the
+uniform condensate. Writing $\bm S_0=(S^x_0,\sqrt NM+v)$, the terms of $R_B$ that touch it
+are $\bk=0$ and $\bk=\bQ$, both giving $\bm S_0\!\cdot\!\bm S_{\bQ}$, so
+\begin{equation}
+  R_B\ \supset\ 2(b_0+b_{\bQ})\,M\,Z\qquad(\text{up to an }O(1)\text{ combinatorial factor}),
+\end{equation}
+and therefore
+\begin{equation}
+  \Delta_{Q_-}\big(-\Lc F_B\big)\ \supset\
+  \frac{2\Gamma h M\,(b_0+b_{\bQ})}{N}\;\delta\big(Z^{2}\big) .
+  \label{eq:channel}
+\end{equation}
+Here $\delta(Z^2)=N\,\delta[(S^z_{\bQ})^{2}]$ is the longitudinal half of the $\bQ$-mode
+bilinear, which overlaps $Y_{\bQ}$ and hence is genuinely visible to Sector~I observables.
+
+\FLAG{The unwelcome feature.} The channel is the $\bk=\bQ$ mode, and the physical resolvent
+of \S6.5 has $b^{\rm phys}_{\bk}=\lambda/4\Gamma a_{\bk}$, so
+\begin{equation}
+  b_{\bQ}=\frac{\lambda}{4\Gamma\,r}\ \gg\ b_0=\frac{\lambda}{4\Gamma a_0} .
+\end{equation}
+The correction couples exactly to the largest coefficient in the solution. This is why the
+naive estimate of \S6.7 --- which used $O(\sqrt N)$ for $\bs^\top\Em\mathsf B\bs$ without
+noting that $b_{\bQ}$ is anomalously large --- was too optimistic.
+
+\subsection{Power counting}
+Three ingredients, all now checked numerically on the lattice at a generic point
+($\beta=0.7$, $M_c^{2}\simeq0.29$):
+\begin{center}
+\begin{tabular}{lccc}
+\hline
+$r$ & $\lambda$ & $\lambda/\sqrt r$ & $b_{\bQ}=\lambda/4\Gamma r$\\
+\hline
+$3\times10^{-2}$ & $-1.008$ & $-5.82$ & $-8.40$\\
+$1\times10^{-2}$ & $-0.612$ & $-6.12$ & $-15.3$\\
+$3\times10^{-3}$ & $-0.348$ & $-6.35$ & $-29.0$\\
+$1\times10^{-3}$ & $-0.206$ & $-6.52$ & $-51.6$\\
+\hline
+\end{tabular}
+\end{center}
+confirming $\lambda\propto\sqrt r$ (third column constant), hence
+\begin{equation}
+  b_{\bQ}\sim r^{-1/2},
+  \qquad
+  \avg{Z^{2}}=\frac{N}{2r}\ \Rightarrow\ \delta(Z^{2})\sim\frac{N}{r} .
+\end{equation}
+Substituting into \eqref{eq:channel},
+\begin{equation}
+  \big\|\Delta_{Q_-}\big\|\ \sim\ \frac{\Gamma h M\,b_{\bQ}}{r}\ \sim\ \frac{hM}{r^{3/2}},
+  \qquad\text{against retained}\quad \|{-}\Lc\phi\|=\|\delta\Ac\|\sim\sqrt N ,
+\end{equation}
+so that
+\begin{equation}
+  \boxed{\ \frac{\Delta_{Q_-}}{\text{retained}}\ \sim\ \frac{hM}{\sqrt N\,r^{3/2}}
+  \qquad\Longrightarrow\qquad
+  \text{control requires } N r^{3}\gg1 .\ }
+  \label{eq:window}
+\end{equation}
+With $r\sim\xi^{-2}$ and $N=L^{3}$ this is $L^{3}\gg\xi^{6}$, i.e.\ $L\gg\xi^{2}$.
+
+\paragraph{The Laplace--Beltrami correction is milder.} Restricting to codimension two also
+modifies $\Delta_M$. For $F_B=\bs^\top\mathsf B\bs$ the extra second-derivative term along
+$\Em\bs/\sqrt N$ is $\tfrac2N\bs^\top\Em\mathsf B\Em\bs=\tfrac2N\sum_{\bk}b_{\bk-\bQ}|\bm S_{\bk}|^{2}$,
+whose largest piece is the $\bk=0$ condensate, $2b_{\bQ}M^{2}$. Against $\sqrt N$ this needs
+only $Nr\gg1$. So \eqref{eq:window} is the binding condition, and there is no cancellation
+between the two corrections.
+
+\subsection{What this does and does not change}
+\paragraph{Does not change: the results.} In the iterated limit --- $N\to\infty$ at fixed
+$r>0$, then $r\to0$, which is the order used throughout \S2--\S8 --- the ratio
+\eqref{eq:window} vanishes. The rank-one normal form
+\begin{equation}
+  ds_T^{2}\simeq\frac{(dF)^{2}}{8\Gamma|F|}\times\{1,2\}
+\end{equation}
+of \S8.6 stands, as do $\lambda$, $\bar b$, and the amplitude ratio.
+
+\paragraph{Does change: the window, and what a simulation must satisfy.} The construction
+now has \emph{two} validity conditions rather than one:
+\begin{center}
+\begin{tabular}{lll}
+\hline
+ & condition & origin\\
+\hline
+statics (saddle point) & $Nr^{3/2}\gg1$ & \S2.3\\
+$Q_+$ closure, disordered & $Nr^{3/2}\gg1$ & \S6.4\\
+$Q_+$ closure, ordered & $x^{2}L\gg1$ & \S5.10\\
+\rowcolor{gray!12}
+$Q_-$ residual, $h\neq0$ & $Nr^{3}\gg1$ & this section\\
+\hline
+\end{tabular}
+\end{center}
+Previously all conditions coincided at $L\gg\xi$, which \S5.10 presented as a pleasing
+unification. That is now true only at $h=0$. At a generic point the binding condition is
+$L\gg\xi^{2}$, with prefactor $\propto(hM_c)^{2}$: for $\xi=100$ one needs $L\gg10^{4}$
+rather than $L\gg10^{2}$. Any direct simulation of the projected dynamics --- the check
+proposed in \S5.9 --- must respect this, and at a generic boundary point that is a severe
+requirement.
+
+\FLAG{Honesty about the estimate.} \eqref{eq:window} is a power count, not a computed
+residual: the $O(1)$ combinatorial factor in \eqref{eq:channel} and the precise variance of
+$R_B$ have not been evaluated, and the estimate assumes no cancellation between the terms of
+\eqref{eq:extra}. Given that the last three deferred checks each concealed a factor or a
+sign, the exponent in \eqref{eq:window} should be regarded as provisional until the residual
+$R=-\Lc_{\rm full}\phi-\delta\Ac$ is computed with the Sector~II modes retained explicitly.
+What is certain is (i) the exact form \eqref{eq:extra}, (ii) that it vanishes at $h=0$, and
+(iii) that it couples through $b_{\bQ}$, hence is enhanced near criticality rather than
+suppressed.
+
+\subsection{What remains}
+\begin{enumerate}
+  \item \textbf{Evaluate $R$ explicitly.} Build the Sector~II pair basis
+        $\{\bm S^{*}_{\bk}\!\cdot\!\bm S_{\bk-\bQ}, Z\}$, extend the generator matrix of
+        \S7, and check both detailed balance and the residual numerically --- the same
+        machinery as \S7, one sector larger. This would replace \eqref{eq:window} by a
+        computed exponent and is the natural next step.
+  \item \textbf{The regular part of the metric everywhere}, still needed for minimal paths.
+  \item \textbf{The objective functional} (\S4.11), still open and still a prerequisite for
+        geodesics.
+  \item \textbf{Minimal paths.} Unchanged in scope; note the cold ordered interior is cheap,
+        $\Tm_{11}\propto\beta^{-3}$, the mirror of the mean-field antiferromagnet.
+\end{enumerate}
+
+\paragraph{A remark for the manuscript.} None of this affects what would be quoted in
+[BR]: the exponents, the rank-one normal structure, the amplitude ratio $2$, and the
+finiteness of the length are all thermodynamic-limit statements. The window
+\eqref{eq:window} is a statement about when a \emph{finite-size} computation would agree,
+and belongs in supplementary material if anywhere.
+
+\TODO{(1).}
+

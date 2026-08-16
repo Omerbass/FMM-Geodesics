@@ -1,0 +1,277 @@
+\section{ The ordered side at $h\neq0$, and the completed metric}
+
+\medskip
+\noindent
+\textbf{Result.} With both condensates present, the ordered-phase resolvent solves in closed
+form:
+\begin{equation}
+  \boxed{\ \alpha=\frac{M}{2\Gamma},\qquad
+   b_{\bk}=\bar b=\frac{dF}{4\Gamma x^{2}}\ \ \text{(independent of }\bk)\ }
+\end{equation}
+and, since $x^{2}=1-t-M^{2}=-F$ identically in the ordered phase, the singular line element
+is
+\begin{equation}
+  \boxed{\ ds_T^{2}\Big|_{\rm ord}\simeq\frac{(dF)^{2}}{4\Gamma\,|F|}\ }
+  \qquad\text{versus}\qquad
+  ds_T^{2}\Big|_{\rm dis}\simeq\frac{(dF)^{2}}{8\Gamma\,F}\quad(\S6).
+\end{equation}
+Rank one and normal to the critical line on \emph{both} sides, with
+\begin{equation}
+  \boxed{\ \frac{A_-}{A_+}=2\ \ \text{at every point of the critical line}\ }
+\end{equation}
+The factor $2$ found at the $h=0$ tip in \S5.9 is therefore \emph{universal along the whole
+boundary}, not a property of the symmetric point --- which \S6.9(4) had left open. The
+metric is now complete on both sides at a generic point, and
+$\int|F|^{-1/2}d|F|<\infty$ gives finite thermodynamic length across the transition
+everywhere.
+
+%===============================================================
+\section{The ordered side at $h\neq0$}
+%===============================================================
+
+\subsection{First: the \S5 generator passes detailed balance}
+The test of \S7.4 applied to the ordered-phase operator of \S5.4 is immediate. There
+$\Cm=\mathrm{diag}(1/a_{\bk}^{2})$ (the non-condensate modes are free, \S5.3) and
+$\Nop\vec b=4\Gamma[\vec a\odot\vec b-\tfrac1N(\vec b\cdot\vec a^{-1})\vec a]$, so
+\begin{equation}
+  \big(\Cm\Nop\big)_{\bk\bk'}=4\Gamma\left[\frac{\delta_{\bk\bk'}}{a_{\bk}}
+   -\frac{1}{N\,a_{\bk}a_{\bk'}}\right],
+\end{equation}
+manifestly symmetric. Positivity follows from Cauchy--Schwarz,
+$\big(\sum b_{\bk}/a_{\bk}\big)^{2}\le\big(\sum b_{\bk}^{2}/a_{\bk}\big)\big(\sum1/a_{\bk}\big)=Nt\sum b_{\bk}^{2}/a_{\bk}$,
+giving
+\begin{equation}
+  \vec b^{\top}\Cm\Nop\vec b\ \ge\ 4\Gamma(1-t)\sum_{\bk}\frac{b_{\bk}^{2}}{a_{\bk}}
+   =4\Gamma x^{2}\sum_{\bk}\frac{b_{\bk}^{2}}{a_{\bk}}\ >\ 0 .
+\end{equation}
+The operator is positive definite and its conditioning degrades exactly as $x^{2}$ --- the
+quantitative version of the rank-one-determinant statement of \S5.4.
+
+\subsection{Setup: two condensates}
+Ordered phase, $h\neq0$: $z=\beta P$, $a_{\bQ}=0$, and
+\begin{equation}
+  S^z_0=\sqrt NM+v,\quad G\equiv\sqrt N v;
+  \qquad
+  S^x_{\bQ}=\sqrt Nx+w,\quad W\equiv\sqrt N w .
+\end{equation}
+The constraint now reaches both condensates,
+\begin{equation}
+  \delta Q_+=2MG+2xW+\sum_{\bk\neq\bQ}Y_{\bk}=0 ,
+  \label{eq:Qord}
+\end{equation}
+while the energy still reaches only the uniform one, since $a_{\bQ}=0$:
+\begin{equation}
+  \delta\Ac=2a_0MG+\sum_{\bk\neq\bQ}a_{\bk}Y_{\bk} .
+  \label{eq:dAord}
+\end{equation}
+
+\paragraph{$\avg{\Ac}$ is unchanged.} The staggered condensate contributes
+$a_{\bQ}Nx^{2}=0$, so $\avg{\Ac}/N=1+a_0M^{2}$ exactly as in \S6.2, and the
+curvature/mean-force cancellation goes through verbatim. This is worth noting given the
+history: the one quantity that broke \S6 is insensitive to the new condensate.
+
+\paragraph{$Q_-$: what it slaves, and a pointer forward.} Its linear part now reads
+$\delta Q_-\ni2\sqrt Nx\,\delta S^x_0+2\sqrt NM\,\delta S^z_{\bQ}$, i.e.\ it slaves the
+uniform \emph{transverse} and staggered \emph{longitudinal} modes. Neither appears linearly
+in \eqref{eq:Qord} or \eqref{eq:dAord}, and Sectors~I and~II are orthogonal under the
+Gaussian measure, as in \S6.7.
+
+\FLAG{Superseded --- see \S9.} An earlier version of this paragraph concluded from that
+orthogonality that $Q_-$ ``again decouples'', with the residual left owed. The residual has
+since been computed. Orthogonality is \emph{not} decoupling: the correction to the generator
+is exactly $\Gamma\frac hN Z R_B$ with $Z=\sqrt N S^z_{\bQ}$ (\S9.1), and although it
+vanishes identically at $h=0$ --- so \S5 is untouched --- at $h\neq0$ it reaches Sector~I
+through the uniform condensate and couples to the \emph{soft} mode, where the resolvent
+coefficient $b_{\bQ}\propto r^{-1/2}$ is largest. The results of this section are unaffected
+in the thermodynamic limit; the finite-size validity window is not (see \S\ref{sec:status8}
+and \S9.3).
+
+\subsection{The generator on the staggered condensate mode}
+The one new ingredient is $-\Lc W$. Apply the degree-one calculation of \S6.3 to
+$F=\vec u\cdot\bs$ with $\vec u$ the $\bQ$-mode in the $x$ component (so $\vec u\cdot\bs=\sqrt N S^x_{\bQ}$,
+$|\vec u|^{2}=N$, $\uz\cdot\vec u=0$, eigenvalue $a_{\bQ}=0$, and $\avg F=Nx$):
+\begin{equation}
+  -\Lc F=\Gamma\Big[\underbrace{nF}_{-\Delta_M}+2a_{\bQ}F
+   -\tfrac2N\Ac F+\tfrac hN(\uz\!\cdot\!\bs)F\Big].
+\end{equation}
+The mean coefficient is $n-2\avg{\Ac}/N+hM=2-2(1+a_0M^{2})+2a_0M^{2}=0$ --- the same
+cancellation once more --- and the fluctuating part is
+\begin{equation}
+  \boxed{\ -\Lc\,W=-2\Gamma x\,\delta\Ac+\Gamma h x\,G
+   =-2\Gamma a_0Mx\,G-2\Gamma x\!\!\sum_{\bk\neq\bQ}\!\!a_{\bk}Y_{\bk}\ }
+  \label{eq:LW}
+\end{equation}
+
+\paragraph{Consistency with \S5.} At $M=0$, \eqref{eq:LW} is $-\Lc W=-2\Gamma x\,\delta\Ac$,
+so $\phi_{\Ac}=-W/2\Gamma x$ --- exactly the \S5 solution
+$\phi_{\Ac}=\delta Q'/4\Gamma x^{2}=-2xW/4\Gamma x^{2}$. This is an independent derivation
+of \S5's central result by a much shorter route, and it confirms the mode-sum argument
+there.
+
+\subsection{Eliminating $W$: no residual redundancy}
+Nothing on the right of \eqref{eq:LW}, or of the \S6.3 formulas, carries a $W$ component:
+$\delta(\bs^\top\mathsf A\mathsf B\bs)$ has weight $a_{\bQ}b_{\bQ}=0$ there. So $-\Lc$ maps
+into the $W$-free subspace. Since the null vector $\vec n=(2M,2x,\vec1)$ has $W$-component
+$2x\neq0$, the slice $\{W\text{-coefficient}=0\}$ meets each equivalence class exactly once.
+\emph{Working in that slice, the coordinates $(g,\vec b)$ are faithful and there is no
+$\lambda$ freedom} --- in contrast to \S6, where the redundancy survived and forced the
+augmented solve. Equivalently: use \eqref{eq:Qord} to eliminate $W$, leaving $G$ and
+$\{Y_{\bk}\}$ independent with the diagonal covariance
+$\Cm=\mathrm{diag}\big(N/2a_0,\;1/a_{\bk}^{2}\big)$.
+
+\subsection{Solving}
+With $\alpha=g-2b_0M$, $\Sigma_b=\overline{(b/a)}+b_0M^{2}$, matching
+$-\Lc\phi=s_{\Ac}\delta\Ac+s_G G$ component by component gives
+\begin{align}
+  Y_{\bk}:&\quad 4\Gamma a_{\bk}b_{\bk}-4\Gamma\Sigma_b a_{\bk}-2\Gamma M\alpha a_{\bk}=s_{\Ac}a_{\bk},
+  \label{eq:Yord}\\
+  G:&\quad 2\Gamma a_0(1-M^{2})\alpha-4\Gamma a_0M(\Sigma_b-b_0)=2a_0Ms_{\Ac}+s_G .
+  \label{eq:Gord}
+\end{align}
+Every $a_{\bk}$ cancels from \eqref{eq:Yord}, so
+\begin{equation}
+  b_{\bk}=\bar b=\frac{s_{\Ac}+2\Gamma\kappa}{4\Gamma}\quad\text{(constant)},
+  \qquad \kappa=M\alpha+2\Sigma_b .
+\end{equation}
+With $\bar b$ constant, $\overline{(b/a)}=\bar b\,\Wc=\bar b\,t$ and $b_0=\bar b$, so
+$\Sigma_b=\bar b(t+M^{2})$ and self-consistency gives
+\begin{equation}
+  4\Gamma\bar b\big[1-t-M^{2}\big]=s_{\Ac}+2\Gamma M\alpha
+  \qquad\Longrightarrow\qquad
+  \boxed{\ 4\Gamma\bar b\,x^{2}=s_{\Ac}+2\Gamma M\alpha\ }
+  \label{eq:selfcon}
+\end{equation}
+using $t+M^{2}+x^{2}=1$: \emph{the order parameter enters as the coefficient of $\bar b$},
+exactly as in \S5.4. Meanwhile $\Sigma_b-b_0=-\bar b x^{2}$, so \eqref{eq:Gord} becomes
+$\Gamma(1-M^{2})\alpha+2\Gamma M\bar bx^{2}=Ms_{\Ac}+s_G/2a_0$; substituting
+\eqref{eq:selfcon} the $M^{2}\alpha$ terms cancel and
+\begin{equation}
+  \boxed{\ \alpha=\frac{1}{2\Gamma}\Big[Ms_{\Ac}+\frac{s_G}{a_0}\Big],
+  \qquad
+  4\Gamma\bar b\,x^{2}=(1+M^{2})s_{\Ac}+\frac{M s_G}{a_0}\ }
+  \label{eq:sol8}
+\end{equation}
+
+\paragraph{The right-hand side is $dF$.} For the control displacement
+$d\lambda^\mu\delta X_\mu=-\tfrac{d\beta}{\beta}\delta\Ac+dh\,G$, i.e.\
+$s_{\Ac}=-d\beta/\beta$, $s_G=dh$, \S6.6 established
+$(1+M^{2})s_{\Ac}+Ms_G/a_0=dF$ with $F=t+M^{2}-1$. Hence
+\begin{equation}
+  \boxed{\ \bar b=\frac{dF}{4\Gamma x^{2}}\ },
+  \qquad
+  \phi=\alpha G+\bar b\big[2MG+\textstyle\sum_{\bk}Y_{\bk}\big]=\alpha G-2\bar b x\,W ,
+\end{equation}
+the last step using the constraint \eqref{eq:Qord}. The \emph{same} scaling field $F$ that
+organised the disordered side organises this one.
+
+\subsection{The metric}
+With $W$ slaved, $\avg{GW}=-\tfrac{M}{x}\avg{G^{2}}=-\tfrac{NM}{2a_0x}$ and
+$\avg{Y_{\bk}W}=-\tfrac{1}{2x}a_{\bk}^{-2}$. The singular ($\bar b$) part of
+$\Tm=\avg{(s_{\Ac}\delta\Ac+s_GG)\phi}$ is
+\begin{equation}
+  \frac{\Tm^{\rm sing}}{N}=\bar b\Big[(t+2M^{2})s_{\Ac}+\frac{Ms_G}{a_0}\Big] .
+\end{equation}
+On the critical line $t+M^{2}=1$, so $t+2M^{2}=1+M^{2}$ and the bracket is again $dF$:
+\begin{equation}
+  \boxed{\ ds_T^{2}\Big|_{\rm ord}=\bar b\,dF=\frac{(dF)^{2}}{4\Gamma x^{2}}\ }
+\end{equation}
+rank one and normal to the critical line, as on the disordered side. Finally, in the
+ordered phase
+\begin{equation}
+  x^{2}=1-t-M^{2}=-F=|F| ,
+\end{equation}
+so the two sides read
+\begin{equation}
+  \boxed{\ ds_T^{2}\simeq\frac{(dF)^{2}}{8\Gamma|F|}\times
+  \begin{cases}
+    1, & F>0 \quad\text{(disordered)},\\
+    2, & F<0 \quad\text{(ordered)} .
+  \end{cases}\ }
+  \label{eq:final8}
+\end{equation}
+
+\paragraph{The amplitude ratio is universal after all.} \S5.9 obtained $A_-/A_+=2$ at the
+$h=0$ tip and \S6.9(4) flagged that it might be a tip property, since the $1/x^{2}$
+mechanism was known not to operate at $M_c\neq0$. Equation \eqref{eq:final8} settles it: the
+ratio is $2$ at every point of the critical line. The mechanisms genuinely differ --- the
+disordered side runs through $\lambda\propto dF/I_2$ with the divergence carried by
+$I_3/I_2^{2}$, the ordered side through $\bar b\propto dF/x^{2}$ with the divergence carried
+by the vanishing order parameter --- and they nonetheless produce the same $|F|^{-1}$ with a
+fixed ratio. That coincidence is a strong indication that both calculations are right.
+
+\paragraph{Full $\Tm_{11}$ at a generic point.} Keeping the regular part as well,
+\begin{equation}
+  \Tm_{11}\Big|_{\rm ord}=\frac{1}{\beta^{2}}\cdot
+  \frac{2M^{2}x^{2}+(1+M^{2})(t+2M^{2})}{4\Gamma x^{2}} ,
+\end{equation}
+which reduces to $t/4\Gamma\beta^{2}x^{2}$ at $M=0$, i.e.\ \S5's result. \checkmark
+
+\subsection{Numerical validation}
+Building $\Nop$ and $\Cm$ on random spectra with $t=0.55$, $M=0.4$ ($x^{2}=0.29$):
+\begin{center}
+\begin{tabular}{lcc}
+\hline
+ & $N=60$ & $N=300$\\
+\hline
+detailed-balance asymmetry of $\Cm\Nop$ & $6.8\times10^{-17}$ & $6.3\times10^{-17}$\\
+\hline
+\end{tabular}
+\end{center}
+and solving $\Nop\vec\phi=\vec s$ ($N=300$):
+\begin{center}
+\begin{tabular}{lcc}
+\hline
+quantity & numeric & analytic\\
+\hline
+$\alpha$ & $0.20000000$ & $M/2\Gamma=0.20000000$\\
+$b_{\bk}$ (spread) & $\min=\max=1.00000000$ & $(1+M^{2})/4\Gamma x^{2}=1.00000000$\\
+$\Tm_{\Ac\Ac}/N$ & $0.95000000$ & $0.95000000$\\
+\hline
+\end{tabular}
+\end{center}
+$b_{\bk}$ is constant to machine precision, as \eqref{eq:Yord} requires. For general sources
+$(s_{\Ac},s_G)$ the identity $4\Gamma\bar bx^{2}=(1+M^{2})s_{\Ac}+Ms_G/a_0$ holds to
+$10^{-8}$ in every case tested.
+
+\subsection{Status}
+\label{sec:status8}
+The metric is complete on both sides of the critical line at a generic point:
+\eqref{eq:final8}, rank one, normal, with universal amplitude ratio $2$ and integrable
+$\sqrt{\Tm}$. Combined with \S7, every load-bearing equation of \S5--\S6 has passed a
+detailed-balance test, and the two independent mechanisms agree on the exponent and the
+ratio. These are thermodynamic-limit statements and are unaffected by \S9.
+
+\paragraph{Validity window --- revised by \S9.}
+An earlier version of this section inherited from \S5.10 the claim that the whole
+construction has the single validity domain $L\gg\xi$. That holds at the $h=0$ tip only.
+Including the $Q_-$ correction, the binding condition at a generic point is instead
+\begin{equation}
+  \boxed{\ N r^{3}\gg1\qquad(L\gg\xi^{2})\ }
+\end{equation}
+with prefactor $\propto(hM_c)^{2}$ (\S9.3), against $Nr^{3/2}\gg1$ for the statics and the
+$Q_+$ closure. The exponent is a power count and is flagged provisional in \S9.4 pending an
+explicit residual; what is certain is that the correction is $\propto h$, vanishes at the
+tip, and is \emph{enhanced} near criticality rather than suppressed. This matters for any
+finite-size or simulation check, not for what would be quoted in [BR].
+
+\paragraph{Remaining.}
+\begin{enumerate}
+  \item \textbf{Evaluate the $Q_-$ residual explicitly} (\S9.5): extend the \S7 matrix
+        machinery by the Sector~II pair basis
+        $\{\bm S^{*}_{\bk}\!\cdot\!\bm S_{\bk-\bQ},\,Z\}$, then test detailed balance and
+        compute $R$ numerically. This would replace the provisional exponent above by a
+        computed one.
+  \item \textbf{The regular part of the metric everywhere}, needed for minimal paths.
+        The singular part is known in closed form; the regular part requires evaluating
+        $\alpha$ and the non-singular pieces away from the critical line, which is
+        straightforward but not yet tabulated.
+  \item \textbf{The objective functional} of \S4.11 --- unchanged, and still a prerequisite
+        for geodesics rather than for lengths.
+  \item \textbf{Minimal paths.} With \eqref{eq:final8} the ``around versus through''
+        comparison can finally be posed quantitatively. Note the cold ordered interior is
+        cheap ($\Tm_{11}\propto\beta^{-3}$ as $\beta\to\infty$ at fixed $x^{2}\to1$), which
+        is the mirror image of the mean-field antiferromagnet where $\beta=0$ was cheap.
+\end{enumerate}
+
+\TODO{(1) then (2).}
+

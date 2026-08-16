@@ -1,0 +1,494 @@
+\section{The complete off-critical metric in both phases}
+\noindent
+Sections \S4--\S8 obtained the \emph{singular} part of $\Tm_{\mu\nu}$ near the critical line.
+Minimal paths need the whole tensor everywhere. This section supplies it: closed form in the
+ordered phase, and in terms of three Watson integrals in the disordered phase. Both
+expressions have been checked against the matrix solvers of \S7 and \S8 to all printed
+digits.
+
+\medskip
+\noindent
+\FLAG{A correction to \S8 first.} In \S8.5 the numerator of $\bar b$ was identified with
+	$dF$. That is true only \emph{on} the critical line. Off it (\S\ref{sec:offbdy}),
+	\begin{equation}
+		\bar b=\frac{dF}{4\Gamma x^{2}}-\frac{d\beta}{4\Gamma\beta} ,
+	\end{equation}
+	and the second, finite term --- invisible to a leading singular analysis, since it is down by
+	$x^{2}$ --- is exactly what completes the tensor. The same warning applies to the disordered
+	side: $F$ and the saddle quantities agree only at $r=0$.
+	
+	%===============================================================
+\subsection{Notation}
+As in \S0--\S9. In addition, define the reduced controls
+\begin{equation}
+  \boxed{\ t\equiv\frac{T}{T_0}=\frac{\beta_0}{\beta},\qquad
+   \eta\equiv\frac{H}{4P}=\frac{h}{4\beta P}\ }
+  \label{eq:reduced}
+\end{equation}
+so that the critical line \eqref{eq:Fdef} of \S6 is simply the parabola
+\begin{equation}
+  F(t,\eta)=t+\eta^{2}-1=0 ,\qquad F<0\ \text{ordered},\ F>0\ \text{disordered}.
+\end{equation}
+In the ordered phase $M=\eta$ and $x^{2}=-F$. Throughout, $D\equiv a_0V=a_0I_2+2M^{2}$ with
+$V=I_2+2M^{2}/a_0$ the quantity of \S3.7 and \S7.3; $D$ is the more convenient grouping here.
+
+\subsection{Two identities that hold only on the boundary}
+\label{sec:offbdy}
+Both are elementary and both were silently assumed in \S6 and \S8.
+
+\paragraph{(i) Disordered branch.} The constraint is $I_1+M^{2}=1$, so
+\begin{equation}
+  F=t+M^{2}-1=t-I_1 .
+\end{equation}
+Since $\Wc$ decreases with $r$ and $\Wc(0)=t$, we have $I_1=\Wc(r)<t$ for $r>0$, i.e.\ $F>0$
+--- correct, but note $F\neq t+M^{2}-1$ is \emph{not} the same as ``$M^{2}=1-\Wc(0)$''. The
+magnetisation obeys $M=h/2a_0$ with $a_0=r+2\beta P$, whereas $F$ is defined with $2\beta P$
+alone. The two coincide only at $r=0$.
+
+\paragraph{(ii) Ordered branch.} With $F=t+M^{2}-1$ and $M=h/2a_0$, $a_0=2\beta P$,
+\begin{equation}
+  dF=-\frac{t+2M^{2}}{\beta}\,d\beta+\frac{M}{a_0}\,dh ,
+\end{equation}
+whereas the numerator appearing in $\bar b$ (\S8.5) is
+$(1+M^{2})s_{\Ac}+\tfrac{M}{a_0}s_G$ with $s_{\Ac}=-d\beta/\beta$, $s_G=dh$. Their difference
+is
+\begin{equation}
+  \Big[(1+M^{2})-(t+2M^{2})\Big]\Big(-\frac{d\beta}{\beta}\Big)
+  =-\frac{1-t-M^{2}}{\beta}d\beta=-\frac{x^{2}}{\beta}d\beta ,
+\end{equation}
+giving the boxed correction above. On the critical line $x^{2}=0$ and the two agree, which is
+why \S8's singular result was right.
+
+\subsection{Disordered phase: the general-source solution}
+From \S6.5, with a general source $q_s=s_{\Ac}\delta\Ac+s_G G$, the gauge $1+2\Gamma\kappa=0$
+gives $b_{\bk}=\lambda_s/4\Gamma a_{\bk}$ with
+\begin{equation}
+  \boxed{\ \lambda_s=-\frac{a_0(1+M^{2})s_{\Ac}+M s_G}{D}\ }
+  \label{eq:lam10}
+\end{equation}
+What \S6 did not need, and what is required here, is the coefficient of $G$ in the solution.
+Writing $\phi_s=\gamma_s G+\sum_{\bk}b_{\bk}Y_{\bk}$, we have $\gamma_s=\alpha_s+2b_0M$ with
+$\alpha_s=-(s_{\Ac}+\lambda_s V)/2\Gamma M$ from \S6.5 and $b_0=\lambda_s/4\Gamma a_0$. Then
+\begin{equation}
+  \gamma_s=\frac{1}{2\Gamma}\Big[-\frac{s_{\Ac}}{M}-\frac{\lambda_s}{M}\Big(I_2+\frac{M^{2}}{a_0}\Big)
+   +\frac{M\lambda_s}{a_0}\Big]
+  =-\frac{s_{\Ac}+\lambda_s I_2}{2\Gamma M} ,
+\end{equation}
+the two $M\lambda_s/a_0$ terms cancelling. Substituting \eqref{eq:lam10} and using
+$D-a_0I_2(1+M^{2})=M^{2}(2-a_0I_2)$,
+\begin{equation}
+  \boxed{\ \gamma_s=\frac{M(a_0I_2-2)s_{\Ac}+I_2\,s_G}{2\Gamma D}\ }
+  \label{eq:gam10}
+\end{equation}
+\FLAG{Why $\gamma$ was invisible before.} Near the line $\lambda_s\to0$ like $\sqrt r$ while
+$b_{\bQ}\propto\lambda_s/r$ blows up, so the singular part of $\Tm$ comes entirely from
+$\lambda_s$. $\gamma_s$ stays finite and contributes only to the regular background --- which
+is precisely what fast marching needs away from the line.
+
+\subsection{Disordered phase: the bilinear form}
+Conditioning the Gaussian covariance on $\delta Q_+=0$ (\S7.3) gives two compact objects.
+Using $\tfrac1N\mathrm{Cov}(q_s,\delta Q)=(1+M^{2})s_{\Ac}+\tfrac{M}{a_0}s_G=-D\lambda_s/a_0$
+and $\tfrac1N\mathrm{Var}(\delta Q)=V=D/a_0$:
+\begin{align}
+  \frac1N\avg{q_s\,G}_c&=\underbrace{Ms_{\Ac}+\frac{s_G}{2a_0}}_{\text{unconditioned}}
+   \;+\;\frac{M}{a_0}\lambda_s\;\equiv\;R_s ,
+  \label{eq:Rs}\\
+  \frac1N\avg{q_s\,\Gc}_c&=I_2s_{\Ac}+I_3\lambda_s\;\equiv\;S_s ,
+  \qquad \Gc\equiv\sum_{\bk}\frac{Y_{\bk}}{a_{\bk}} ,
+  \label{eq:Ss}
+\end{align}
+where in each case the conditional correction $-\mathrm{Cov}(q_s,\delta Q)\mathrm{Cov}(\cdot,\delta Q)/\mathrm{Var}(\delta Q)$
+collapses because the factor $-D\lambda_s/a_0$ cancels against $V=D/a_0$. Since
+$\phi_t=\gamma_tG+\tfrac{\lambda_t}{4\Gamma}\Gc$,
+\begin{equation}
+  \boxed{\ \Tm^{\rm dis}(s,t)=\gamma_t R_s+\frac{\lambda_t}{4\Gamma}S_s\ }
+  \label{eq:bilin10}
+\end{equation}
+Symmetry under $s\leftrightarrow t$ is guaranteed by detailed balance (\S7.4) and is a useful
+algebraic check on \eqref{eq:lam10}--\eqref{eq:gam10}.
+
+\subsection{Disordered phase: the tensor}
+Insert the basis sources $e_\beta:(s_{\Ac},s_G)=(-1/\beta,0)$ and $e_h:(0,1)$, for which
+\begin{equation}
+  \lambda_\beta=\frac{a_0(1+M^{2})}{\beta D},\quad
+  \gamma_\beta=-\frac{M(a_0I_2-2)}{2\Gamma\beta D},\qquad
+  \lambda_h=-\frac{M}{D},\quad
+  \gamma_h=\frac{I_2}{2\Gamma D} .
+\end{equation}
+Expanding \eqref{eq:bilin10} and collecting powers of $I_2,I_3$:
+\begin{equation}
+  \boxed{
+  \begin{aligned}
+  \Tm^{\rm dis}_{\beta\beta}&=\frac{a_0^{2}\big[(1+M^{2})^{2}I_3-(1-M^{2})I_2^{2}\big]
+    -8a_0M^{2}I_2+4M^{2}(1-M^{2})}{4\Gamma\beta^{2}D^{2}},\\[2pt]
+  \Tm^{\rm dis}_{\beta h}&=-\frac{M\big[a_0I_2^{2}-2I_2+a_0(1+M^{2})I_3\big]}{4\Gamma\beta D^{2}},\\[2pt]
+  \Tm^{\rm dis}_{hh}&=\frac{I_2^{2}+M^{2}I_3}{4\Gamma D^{2}} .
+  \end{aligned}}
+  \label{eq:Tdis}
+\end{equation}
+The determinant factorises,
+\begin{equation}
+  \det\Tm^{\rm dis}=\frac{(1-M^{2})I_3-I_2^{2}}{16\Gamma^{2}\beta^{2}D^{2}}\;>\;0 ,
+  \label{eq:detdis}
+\end{equation}
+positivity following from Cauchy--Schwarz, $I_2^{2}\le I_1I_3=(1-M^{2})I_3$ (\S4.7). This is a
+stronger statement than anything in \S6: the tensor is \emph{full rank everywhere} in the open
+disordered phase, not merely near the line.
+
+\paragraph{Check.} At $h=0$, $M=0$, $D=a_0I_2$, and \eqref{eq:Tdis} collapses to
+\begin{equation}
+  \Tm^{\rm dis}_{\beta\beta}=\frac{1}{4\Gamma\beta^{2}}\Big(\frac{I_3}{I_2^{2}}-1\Big),
+  \qquad \Tm^{\rm dis}_{\beta h}=0,\qquad \Tm^{\rm dis}_{hh}=\frac{1}{4\Gamma a_0^{2}} ,
+\end{equation}
+which is exactly \S4.7 and \S4.9. \checkmark
+
+\subsection{Ordered phase: the tensor}
+Here \S8 already supplies everything except the expansion. From \S8.5--\S8.6,
+\begin{equation}
+  \alpha_s=\frac{1}{2\Gamma}\Big[Ms_{\Ac}+\frac{s_G}{a_0}\Big],
+  \qquad
+  \bar b_s=\frac{(1+M^{2})s_{\Ac}+(M/a_0)s_G}{4\Gamma x^{2}} ,
+\end{equation}
+\begin{equation}
+  \Tm^{\rm ord}(s,t)=\alpha_t\Big[Ms_{\Ac}+\frac{s_G}{2a_0}\Big]
+   +\bar b_t\Big[(t+2M^{2})s_{\Ac}+\frac{M}{a_0}s_G\Big] .
+  \label{eq:bilinord}
+\end{equation}
+Inserting the basis sources gives, after using $x^{2}=1-t-M^{2}$ three times,
+\begin{equation}
+  \boxed{\ \Tm^{\rm ord}_{(\beta,h)}=\frac{1}{4\Gamma x^{2}}
+  \begin{pmatrix}
+   \dfrac{t+(4-t)M^{2}}{\beta^{2}} & -\dfrac{M(2-t)}{a_0\beta}\\[10pt]
+   -\dfrac{M(2-t)}{a_0\beta} & \dfrac{1-t}{a_0^{2}}
+  \end{pmatrix}\ }
+  \label{eq:Tord}
+\end{equation}
+The three simplifications are worth recording, since they are what makes the result compact:
+\begin{align}
+  2M^{2}x^{2}+(1+M^{2})(t+2M^{2})&=t+(4-t)M^{2},\\
+  2x^{2}+t+2M^{2}&=2-t,\\
+  x^{2}+M^{2}&=1-t .
+\end{align}
+The determinant is
+\begin{equation}
+  \det\Tm^{\rm ord}=\frac{t}{16\Gamma^{2}\beta^{2}a_0^{2}x^{2}}>0 ,
+\end{equation}
+using $\big(t+(4-t)M^{2}\big)(1-t)-M^{2}(2-t)^{2}=t\,x^{2}$.
+
+\FLAG{No null directions, in either phase.} \eqref{eq:detdis} and the above are both strictly
+positive. The rank-one degeneracy that drives the optimal-path classification in [BR,\S e] is
+\emph{not} inherited by the spherical model --- consistent with the static statement in
+\S3.10, and now established for the full dynamical tensor.
+
+\subsection{Reduced coordinates, and an exact decomposition}
+The Jacobian from \eqref{eq:reduced} is
+\begin{equation}
+  \frac{\partial(\beta,h)}{\partial(t,\eta)}=
+  \begin{pmatrix}-\beta/t & 0\\ -h/t & 4\beta P\end{pmatrix},
+\end{equation}
+and pulling \eqref{eq:Tord} back with $\Tm^{(y)}=J^{\top}\Tm^{(\lambda)}J$, using
+$h/a_0=2\eta$ and $4\beta P=2a_0$, gives
+\begin{equation}
+  \boxed{\ \Tm^{\rm ord}_{(t,\eta)}=\frac{1}{4\Gamma x^{2}}
+  \begin{pmatrix}\dfrac{1-\eta^{2}}{t} & 2\eta\\[6pt] 2\eta & 4(1-t)\end{pmatrix}\ }
+  \label{eq:Tred}
+\end{equation}
+and --- the most useful form for computation --- the \emph{exact} decomposition
+\begin{equation}
+  \boxed{\ d\ell_T^{2}\Big|_{\rm ord}
+   =\frac{(dF)^{2}}{4\Gamma x^{2}}+\frac{(dt)^{2}}{4\Gamma t}+\frac{(d\eta)^{2}}{\Gamma}\ }
+  \label{eq:decomp}
+\end{equation}
+valid throughout the ordered phase, not just near the boundary. To verify, use
+$dF=dt+2\eta\,d\eta$ and $t+x^{2}=1-\eta^{2}$, $x^{2}+\eta^{2}=1-t$.
+
+\paragraph{Reading.} \eqref{eq:decomp} separates the geometry into three pieces: a
+\emph{singular normal} term $\propto(dF)^{2}/x^{2}$, which is the rank-one structure of \S8
+and diverges as $|F|^{-1}$; a \emph{thermal background} $(dt)^{2}/4\Gamma t$, which is finite
+everywhere except $T\to0$; and a \emph{field background} $(d\eta)^{2}/\Gamma$, which is flat.
+The first was all that \S8 saw. The second and third are the regular part, and they are what
+decide the ``around versus through'' competition away from the line.
+
+Note also that $(dt)^{2}/4\Gamma t=\big(d\sqrt t\big)^{2}/\Gamma$, so in coordinates
+$(2\sqrt t,\,2\eta)$ the two background terms together are \emph{flat Euclidean} --- the same
+combination that appeared, spuriously, in the very first draft of these notes. It is real
+here, but it is only part of the metric; the singular normal term is not flat. Remarkably,
+adding that term back does not spoil matters but produces a different constant-curvature
+geometry, as the next subsection shows.
+
+\subsection{The ordered phase is a spherical patch --- and the sphere is the constraint}
+\label{sec:sphere}
+There is a three-line route to this, and it is more revealing than the coordinate
+manipulation that follows. Take the exact decomposition \eqref{eq:decomp} and define
+\begin{equation}
+  \boxed{\ X\equiv\sqrt{t}=\sqrt{\Wc},\qquad Y\equiv\eta=M,\qquad Z\equiv x\ }
+  \label{eq:XYZ}
+\end{equation}
+i.e.\ the square roots of the three terms in the spherical constraint of \S2.3. That
+constraint, $\Wc+M^{2}+x^{2}=1$, is then literally
+\begin{equation}
+  X^{2}+Y^{2}+Z^{2}=1 .
+\end{equation}
+Now $F=-x^{2}$ gives $dF=-2x\,dx$, so $(dF)^{2}/4\Gamma x^{2}=dZ^{2}/\Gamma$; and
+$t=X^{2}$ gives $dt^{2}/4\Gamma t=dX^{2}/\Gamma$; and $d\eta^{2}/\Gamma=dY^{2}/\Gamma$.
+Hence
+\begin{equation}
+  \boxed{\ d\ell_T^{2}\Big|_{\rm ord}=\frac{1}{\Gamma}\Big[dX^{2}+dY^{2}+dZ^{2}\Big]
+   \quad\text{restricted to}\quad X^{2}+Y^{2}+Z^{2}=1\ }
+  \label{eq:sphereXYZ}
+\end{equation}
+the round metric induced on a sphere of radius $R=1/\sqrt\Gamma$.
+
+\FLAG{This is not a coordinate accident.} The three Cartesian coordinates are the thermal
+occupation, the uniform magnetisation and the staggered order parameter, and the sphere they
+lie on \emph{is the spherical constraint that defines the model}. The thermodynamic geometry
+of the ordered phase is the round metric on the constraint sphere itself. That the
+dissipation metric --- built from the dynamics, the projected generator and a resolvent ---
+should land exactly on the model's own configuration-space constraint is a statement worth
+making explicitly in the manuscript.
+
+\paragraph{Equivalent route in angles.} For completeness, and because the angular
+coordinates are what a solver wants, set
+\begin{equation}
+  w\equiv2\sqrt t,\qquad v\equiv2\eta,
+  \qquad\text{so}\qquad
+  \frac{(dt)^{2}}{4\Gamma t}+\frac{(d\eta)^{2}}{\Gamma}=\frac{dw^{2}+dv^{2}}{4\Gamma},
+\end{equation}
+and introduce polar coordinates on the $(w,v)$ plane,
+\begin{equation}
+  w=\varrho\cos\psi,\qquad v=\varrho\sin\psi,\qquad \varrho^{2}=w^{2}+v^{2} .
+\end{equation}
+Since $F=t+\eta^{2}-1=\tfrac14(\varrho^{2}-4)$ we have $x^{2}=-F=\tfrac14(4-\varrho^{2})$ and
+$dF=\tfrac12\varrho\,d\varrho$, so the singular normal term becomes
+\begin{equation}
+  \frac{(dF)^{2}}{4\Gamma x^{2}}=\frac{\varrho^{2}\,d\varrho^{2}}{4\Gamma\,(4-\varrho^{2})} .
+\end{equation}
+Adding the background, the cross terms cancel and \eqref{eq:decomp} becomes \emph{diagonal}:
+\begin{equation}
+  d\ell_T^{2}\Big|_{\rm ord}
+   =\frac{1}{4\Gamma}\left[\Big(1+\frac{\varrho^{2}}{4-\varrho^{2}}\Big)d\varrho^{2}
+    +\varrho^{2}d\psi^{2}\right]
+   =\frac{1}{4\Gamma}\left[\frac{4\,d\varrho^{2}}{4-\varrho^{2}}+\varrho^{2}d\psi^{2}\right].
+  \label{eq:polar}
+\end{equation}
+Finally substitute $\varrho=2\sin\chi$, for which $4-\varrho^{2}=4\cos^{2}\chi$ and
+$d\varrho=2\cos\chi\,d\chi$:
+\begin{equation}
+  \boxed{\ d\ell_T^{2}\Big|_{\rm ord}=\frac{1}{\Gamma}\Big[d\chi^{2}+\sin^{2}\!\chi\;d\psi^{2}\Big]\ }
+  \label{eq:sphere}
+\end{equation}
+\textbf{Each selected ordered pure-state branch is isometric to a quarter of a round
+two-sphere of radius $R=1/\sqrt\Gamma$}, with constant \emph{Gaussian} (sectional) curvature
+\begin{equation}
+  K=\frac{1}{R^{2}}=\Gamma
+  \qquad\text{(the Ricci scalar is }\mathcal R=2K=2\Gamma\text{)} .
+\end{equation}
+Verified numerically: transforming \eqref{eq:Tred} to $(\chi,\psi)$ by the Jacobian of
+$(t,\eta)\leftrightarrow(\chi,\psi)$ reproduces $\Gamma^{-1}\mathrm{diag}(1,\sin^{2}\chi)$ to
+eight digits at every test point.
+
+\FLAG{A patch, not the whole sphere.} The selected branch has $X=\sqrt t>0$ and $Z=x>0$, so
+the domain is the intersection of two hemispheres --- a quarter-sphere. The second
+symmetry-broken branch $x<0$ is the reflected quarter, and if both state sheets are retained
+their union is the hemisphere $X>0$, with the critical line $x=0$ the great circle separating
+them. Saying flatly ``the ordered phase is a round two-sphere'' overstates it.
+
+\paragraph{The domain.} Since $t>0$ requires $w>0$ and the ordered phase requires
+$\varrho<2$,
+\begin{equation}
+  \chi\in[0,\tfrac\pi2),\qquad \psi\in(-\tfrac\pi2,\tfrac\pi2),
+\end{equation}
+a lune covering half the northern hemisphere. The boundaries all lie in the smooth metric
+completion of the ordered phase (they are not in the open phase itself), and in that
+completion they are geodesics:
+\begin{center}
+\begin{tabular}{lll}
+\hline
+locus & sphere image & is a geodesic?\\
+\hline
+critical line $F=0$ & equator $\chi=\pi/2$ & \textbf{yes} (great circle)\\
+$T=0$ & meridians $\psi=\pm\pi/2$ & yes\\
+$T=0,H=0$ & pole $\chi=0$ & (a point)\\
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{Consequences.} Three, and all matter for \S11.
+\begin{enumerate}
+  \item \textbf{Ordered-phase geodesics are great-circle arcs}, and distances are
+        $\ell=\Theta/\sqrt\Gamma$ with $\Theta$ the great-circle angle. No numerical solver
+        is needed inside the ordered phase at all.
+  \item \textbf{The critical line is itself a geodesic.} A minimal path that reaches the
+        boundary may run \emph{along} it at locally minimal cost. This is a third candidate
+        topology, alongside ``around the tip'' and ``straight through'', and it was not
+        visible before \eqref{eq:sphere}: the singularity of the metric is purely normal
+        (\S8.6), so the tangential direction along $F=0$ is perfectly regular.
+  \item \textbf{An exact benchmark for the numerics.} Great-circle distances give a
+        non-trivial closed-form answer against which any eikonal or graph solver can be
+        validated before it is trusted in the disordered phase.
+\end{enumerate}
+
+\subsection{The [BR] convention is hyperbolic, not spherical}
+\label{sec:hyperbolic}
+\FLAG{Correction.} An earlier version of this section asserted that the convention factor
+``destroys constant curvature''. That is wrong for the choice actually made in [BR].
+
+Pass to the Mercator coordinate $d\mu=d\chi/\sin\chi$, i.e.\ $\mu=\ln\tan(\chi/2)$ and
+$\sin\chi=\operatorname{sech}\mu$, in which
+$d\chi^{2}+\sin^{2}\!\chi\,d\psi^{2}=\sin^{2}\!\chi\,(d\mu^{2}+d\psi^{2})$. With
+$t=\sin^{2}\!\chi\cos^{2}\!\psi$ and $\beta=\beta_0/t$, the [BR] metric $g=\beta\Tm$ is
+\begin{equation}
+  d\ell_g^{2}
+  =\frac{\beta_0}{\sin^{2}\!\chi\cos^{2}\!\psi}\cdot\frac{\sin^{2}\!\chi}{\Gamma}
+   \big(d\mu^{2}+d\psi^{2}\big)
+  =\boxed{\ \frac{\beta_0}{\Gamma}\,\frac{d\mu^{2}+d\psi^{2}}{\cos^{2}\!\psi}\ }
+  \label{eq:poincare}
+\end{equation}
+\textbf{The factor $\sin^{2}\!\chi$ cancels exactly}, leaving the Poincar\'e metric on the
+strip $|\psi|<\pi/2$. Its Gaussian curvature is constant and \emph{negative},
+\begin{equation}
+  \boxed{\ K_g=-\frac{\Gamma}{\beta_0}\ },\qquad \mathcal R_g=-\frac{2\Gamma}{\beta_0},
+\end{equation}
+(or $K_g=-\Gamma$ if the dimensionless factor $\beta/\beta_0$ is used). So
+\begin{equation}
+  \boxed{\ \Tm^{\rm ord}\ \text{is spherical};\qquad
+   g^{\rm BR}=\beta\,\Tm^{\rm ord}\ \text{is hyperbolic.}\ }
+\end{equation}
+Both are exactly solvable. \emph{No numerical solver is needed inside the ordered phase for
+either convention} --- one simply uses hyperbolic geodesics instead of great circles.
+
+\paragraph{The boundary survives the change.} The critical line $\chi=\pi/2$ is $\mu=0$, and
+since \eqref{eq:poincare} is independent of $\mu$, the reflection $\mu\to-\mu$ is an isometry
+whose fixed-point set is $\mu=0$. A fixed-point set of an isometry is totally geodesic, so
+the critical line is a geodesic of the [BR] metric too. The third path topology of
+\S\ref{sec:sphere} therefore survives the convention change, even though the great-circle
+description does not.
+
+\FLAG{Only two of the three conventions are constant-curvature.} Computing
+$K=-e^{-2\phi}\Delta\phi$ numerically for $d\ell^{2}=e^{2\phi}(d\mu^{2}+d\psi^{2})$:
+\begin{center}
+\begin{tabular}{lcccc}
+\hline
+$(\mu,\psi)$ & $(-0.4,0.2)$ & $(-1.0,-0.6)$ & $(-0.2,0.9)$ & $(-2.0,0.1)$\\
+\hline
+$K$ for $\Tm$            & $+1.0000$ & $+1.0000$ & $+1.0000$ & $+1.0000$\\
+$K$ for $\beta\Tm$ (BR)  & $-1.0000$ & $-1.0000$ & $-1.0000$ & $-1.0000$\\
+$K$ for $\Tm/\beta$      & $3.914$   & $19.21$   & $12.64$   & $232.99$\\
+\hline
+\end{tabular}
+\end{center}
+($\Gamma=\beta_0=1$.) The excess-work pullback $\Tm/\beta$ --- the convention that the tensor
+transformation of \S4.11 actually favours --- gives \emph{no} constant curvature. This is a
+genuine tension: the convention with the clean geometry is not the one the Sivak--Crooks
+transformation produces. Elegance is not evidence, so \S4.11 remains open; but the
+geometric signature is sharp enough that it should be recorded alongside the argument
+there.
+
+In all three cases the metric is conformally flat in $(\mu,\psi)$, so the ordered-phase
+problem is \emph{isotropic} in Mercator coordinates and an ordinary scalar-speed fast marcher
+suffices if one is used at all.
+
+\subsection{Numerical assembly}
+For a grid point $(t,\eta)$:
+\begin{enumerate}
+  \item $F=t+\eta^{2}-1$.
+  \item If $F<0$: use \eqref{eq:Tred} directly with $x^{2}=-F$, $M=\eta$ --- no root solve.
+        Better still, skip the grid entirely: the ordered phase is exactly solvable in
+        \emph{both} constant-curvature conventions --- great circles for $\Tm$
+        (\S\ref{sec:sphere}), hyperbolic geodesics on the Poincar\'e strip for $g^{\rm BR}$
+        (\S\ref{sec:hyperbolic}).
+  \item If $F>0$: solve the saddle equation $I_1(r,\beta)+M^{2}=1$ for $r$ at
+        $\beta=\beta_0/t$, $M=h/2a_0$, then evaluate $I_2,I_3$ and use \eqref{eq:Tdis},
+        pulling back with the Jacobian above.
+  \item Apply the scalar convention factor of \S4.11 --- and see the warning there, which is
+        \emph{not} resolved by this section.
+\end{enumerate}
+The Watson integrals depend on $(r,\beta)$ only through $s=r/\beta\Jc$, so
+$I_n=(\beta\Jc)^{-n}K_n(s)$ with $K_n$ universal; tabulating $K_{1,2,3}(s)$ once and
+interpolating turns each grid point into a scalar root solve.
+
+\subsection{The critical interface}
+The raw tensor is infinite on $F=0$, so a grid value placed exactly there creates a spurious
+numerical barrier even though the distance is finite. Two clean treatments:
+\begin{itemize}
+  \item \textbf{Signed square-root coordinate} $\rho=\mathrm{sgn}(F)\sqrt{|F|}$, so
+        $F=\rho|\rho|$ and $dF=2|\rho|d\rho$. Then
+        \begin{equation}
+          \frac{(dF)^{2}}{8\Gamma F}=\frac{(d\rho)^{2}}{2\Gamma}\ (\rho>0),
+          \qquad
+          \frac{(dF)^{2}}{4\Gamma|F|}=\frac{(d\rho)^{2}}{\Gamma}\ (\rho<0),
+        \end{equation}
+        both finite, with the ratio $2$ of \S8.6 now visible as a jump in a \emph{regular}
+        coefficient.
+  \item \textbf{Analytic edge cost} for an edge crossing nearly normally between $F_+>0$ and
+        $F_-<0$:
+        $\Delta\ell\simeq\sqrt{F_+/2\Gamma}+\sqrt{|F_-|/\Gamma}$, adding the regular part by
+        midpoint quadrature.
+\end{itemize}
+\FLAG{And note what the interface \emph{is}.} By \S\ref{sec:sphere} and
+\S\ref{sec:hyperbolic} the critical line is a geodesic of the ordered-phase metric in both
+constant-curvature conventions, so it is not merely a place where the grid needs care:
+it is a locus along which a minimal path may legitimately travel. Any regularisation must
+therefore represent the tangential direction accurately, not just avoid the normal
+divergence.
+
+Since $\Tm_{t\eta}\neq0$ in general, the eikonal problem
+$\nabla D^{\top}\Tm^{-1}\nabla D=1$ is anisotropic: a scalar-speed fast marcher is not
+adequate; use an ordered-upwind or anisotropic stencil taking the full matrix.
+
+\subsection{Verification}
+Both tensors were checked against the independent matrix solvers of \S7 (disordered:
+generator \eqref{eq:Nop} plus conditioned covariance, augmented solve) and \S8 (ordered:
+generator plus diagonal covariance, direct solve), on a $6^{3}$ mode grid:
+\begin{center}
+\begin{tabular}{llccc}
+\hline
+phase & point & $\Tm_{\beta\beta}$ & $\Tm_{\beta h}$ & $\Tm_{hh}$\\
+\hline
+dis & $\beta{=}0.30,h{=}0.3$ & $0.801357$ & $-0.043512$ & $0.059339$\\
+dis & $\beta{=}0.40,h{=}2.0$ & $1.426959$ & $-0.169025$ & $0.037516$\\
+dis & $\beta{=}0.30,h{=}4.0$ & $0.389440$ & $-0.063877$ & $0.012418$\\
+ord & $t{=}0.55,M{=}0.40$    & $1.93878$  & $-0.17007$  & $0.02199$\\
+ord & $t{=}0.20,M{=}0.80$    & $8.39286$  & $-0.76531$  & $0.07086$\\
+\hline
+\end{tabular}
+\end{center}
+Closed forms and solvers agree to every digit shown, and \eqref{eq:detdis} reproduces the
+directly computed determinant.
+
+\subsection{What this changes, and what it does not}
+\paragraph{Changes.} The metric is now available everywhere in both phases, so \S11 (minimal
+paths) is unblocked. Three consequences for [BR]:
+\begin{enumerate}
+  \item \textbf{No null directions} anywhere, so the constant-magnetisation zero-length paths
+        of the mean-field example have no analogue and the four-class path taxonomy of
+        [BR,\S e] must be re-derived.
+  \item \textbf{The whole domain must be solved.} There is no collapse of the disordered
+        phase to a one-dimensional quotient.
+  \item \textbf{Around versus through is a genuine quantitative competition}, not a
+        consequence of a rank-one artefact.
+  \item \textbf{A third topology exists.} Because the critical line is a geodesic
+        (\S\ref{sec:sphere}), ``enter the ordered phase and run along the boundary'' is a
+        candidate distinct from both ``around the tip'' and ``straight through''. The
+        classification in [BR,\S e] has no analogue of it.
+  \item \textbf{Half the problem is analytic, in either convention.} The ordered phase needs
+        no numerics: geodesics are great-circle arcs for $\Tm$ and hyperbolic geodesics for
+        $g^{\rm BR}$, so the crossing problem reduces to matching two boundary points on
+        $F=0$ to the disordered-phase solution.
+  \item \textbf{A geometric signature on the convention question.} $\Tm$ and $\beta\Tm$ both
+        give constant curvature ($+\Gamma$ and $-\Gamma/\beta_0$); $\Tm/\beta$ does not
+        (\S\ref{sec:hyperbolic}). This does not settle \S4.11 --- the tensor transformation
+        there favours $\Tm/\beta$ --- but it is a sharp structural fact that the manuscript
+        should weigh.
+\end{enumerate}
+
+\paragraph{Does not change.} The three caveats of \S4.11, \S9 and \S12 stand:
+the mobility choice is not determined by the equilibrium model; the $Q_-$ correction affects
+the finite-size window (\S9) but not the continuum tensor above; and the objective functional
+is still unfixed, which matters here more than before --- a non-constant scalar factor is a
+conformal change and \emph{changes geodesics}, so it must be settled before any path is
+reported.
+
+\TODO{\S11: anisotropic fast marching on \eqref{eq:Tred}/\eqref{eq:Tdis}.}
+
+	
