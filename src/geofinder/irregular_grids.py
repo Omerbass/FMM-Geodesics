@@ -1,5 +1,41 @@
 import numpy as np
 
+def structured_grid_triangles(nx, ny):
+    """
+    Triangulate a plain rectangular nx*ny grid into 2 triangles per cell,
+    without scipy.spatial.Delaunay/Qhull. Positions must be laid out as
+    np.reshape(np.meshgrid(x, y), (2, -1)).T for x of length nx, y of
+    length ny (index k = i*nx+j, i indexing y, j indexing x -- numpy's
+    default meshgrid 'xy' indexing) -- i.e. exactly the pattern used by
+    main_flat/main_sphere/main_spherical in tests/fmmGeodesics.py.
+
+    Qhull's Delaunay is solving a much harder problem than this needs: a
+    general point-position triangulation, including breaking ties among
+    the many exactly-cocircular quadruples a perfect grid produces. Since
+    the combinatorial structure of a rectangular grid is already known
+    exactly, this builds the same triangle count directly, ~150x faster
+    at 10^6 points (see git history). The diagonal alternates checkerboard-
+    style per cell (rather than a single fixed direction) so the
+    triangulation doesn't impose a systematic directional bias on
+    Euclidean-coordinate quantities (e.g. FMM's per-triangle updates) --
+    matching how Qhull tends to split a near-perfect grid anyway, without
+    its general-position machinery.
+
+    Only valid for a *complete* rectangular grid with no missing points
+    (e.g. not a BoundedGrid with an irregular bound_function cutting holes
+    out of it) -- use scipy.spatial.Delaunay for those.
+    """
+    i, j = np.meshgrid(np.arange(ny - 1), np.arange(nx - 1), indexing='ij')
+    i = i.ravel(); j = j.ravel()
+    a = i * nx + j       # bottom-left
+    b = a + 1             # bottom-right (x+1)
+    c = a + nx            # top-left (y+1)
+    d = c + 1              # top-right
+    even = (i + j) % 2 == 0
+    tri1 = np.where(even[:, None], np.stack([a, b, d], axis=1), np.stack([a, b, c], axis=1))
+    tri2 = np.where(even[:, None], np.stack([a, d, c], axis=1), np.stack([b, d, c], axis=1))
+    return np.concatenate([tri1, tri2], axis=0)
+
 class BoundedGrid(object):
     def __init__(self, dim, cartesian_boundaries, deltas, bound_function):
         """

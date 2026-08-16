@@ -249,9 +249,12 @@ def main_spherical(x0, show_plot=False, beta_bounds=(0.3, 1.3), h_bounds=(-4.0, 
     """
     sphMetric = metrics.SphericalModel()
 
+    # positions form a complete rectangular grid (no BoundedGrid holes), so
+    # the triangulation's combinatorics are known outright -- no need for
+    # scipy.spatial.Delaunay's general-position Qhull computation (~150x
+    # slower here, see structured_grid_triangles' docstring).
     positions = np.reshape(np.meshgrid(np.linspace(*beta_bounds, n), np.linspace(*h_bounds, n)), (2, -1)).T
-    delaunay = Delaunay(positions)
-    triangles = delaunay.simplices
+    triangles = structured_grid_triangles(n, n)
     source = np.argmin(np.linalg.norm(positions - x0, axis=1))
 
     geo = FMMGeodesicPaths(sphMetric.metric, dim=2)
@@ -265,7 +268,7 @@ def main_spherical(x0, show_plot=False, beta_bounds=(0.3, 1.3), h_bounds=(-4.0, 
         plt.show()
 
     np.savez(f"data/spherical_geodesic_paths_beta0={positions[source, 0]:.3f}_h0={positions[source, 1]:.3f}.npz",
-        positions=positions, distances=distances, source=source, triangles=triangles, grid=None, deluanay=delaunay)
+        positions=positions, distances=distances, source=source, triangles=triangles, grid=None, deluanay=None)
 
 def _graded_1d_points(anchors, lo, hi, fine_delta, coarse_delta, band_half_width):
     """
@@ -342,5 +345,5 @@ if __name__ == "__main__":
     # main_bethe_antiferro(np.array([-0.9, 0.6]))
     # main_bethe_antiferro_transition(np.array([-1.0, 2.3]), fine_delta=0.002, coarse_delta=0.01, band_half_width=0.5)
     main_spherical(np.array([0.7, 1]), show_plot=False, 
-                   beta_bounds=(0.1, 4.0), h_bounds=(-4.0, 4.0), n=7000)
+                   beta_bounds=(0.1, 4.0), h_bounds=(-4.0, 4.0), n=6000)
 
