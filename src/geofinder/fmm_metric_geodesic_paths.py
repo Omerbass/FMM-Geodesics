@@ -91,8 +91,13 @@ class FMMGeodesicPaths:
         a = self._safe_norm(vec_ab @ gA @ vec_ab, positions[A], vec_ab)
         b = self._safe_norm(vec_ac @ gA @ vec_ac, positions[A], vec_ac)
         cos_theta = (vec_ab @ gA @ vec_ac) / (a * b)
-        if np.abs(cos_theta) > 1 and np.isclose(cos_theta**2, 1, rtol=0):
-            cos_theta = np.sign(cos_theta)
+        # Cauchy-Schwarz guarantees |cos_theta| <= 1 for a positive-definite
+        # metric; any excursion past that is numerical error (roundoff in an
+        # ill-conditioned/near-singular metric, e.g. near SphericalModel's
+        # critical line), not a real geometric case, so clamp unconditionally
+        # rather than only when already within isclose's default atol=1e-8 --
+        # that check let larger overshoots through and crashed sqrt(negative).
+        cos_theta = np.clip(cos_theta, -1, 1)
         sin_theta = np.sqrt(1 - cos_theta**2)
 
         if a**2 + b**2 - 2*a*b*cos_theta == 0:
